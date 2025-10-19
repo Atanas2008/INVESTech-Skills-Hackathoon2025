@@ -1,4 +1,6 @@
 Flask==2.3.3
 Flask-CORS==4.0.0
 Werkzeug==2.3.7
-sqlite3
+psycopg2-binary==2.9.7
+python-decouple==3.8
+gunicorn==21.2.0

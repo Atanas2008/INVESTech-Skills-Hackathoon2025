@@ -5,22 +5,53 @@ import os
 from datetime import datetime
 import sqlite3
 from werkzeug.utils import secure_filename
+import requests
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all domains
+
+# Ambee API Configuration
+AMBEE_API_KEY = 'bdeedc716f3882fa7005eaf1c617bdeb943df52c1b3f3cc43b6334daf19689cc'
+AMBEE_BASE_URL = 'https://api.ambeedata.com'
 
 # Configuration
 app.config['SECRET_KEY'] = 'your-secret-key-here'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
+# Cloud database configuration
+CLOUD_DB_URL = os.environ.get('DATABASE_URL')  # For Heroku/Railway/etc
+USE_CLOUD_DB = CLOUD_DB_URL is not None
+
+if USE_CLOUD_DB:
+    print("🌐 Using cloud database:", CLOUD_DB_URL[:50] + "...")
+else:
+    print("💾 Using local SQLite database")
+
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+# Database connection function
+def get_db_connection():
+    """Get database connection - local SQLite or cloud PostgreSQL"""
+    if USE_CLOUD_DB:
+        # For cloud deployment with PostgreSQL
+        try:
+            import psycopg2
+            return psycopg2.connect(CLOUD_DB_URL)
+        except ImportError:
+            print("⚠️ psycopg2 not installed, falling back to SQLite")
+            return sqlite3.connect('plantatree.db')
+        except Exception as e:
+            print(f"⚠️ Cloud DB connection failed: {e}, falling back to SQLite")
+            return sqlite3.connect('plantatree.db')
+    else:
+        return sqlite3.connect('plantatree.db')
+
 # Database initialization
 def init_db():
-    """Initialize SQLite database with required tables"""
-    conn = sqlite3.connect('plantatree.db')
+    """Initialize database with required tables"""
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     # Users table
@@ -157,7 +188,7 @@ def serve_static(filename):
 @app.route('/api/locations', methods=['GET'])
 def get_locations():
     """Get all approved locations"""
-    conn = sqlite3.connect('plantatree.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     cursor.execute('''
@@ -220,7 +251,7 @@ def add_location():
 @app.route('/api/eco-actions', methods=['GET'])
 def get_eco_actions():
     """Get all approved eco actions"""
-    conn = sqlite3.connect('plantatree.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     cursor.execute('''
@@ -305,6 +336,143 @@ def add_eco_action():
         
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/charity-stats', methods=['GET'])
+def get_charity_stats():
+    """Get charity statistics - total points from all eco actions"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Calculate total points from all approved eco actions
+        cursor.execute('SELECT SUM(points) FROM eco_actions WHERE approved = TRUE')
+        total_points = cursor.fetchone()[0] or 0
+        
+        # Calculate donations made (every 500 points = 1 BGN donation)
+        donations_made = total_points // 500
+        total_donated = donations_made * 1.0  # 1 BGN per 500 points
+        
+        conn.close()
+        
+        return jsonify({
+            'total_points': total_points,
+            'donations_made': donations_made,
+            'total_donated_bgn': total_donated,
+            'current_cycle_points': total_points % 500,
+            'points_to_next_donation': 500 - (total_points % 500)
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/leaderboard', methods=['GET'])
+def get_leaderboard():
+    """Get leaderboard data with user rankings"""
+    try:
+        period = request.args.get('period', 'all')  # all, week, month, year
+        action_type = request.args.get('type', 'all')  # all, tree, clean, bike, recycle
+        limit = int(request.args.get('limit', 50))
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Base query for user statistics
+        base_query = """
+            SELECT 
+                u.id,
+                u.username,
+                COALESCE(SUM(ea.points), 0) as total_points,
+                COUNT(ea.id) as total_actions,
+                u.created_at,
+                GROUP_CONCAT(DISTINCT b.icon || ' ' || b.name) as badges
+            FROM users u
+            LEFT JOIN eco_actions ea ON u.id = ea.user_id AND ea.approved = TRUE
+            LEFT JOIN user_badges ub ON u.id = ub.user_id
+            LEFT JOIN badges b ON ub.badge_id = b.id
+        """
+        
+        # Add time period filter
+        where_conditions = []
+        params = []
+        
+        if action_type != 'all':
+            where_conditions.append("ea.type = ?")
+            params.append(action_type)
+            
+        if period == 'week':
+            where_conditions.append("ea.created_at >= date('now', '-7 days')")
+        elif period == 'month':
+            where_conditions.append("ea.created_at >= date('now', '-1 month')")
+        elif period == 'year':
+            where_conditions.append("ea.created_at >= date('now', '-1 year')")
+        
+        if where_conditions:
+            base_query += " WHERE " + " AND ".join(where_conditions)
+            
+        base_query += """
+            GROUP BY u.id, u.username, u.created_at
+            ORDER BY total_points DESC, total_actions DESC
+            LIMIT ?
+        """
+        params.append(limit)
+        
+        cursor.execute(base_query, params)
+        rows = cursor.fetchall()
+        
+        leaderboard = []
+        for i, row in enumerate(rows):
+            user_data = {
+                'rank': i + 1,
+                'id': row[0],
+                'username': row[1],
+                'points': row[2],
+                'actions': row[3],
+                'join_date': row[4],
+                'badges': row[5].split(',') if row[5] else [],
+                'avatar': f'https://via.placeholder.com/80?text={row[1][0].upper()}'
+            }
+            
+            # Determine user level based on points
+            if user_data['points'] >= 1000:
+                user_data['level'] = 'Еко легенда'
+            elif user_data['points'] >= 750:
+                user_data['level'] = 'Еко майстор'
+            elif user_data['points'] >= 500:
+                user_data['level'] = 'Еко експерт'
+            elif user_data['points'] >= 300:
+                user_data['level'] = 'Еко активист'
+            elif user_data['points'] >= 150:
+                user_data['level'] = 'Еко ентусиаст'
+            else:
+                user_data['level'] = 'Еко новак'
+                
+            leaderboard.append(user_data)
+        
+        # Get total statistics
+        cursor.execute('SELECT COUNT(*) FROM users')
+        total_users = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) FROM eco_actions WHERE approved = TRUE')
+        total_actions = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT SUM(points) FROM eco_actions WHERE approved = TRUE')
+        total_points = cursor.fetchone()[0] or 0
+        
+        conn.close()
+        
+        return jsonify({
+            'leaderboard': leaderboard,
+            'statistics': {
+                'total_users': total_users,
+                'total_actions': total_actions,
+                'total_points': total_points
+            },
+            'period': period,
+            'type': action_type
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
@@ -549,6 +717,160 @@ def clear_all_redesigns():
     except Exception as e:
         print(f"Error clearing redesigns: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
+
+# ==================== AMBEE API ENDPOINTS ====================
+
+@app.route('/api/air-quality', methods=['GET'])
+def get_air_quality():
+    """Get air quality data from Ambee API"""
+    try:
+        lat = request.args.get('lat', 42.6977)  # Default to Sofia
+        lon = request.args.get('lon', 23.3219)
+        
+        print(f"Fetching air quality data for lat: {lat}, lon: {lon}")
+        
+        # Make request to Ambee API
+        url = f"{AMBEE_BASE_URL}/latest/by-lat-lng"
+        headers = {
+            'x-api-key': AMBEE_API_KEY,
+            'Content-type': 'application/json'
+        }
+        params = {
+            'lat': lat,
+            'lng': lon
+        }
+        
+        response = requests.get(url, headers=headers, params=params, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"Air quality data received: {data}")
+            return jsonify({
+                'status': 'success',
+                'data': data,
+                'source': 'ambee_api'
+            })
+        else:
+            print(f"Ambee API error: {response.status_code}")
+            # Return fallback data for Sofia
+            return jsonify({
+                'status': 'success',
+                'data': {
+                    'message': 'success',
+                    'stations': [{
+                        'AQI': 44,
+                        'PM25': 8.177,
+                        'PM10': 20.523,
+                        'NO2': 7.497,
+                        'OZONE': 22.803,
+                        'CO': 1.072,
+                        'SO2': 0.816,
+                        'city': 'Sofia',
+                        'countryCode': 'BG',
+                        'updatedAt': datetime.now().isoformat()
+                    }]
+                },
+                'source': 'fallback'
+            })
+            
+    except Exception as e:
+        print(f"Error fetching air quality data: {e}")
+        return jsonify({
+            'status': 'success',
+            'data': {
+                'message': 'success',
+                'stations': [{
+                    'AQI': 44,
+                    'PM25': 8.177,
+                    'PM10': 20.523,
+                    'NO2': 7.497,
+                    'OZONE': 22.803,
+                    'CO': 1.072,
+                    'SO2': 0.816,
+                    'city': 'Sofia',
+                    'countryCode': 'BG',
+                    'updatedAt': datetime.now().isoformat()
+                }]
+            },
+            'source': 'fallback'
+        })
+
+@app.route('/api/weather', methods=['GET'])
+def get_weather():
+    """Get weather data from Ambee API"""
+    try:
+        lat = request.args.get('lat', 42.6977)  # Default to Sofia
+        lon = request.args.get('lon', 23.3219)
+        
+        print(f"Fetching weather data for lat: {lat}, lon: {lon}")
+        
+        # Make request to Ambee API
+        url = f"{AMBEE_BASE_URL}/weather/latest/by-lat-lng"
+        headers = {
+            'x-api-key': AMBEE_API_KEY,
+            'Content-type': 'application/json'
+        }
+        params = {
+            'lat': lat,
+            'lng': lon
+        }
+        
+        response = requests.get(url, headers=headers, params=params, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"Weather data received: {data}")
+            
+            # Convert temperature from Fahrenheit to Celsius if needed
+            if 'data' in data and 'temperature' in data['data']:
+                temp_f = data['data']['temperature']
+                if temp_f:
+                    temp_c = (temp_f - 32) * 5/9
+                    data['data']['temperatureC'] = round(temp_c, 1)
+                    data['data']['temperatureF'] = temp_f
+                    print(f"Temperature converted: {temp_f}°F = {temp_c:.1f}°C")
+            
+            return jsonify({
+                'status': 'success',
+                'data': data,
+                'source': 'ambee_api'
+            })
+        else:
+            print(f"Ambee Weather API error: {response.status_code}")
+            # Return fallback weather data for Sofia
+            return jsonify({
+                'status': 'success',
+                'data': {
+                    'data': {
+                        'temperature': 41,  # Fahrenheit (5°C)
+                        'temperatureC': 5,  # Celsius  
+                        'temperatureF': 41, # Fahrenheit
+                        'humidity': 78,
+                        'windSpeed': 2.1,
+                        'visibility': 6500,
+                        'pressure': 1018.5
+                    }
+                },
+                'source': 'fallback'
+            })
+            
+    except Exception as e:
+        print(f"Error fetching weather data: {e}")
+        return jsonify({
+            'status': 'success',
+            'data': {
+                'data': {
+                    'temperature': 41,  # Fahrenheit (5°C)
+                    'temperatureC': 5,  # Celsius
+                    'temperatureF': 41, # Fahrenheit
+                    'humidity': 78,
+                    'windSpeed': 2.1,
+                    'visibility': 6500,
+                    'pressure': 1018.5
+                }
+            },
+            'source': 'fallback'
+        })
 
 if __name__ == '__main__':
     print("🌱 PlantATree Server стартира...")

@@ -27,6 +27,8 @@
                 <li><a href="#" onclick="showSection('home')" class="nav-link">Начало</a></li>
                 <li><a href="#" onclick="showSection('map')" class="nav-link">Карта</a></li>
                 <li><a href="#" onclick="showSection('feed')" class="nav-link">Еко действия</a></li>
+                <li><a href="#" onclick="showSection('air-quality')" class="nav-link">Въздух</a></li>
+                <li><a href="#" onclick="showSection('leaderboard')" class="nav-link">Класация</a></li>
                 <li><a href="#" onclick="showSection('profile')" class="nav-link">Профил</a></li>
             </ul>
             <div class="auth-buttons">
@@ -207,17 +209,17 @@
                 <h3><i class="fas fa-chart-line"></i> Статистики на града</h3>
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-icon">👥</div>
+                        <div class="stat-icon"><i class="fas fa-users"></i></div>
                         <div class="stat-info">
                             <span class="stat-value" id="population">5000</span>
                             <span class="stat-label">Население</span>
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">🌿</div>
+                        <div class="stat-icon"><i class="fas fa-leaf"></i></div>
                         <div class="stat-info">
-                            <span class="stat-value" id="eco-score">75</span>
-                            <span class="stat-label">Еко Рейтинг</span>
+                            <span class="stat-value" id="green-coverage">35%</span>
+                            <span class="stat-label">Зелено покритие</span>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -242,7 +244,7 @@
                 <h3><i class="fas fa-tools"></i> Инструменти за строене</h3>
                 <div class="tool-categories">
                     <div class="tool-category">
-                        <h4>🌳 Зелени зони</h4>
+                        <h4><i class="fas fa-tree"></i> Зелени зони</h4>
                         <div class="tools-grid">
                             <button class="tool-btn" onclick="selectTool('park')" data-tool="park">
                                 <i class="fas fa-tree"></i>
@@ -305,7 +307,7 @@
                     </div>
                     
                     <div class="tool-category">
-                        <h4>🛠️ Utilities</h4>
+                        <h4><i class="fas fa-tools"></i> Utilities</h4>
                         <div class="tools-grid">
                             <button class="tool-btn" onclick="selectTool('demolish')" data-tool="demolish">
                                 <i class="fas fa-trash"></i>
@@ -340,6 +342,24 @@
         <div class="section-header">
             <h2><i class="fas fa-leaf"></i> Еко действия</h2>
             <p>Споделете вашите еко инициативи с общността</p>
+            
+            <!-- Charity Notice -->
+            <div class="charity-notice">
+                <div class="charity-content">
+                    <i class="fas fa-heart"></i>
+                    <div class="charity-text">
+                        <h4>Благотворителност</h4>
+                        <p>За всеки 500 събрани точки от общността дарявame 1 лв. за залесяване и опазване на природата!</p>
+                        <div class="charity-progress">
+                            <span id="charity-total-points">0</span>/500 точки до следващото дарение
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="charity-progress-fill" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <button class="btn-primary" onclick="showAddActionModal()">
                 <i class="fas fa-plus"></i> Добави действие
             </button>
@@ -370,6 +390,275 @@
         </div>
     </section>
 
+    <!-- Leaderboard Section -->
+    <section id="leaderboard" class="section hidden">
+        <div class="section-header">
+            <h2><i class="fas fa-trophy"></i> Класация</h2>
+            <p>Топ еко герои на София</p>
+        </div>
+        
+        <!-- Statistics Overview -->
+        <div class="leaderboard-stats">
+            <div class="stat-card total-users">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div class="stat-info">
+                    <span class="stat-number" id="total-users">127</span>
+                    <span class="stat-label">Активни потребители</span>
+                </div>
+            </div>
+            <div class="stat-card total-actions">
+                <div class="stat-icon"><i class="fas fa-leaf"></i></div>
+                <div class="stat-info">
+                    <span class="stat-number" id="total-actions">2,543</span>
+                    <span class="stat-label">Общо действия</span>
+                </div>
+            </div>
+            <div class="stat-card total-points">
+                <div class="stat-icon"><i class="fas fa-star"></i></div>
+                <div class="stat-info">
+                    <span class="stat-number" id="total-points">18,720</span>
+                    <span class="stat-label">Общо точки</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaderboard Filters -->
+        <div class="leaderboard-filters">
+            <button class="filter-btn active" onclick="filterLeaderboard('all')">Всички</button>
+            <div class="filter-dropdown">
+                <button class="filter-btn dropdown-toggle" onclick="toggleTimeFilter()">
+                    <span id="current-filter">Този месец</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="dropdown-menu hidden" id="time-filter-menu">
+                    <button onclick="filterLeaderboard('week')">Тази седмица</button>
+                    <button onclick="filterLeaderboard('month')">Този месец</button>
+                    <button onclick="filterLeaderboard('year')">Тази година</button>
+                    <button onclick="filterLeaderboard('all')">Всички времена</button>
+                </div>
+            </div>
+            <button class="filter-btn" onclick="filterLeaderboard('trees')">Дървета</button>
+            <button class="filter-btn" onclick="filterLeaderboard('cleanup')">Почистване</button>
+            <button class="filter-btn" onclick="filterLeaderboard('bike')">Велосипед</button>
+        </div>
+
+        <!-- Leaderboard Table -->
+        <div class="leaderboard-container">
+            <div class="leaderboard-table">
+                <div class="table-header">
+                    <div class="rank-header">Позиция</div>
+                    <div class="user-header">Потребител</div>
+                    <div class="points-header">Точки</div>
+                    <div class="actions-header">Действия</div>
+                    <div class="badges-header">Баджове</div>
+                </div>
+                
+                <!-- Top 3 Special Podium -->
+                <div class="podium-section">
+                    <div class="podium-item gold" id="user-1">
+                        <div class="podium-rank">
+                            <i class="fas fa-crown"></i>
+                            <span>1</span>
+                        </div>
+                        <div class="podium-avatar">
+                            <img src="https://via.placeholder.com/80" alt="user">
+                            <div class="online-indicator"></div>
+                        </div>
+                        <div class="podium-info">
+                            <h4>Мария Петрова</h4>
+                            <div class="podium-stats">
+                                <span class="points">1,250 точки</span>
+                                <span class="actions">85 действия</span>
+                            </div>
+                            <div class="podium-badges">
+                                <span class="badge eco-hero">Еко герой</span>
+                                <span class="badge tree-master">Майстор дървета</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="podium-item silver" id="user-2">
+                        <div class="podium-rank">
+                            <i class="fas fa-medal"></i>
+                            <span>2</span>
+                        </div>
+                        <div class="podium-avatar">
+                            <img src="https://via.placeholder.com/80" alt="user">
+                        </div>
+                        <div class="podium-info">
+                            <h4>Петър Иванов</h4>
+                            <div class="podium-stats">
+                                <span class="points">1,120 точки</span>
+                                <span class="actions">72 действия</span>
+                            </div>
+                            <div class="podium-badges">
+                                <span class="badge bike-rider">Велосипедист</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="podium-item bronze" id="user-3">
+                        <div class="podium-rank">
+                            <i class="fas fa-award"></i>
+                            <span>3</span>
+                        </div>
+                        <div class="podium-avatar">
+                            <img src="https://via.placeholder.com/80" alt="user">
+                        </div>
+                        <div class="podium-info">
+                            <h4>Анна Георгиева</h4>
+                            <div class="podium-stats">
+                                <span class="points">950 точки</span>
+                                <span class="actions">63 действия</span>
+                            </div>
+                            <div class="podium-badges">
+                                <span class="badge cleaner">Почистител</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rest of leaderboard -->
+                <div class="regular-rankings" id="leaderboard-list">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Your Position Card -->
+            <div class="your-position">
+                <h3><i class="fas fa-user"></i> Твоята позиция</h3>
+                <div class="position-card">
+                    <div class="position-rank">#12</div>
+                    <div class="position-avatar">
+                        <img src="https://via.placeholder.com/60" alt="you">
+                    </div>
+                    <div class="position-info">
+                        <h4>Иван Петров</h4>
+                        <div class="position-stats">
+                            <span class="points">420 точки</span>
+                            <span class="actions">28 действия</span>
+                        </div>
+                        <div class="position-progress">
+                            <span>До следваща позиция: 45 точки</span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 75%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Air Quality Section -->
+    <section id="air-quality" class="section hidden">
+        <div class="section-header">
+            <h2><i class="fas fa-wind"></i> Качество на въздуха</h2>
+            <p>Данни в реално време за въздушното качество в София</p>
+        </div>
+        
+        <div class="air-quality-container">
+            <!-- Current Air Quality Card -->
+            <div class="air-quality-card main-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-map-marker-alt"></i> София Център</h3>
+                    <div class="last-updated" id="last-updated">Последно обновяване: зареждане...</div>
+                </div>
+                
+                <div class="aqi-display">
+                    <div class="aqi-value" id="aqi-value">--</div>
+                    <div class="aqi-label">AQI</div>
+                    <div class="aqi-status" id="aqi-status">Зареждане...</div>
+                </div>
+                
+                <div class="pollutants-grid">
+                    <div class="pollutant-item">
+                        <div class="pollutant-icon"><i class="fas fa-smog"></i></div>
+                        <div class="pollutant-info">
+                            <span class="pollutant-value" id="pm25-value">--</span>
+                            <span class="pollutant-label">PM2.5</span>
+                        </div>
+                    </div>
+                    <div class="pollutant-item">
+                        <div class="pollutant-icon"><i class="fas fa-cloud"></i></div>
+                        <div class="pollutant-info">
+                            <span class="pollutant-value" id="pm10-value">--</span>
+                            <span class="pollutant-label">PM10</span>
+                        </div>
+                    </div>
+                    <div class="pollutant-item">
+                        <div class="pollutant-icon"><i class="fas fa-flask"></i></div>
+                        <div class="pollutant-info">
+                            <span class="pollutant-value" id="no2-value">--</span>
+                            <span class="pollutant-label">NO₂</span>
+                        </div>
+                    </div>
+                    <div class="pollutant-item">
+                        <div class="pollutant-icon"><i class="fas fa-industry"></i></div>
+                        <div class="pollutant-info">
+                            <span class="pollutant-value" id="o3-value">--</span>
+                            <span class="pollutant-label">O₃</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Weather Information -->
+            <div class="weather-card">
+                <h3><i class="fas fa-cloud-sun"></i> Метеорологични условия</h3>
+                <div class="weather-info">
+                    <div class="weather-item">
+                        <i class="fas fa-thermometer-half"></i>
+                        <span>Температура: <span id="temperature">--°C</span></span>
+                    </div>
+                    <div class="weather-item">
+                        <i class="fas fa-tint"></i>
+                        <span>Влажност: <span id="humidity">--%</span></span>
+                    </div>
+                    <div class="weather-item">
+                        <i class="fas fa-wind"></i>
+                        <span>Вятър: <span id="wind-speed">-- км/ч</span></span>
+                    </div>
+                    <div class="weather-item">
+                        <i class="fas fa-eye"></i>
+                        <span>Видимост: <span id="visibility">-- км</span></span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Health Recommendations -->
+            <div class="health-recommendations">
+                <h3><i class="fas fa-heart"></i> Препоръки за здравето</h3>
+                <div class="recommendation-content" id="health-recommendations">
+                    <p>Зареждане на препоръки...</p>
+                </div>
+            </div>
+            
+            <!-- Historical Data Chart -->
+            <div class="chart-container">
+                <h3><i class="fas fa-chart-line"></i> 24-часова тенденция</h3>
+                <div class="chart-placeholder" id="air-quality-chart">
+                    <p>Зареждане на графика...</p>
+                </div>
+            </div>
+            
+            <!-- Location Selector -->
+            <div class="location-selector">
+                <h3><i class="fas fa-location-arrow"></i> Избери локация</h3>
+                <select id="location-select" onchange="changeLocation()">
+                    <option value="sofia-center">София Център</option>
+                    <option value="sofia-lozenets">София Лозенец</option>
+                    <option value="sofia-studentski-grad">София Студентски град</option>
+                    <option value="sofia-druzhba">София Дружба</option>
+                    <option value="sofia-lyulin">София Люлин</option>
+                </select>
+                <button class="btn-secondary" onclick="getCurrentLocationAir()">
+                    <i class="fas fa-crosshairs"></i> Моята локация
+                </button>
+            </div>
+        </div>
+    </section>
+
     <!-- Profile Section -->
     <section id="profile" class="section hidden">
         <div class="section-header">
@@ -393,16 +682,16 @@
                         <span class="stat-label">Баджове</span>
                     </div>
                 </div>
-                <div class="badges">
-                    <span class="badge">🌳 Tree Planter</span>
-                    <span class="badge">♻️ Eco Hero</span>
-                    <span class="badge">🚴 Bike Rider</span>
+                <div class="user-badges">
+                    <span class="badge"><i class="fas fa-seedling"></i> Tree Planter</span>
+                    <span class="badge"><i class="fas fa-recycle"></i> Eco Hero</span>
+                    <span class="badge"><i class="fas fa-bicycle"></i> Bike Rider</span>
                 </div>
             </div>
             <div class="profile-history">
                 <h4>История на действията</h4>
                 <div class="history-item">
-                    <div class="history-icon">🌳</div>
+                    <div class="history-icon"><i class="fas fa-tree"></i></div>
                     <div class="history-content">
                         <h5>Засадих дърво</h5>
                         <p>Парк "Витоша" - преди 3 дни</p>
@@ -444,17 +733,17 @@
             <span class="close" onclick="closeModal('addActionModal')">&times;</span>
             <h3>Добави еко действие</h3>
             <form id="actionForm">
-                <input type="text" placeholder="Заглавие на действието" required>
-                <textarea placeholder="Опиши какво си направил..." required></textarea>
-                <input type="file" accept="image/*" required>
-                <select required>
+                <input type="text" name="title" placeholder="Заглавие на действието" required>
+                <textarea name="description" placeholder="Опиши какво си направил..." required></textarea>
+                <input type="file" name="image" accept="image/*">
+                <select name="type" required>
                     <option value="">Тип действие</option>
                     <option value="tree">Засаждане на дърво</option>
                     <option value="clean">Почистване</option>
                     <option value="bike">Каране на колело</option>
                     <option value="recycle">Рециклиране</option>
                 </select>
-                <input type="text" placeholder="Локация" required>
+                <input type="text" name="location" placeholder="Локация" required>
                 <button type="submit" class="btn-primary">Сподели действието</button>
             </form>
         </div>

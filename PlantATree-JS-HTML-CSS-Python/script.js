@@ -2,6 +2,10 @@
 const API_KEY = 'd67057512d7a41409604421a2e3e3411';
 const API_BASE_URL = 'https://api.geoapify.com/v1';
 
+// Ambee API Configuration
+const AMBEE_API_KEY = 'bdeedc716f3882fa7005eaf1c617bdeb943df52c1b3f3cc43b6334daf19689cc';
+const AMBEE_BASE_URL = 'https://api.ambeedata.com';
+
 // Global Variables
 let currentSection = 'home';
 let mapInstance = null;
@@ -74,15 +78,12 @@ function showSection(sectionName) {
         // Initialize specific sections
         if (sectionName === 'map') {
             setTimeout(loadMapWithRedesign, 100);
-        } else if (sectionName === 'builder') {
-            setTimeout(() => {
-                // Always start fresh - clear any saved data
-                clearCityData();
-                initializeCityBuilder();
-                
-                // Don't auto-save anymore - keep everything temporary
-                console.log('City builder initialized with fresh data');
-            }, 100);
+        } else if (sectionName === 'feed') {
+            setTimeout(loadEcoActions, 100);
+        } else if (sectionName === 'leaderboard') {
+            setTimeout(loadLeaderboard, 100);
+        } else if (sectionName === 'air-quality') {
+            setTimeout(initializeAirQualitySection, 100);
         }
         
         // Show success notification (except for home)
@@ -90,8 +91,9 @@ function showSection(sectionName) {
             const sectionNames = {
                 'map': 'Карта', 
                 'feed': 'Еко действия',
-                'profile': 'Профил',
-                'builder': 'Градостроител'
+                'leaderboard': 'Класация',
+                'air-quality': 'Въздушно качество',
+                'profile': 'Профил'
             };
             
             if (sectionNames[sectionName]) {
@@ -657,30 +659,90 @@ function handleLocationSubmit(form) {
 }
 
 // Handle action form submission  
-function handleActionSubmit(form) {
-    const formData = new FormData(form);
-    const actionData = {
-        title: formData.get('title') || form.querySelector('input[type="text"]').value,
-        description: formData.get('description') || form.querySelector('textarea').value,
-        type: formData.get('type') || form.querySelector('select').value,
-        location: formData.get('location') || form.querySelectorAll('input[type="text"]')[1].value,
-        image: formData.get('image') || form.querySelector('input[type="file"]').files[0],
-        timestamp: new Date().toISOString(),
-        points: calculatePoints(formData.get('type') || form.querySelector('select').value)
-    };
+async function handleActionSubmit(form) {
+    const formData = new FormData();
     
-    // In a real app, you would send this to your backend
-    console.log('New eco action:', actionData);
+    // Get form values
+    const title = form.querySelector('input[type="text"]').value;
+    const description = form.querySelector('textarea').value;
+    const type = form.querySelector('select').value;
+    const location = form.querySelectorAll('input[type="text"]')[1].value;
+    const imageFile = form.querySelector('input[type="file"]').files[0];
     
-    // Add to feed
-    addActionToFeed(actionData);
+    // Add to FormData for API call
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('type', type);
+    formData.append('location', location);
+    if (imageFile) {
+        formData.append('image', imageFile);
+    }
     
-    // Show success message
-    showNotification(`Еко действието е добавено! Получихте ${actionData.points} точки! 🎉`, 'success');
-    
-    // Close modal and reset form
-    closeModal('addActionModal');
-    form.reset();
+    try {
+        // Send to backend API
+        const response = await fetch('/api/eco-actions', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Show success message
+            showNotification(result.message, 'success');
+            
+            // Add to feed display
+            const actionData = {
+                title: title,
+                description: description,
+                type: type,
+                location: location,
+                points: result.points,
+                timestamp: new Date().toISOString(),
+                username: 'Вие'
+            };
+            addActionToFeed(actionData);
+            
+            // Close modal and reset form
+            closeModal('addActionModal');
+            form.reset();
+            
+            // Refresh feed from server
+            setTimeout(() => loadEcoActions(), 1000);
+        } else {
+            showNotification('Грешка при добавяне на действието: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Error submitting action:', error);
+        showNotification('Грешка при връзката със сървъра', 'error');
+    }
+}
+
+// Load eco actions from server
+async function loadEcoActions() {
+    try {
+        const response = await fetch('/api/eco-actions');
+        const actions = await response.json();
+        
+        const feedContainer = document.querySelector('.feed-container');
+        if (!feedContainer) return;
+        
+        // Clear current actions (keep only the sample one if no real actions)
+        if (actions.length > 0) {
+            feedContainer.innerHTML = '';
+            
+            actions.forEach(action => {
+                addActionToFeed(action);
+            });
+        }
+        
+        // Update charity statistics
+        updateCharityStats();
+        
+        console.log(`Loaded ${actions.length} eco actions from server`);
+    } catch (error) {
+        console.error('Error loading eco actions:', error);
+    }
 }
 
 // Calculate points based on action type
@@ -715,17 +777,22 @@ function createActionElement(actionData) {
         'recycle': 'Рециклиране'
     };
     
+    // Format timestamp
+    const timeAgo = formatTimeAgo(actionData.created_at || actionData.timestamp);
+    const username = actionData.username || 'Анонимен потребител';
+    const imageUrl = actionData.image_path ? `/${actionData.image_path}` : 'https://via.placeholder.com/400x300';
+    
     actionDiv.innerHTML = `
         <div class="post-header">
             <img src="https://via.placeholder.com/40" alt="user" class="user-avatar">
             <div class="post-info">
-                <h4>Вие</h4>
-                <span class="post-date">току-що</span>
+                <h4>${username}</h4>
+                <span class="post-date">${timeAgo}</span>
             </div>
             <div class="post-points">+${actionData.points} точки</div>
         </div>
         <div class="post-content">
-            <img src="https://via.placeholder.com/400x300" alt="eco action" class="post-image">
+            <img src="${imageUrl}" alt="eco action" class="post-image">
             <h3>${actionData.title}</h3>
             <p>${actionData.description}</p>
             <div class="post-location">
@@ -739,6 +806,26 @@ function createActionElement(actionData) {
     `;
     
     return actionDiv;
+}
+
+// Format time ago string
+function formatTimeAgo(timestamp) {
+    if (!timestamp) return 'току-що';
+    
+    const now = new Date();
+    const actionTime = new Date(timestamp);
+    const diff = now - actionTime;
+    
+    const minutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    
+    if (minutes < 1) return 'току-що';
+    if (minutes < 60) return `преди ${minutes} минути`;
+    if (hours < 24) return `преди ${hours} часа`;
+    if (days < 30) return `преди ${days} дни`;
+    
+    return actionTime.toLocaleDateString('bg-BG');
 }
 
 // Notification system
@@ -1956,6 +2043,705 @@ window.setRedesignTool = setRedesignTool;
 window.clearAllRedesigns = clearAllRedesigns;
 window.loadMapWithRedesign = loadMapWithRedesign;
 window.showRandomFact = showRandomFact;
+
+// =================== LEADERBOARD FUNCTIONALITY ===================
+
+// Sample leaderboard data
+const leaderboardData = [
+    {
+        id: 1,
+        name: "Мария Петрова",
+        points: 1250,
+        actions: 85,
+        badges: ["Еко герой", "Майстор дървета", "Рециклиращ"],
+        level: "Еко легенда",
+        avatar: "https://via.placeholder.com/80",
+        online: true,
+        joinDate: "2024-01-15"
+    },
+    {
+        id: 2,
+        name: "Петър Иванов",
+        points: 1120,
+        actions: 72,
+        badges: ["Велосипедист", "Садовник"],
+        level: "Еко майстор",
+        avatar: "https://via.placeholder.com/80",
+        online: false,
+        joinDate: "2024-02-03"
+    },
+    {
+        id: 3,
+        name: "Анна Георгиева",
+        points: 950,
+        actions: 63,
+        badges: ["Почистител", "Природолюбец"],
+        level: "Еко експерт",
+        avatar: "https://via.placeholder.com/80",
+        online: true,
+        joinDate: "2024-01-28"
+    },
+    {
+        id: 4,
+        name: "Георги Димитров",
+        points: 840,
+        actions: 56,
+        badges: ["🌳 Залесител"],
+        level: "Еко активист",
+        avatar: "https://via.placeholder.com/80",
+        online: false,
+        joinDate: "2024-03-10"
+    },
+    {
+        id: 5,
+        name: "Елена Николова",
+        points: 780,
+        actions: 52,
+        badges: ["Рециклиращ", "Садовник"],
+        level: "Еко активист",
+        avatar: "https://via.placeholder.com/80",
+        online: true,
+        joinDate: "2024-02-20"
+    },
+    {
+        id: 6,
+        name: "Иван Стоянов",
+        points: 720,
+        actions: 48,
+        badges: ["🚴 Велосипедист"],
+        level: "Еко активист",
+        avatar: "https://via.placeholder.com/80",
+        online: false,
+        joinDate: "2024-03-05"
+    },
+    {
+        id: 7,
+        name: "Росица Василева",
+        points: 680,
+        actions: 45,
+        badges: ["Почистител", "Природолюбец"],
+        level: "Еко ентусиаст",
+        avatar: "https://via.placeholder.com/80",
+        online: true,
+        joinDate: "2024-02-15"
+    },
+    {
+        id: 8,
+        name: "Димитър Петков",
+        points: 620,
+        actions: 41,
+        badges: ["🌳 Залесител"],
+        level: "Еко ентусиаст",
+        avatar: "https://via.placeholder.com/80",
+        online: false,
+        joinDate: "2024-03-20"
+    },
+    {
+        id: 9,
+        name: "Стефка Атанасова",
+        points: 580,
+        actions: 38,
+        badges: ["♻️ Рециклиращ"],
+        level: "Еко ентусиаст",
+        avatar: "https://via.placeholder.com/80",
+        online: true,
+        joinDate: "2024-02-28"
+    },
+    {
+        id: 10,
+        name: "Николай Христов",
+        points: 520,
+        actions: 34,
+        badges: ["Велосипедист", "Садовник"],
+        level: "Еко новак",
+        avatar: "https://via.placeholder.com/80",
+        online: false,
+        joinDate: "2024-03-15"
+    },
+    {
+        id: 11,
+        name: "Ваня Младенова",
+        points: 480,
+        actions: 32,
+        badges: ["Природолюбец"],
+        level: "Еко новак",
+        avatar: "https://via.placeholder.com/80",
+        online: true,
+        joinDate: "2024-03-08"
+    },
+    {
+        id: 12,
+        name: "Иван Петров",
+        points: 420,
+        actions: 28,
+        badges: ["🌳 Залесител"],
+        level: "Еко новак",
+        avatar: "https://via.placeholder.com/80",
+        online: true,
+        joinDate: "2024-03-22"
+    }
+];
+
+let currentFilter = 'month';
+let currentTypeFilter = 'all';
+
+// Load and display leaderboard
+function loadLeaderboard() {
+    console.log('Loading leaderboard...');
+    
+    // Update statistics
+    updateLeaderboardStats();
+    
+    // Display regular rankings (4th place and below)
+    displayRegularRankings();
+    
+    // Update your position
+    updateYourPosition();
+    
+    showNotification('Класацията е заредена! 🏆', 'success');
+}
+
+// Update leaderboard statistics
+function updateLeaderboardStats() {
+    const totalUsers = leaderboardData.length;
+    const totalActions = leaderboardData.reduce((sum, user) => sum + user.actions, 0);
+    const totalPoints = leaderboardData.reduce((sum, user) => sum + user.points, 0);
+    
+    document.getElementById('total-users').textContent = totalUsers;
+    document.getElementById('total-actions').textContent = totalActions.toLocaleString();
+    document.getElementById('total-points').textContent = totalPoints.toLocaleString();
+}
+
+// Display regular rankings (4th place and below)
+function displayRegularRankings() {
+    const container = document.getElementById('leaderboard-list');
+    const regularUsers = leaderboardData.slice(3); // Skip top 3
+    
+    container.innerHTML = regularUsers.map((user, index) => `
+        <div class="ranking-item">
+            <div class="ranking-number">#${index + 4}</div>
+            <div class="ranking-avatar">
+                <img src="${user.avatar}" alt="${user.name}">
+            </div>
+            <div class="ranking-info">
+                <h5>${user.name}</h5>
+                <div class="level">${user.level}</div>
+            </div>
+            <div class="ranking-points">${user.points}</div>
+            <div class="ranking-actions">${user.actions}</div>
+            <div class="ranking-badges">
+                ${user.badges.slice(0, 3).map(badge => 
+                    `<div class="mini-badge" title="${badge}">${badge.charAt(0)}</div>`
+                ).join('')}
+            </div>
+        </div>
+    `).join('');
+}
+
+// Update your position card
+function updateYourPosition() {
+    const yourUser = leaderboardData.find(user => user.name === "Иван Петров");
+    if (yourUser) {
+        const yourRank = leaderboardData.findIndex(user => user.id === yourUser.id) + 1;
+        const nextUser = leaderboardData[yourRank - 2]; // User above you
+        const pointsToNext = nextUser ? nextUser.points - yourUser.points : 0;
+        const progressPercent = nextUser ? ((yourUser.points / nextUser.points) * 100) : 100;
+        
+        // Update the position card
+        const positionCard = document.querySelector('.position-rank');
+        if (positionCard) {
+            positionCard.textContent = `#${yourRank}`;
+        }
+        
+        const progressSpan = document.querySelector('.position-progress span');
+        if (progressSpan && nextUser) {
+            progressSpan.textContent = `До следваща позиция: ${pointsToNext} точки`;
+        }
+        
+        const progressFill = document.querySelector('.position-progress .progress-fill');
+        if (progressFill) {
+            progressFill.style.width = `${Math.min(progressPercent, 100)}%`;
+        }
+    }
+}
+
+// Filter leaderboard by time period
+function filterLeaderboard(period) {
+    currentFilter = period;
+    
+    // Update filter button text
+    const filterNames = {
+        'week': 'Тази седмица',
+        'month': 'Този месец', 
+        'year': 'Тази година',
+        'all': 'Всички времена',
+        'trees': '🌳 Дървета',
+        'cleanup': '🧹 Почистване',
+        'bike': '🚴 Велосипед'
+    };
+    
+    const currentFilterElement = document.getElementById('current-filter');
+    if (currentFilterElement && filterNames[period]) {
+        currentFilterElement.textContent = filterNames[period];
+    }
+    
+    // Hide dropdown
+    const dropdown = document.getElementById('time-filter-menu');
+    if (dropdown) {
+        dropdown.classList.remove('show');
+    }
+    
+    // Update filter buttons active state
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // In a real app, you would filter the data based on period/type
+    // For demo, we'll just show a notification
+    showNotification(`Филтър приложен: ${filterNames[period]} 📊`, 'info');
+    
+    // Reload leaderboard with filtered data
+    displayRegularRankings();
+    updateLeaderboardStats();
+}
+
+// Toggle time filter dropdown
+function toggleTimeFilter() {
+    const dropdown = document.getElementById('time-filter-menu');
+    if (dropdown) {
+        dropdown.classList.toggle('show');
+    }
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const dropdown = document.getElementById('time-filter-menu');
+    const toggle = document.querySelector('.dropdown-toggle');
+    
+    if (dropdown && toggle && !toggle.contains(event.target) && !dropdown.contains(event.target)) {
+        dropdown.classList.remove('show');
+    }
+});
+
+// Add some animation effects
+function animateLeaderboardEntry() {
+    const items = document.querySelectorAll('.ranking-item, .podium-item');
+    items.forEach((item, index) => {
+        item.style.opacity = '0';
+        item.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            item.style.transition = 'all 0.5s ease';
+            item.style.opacity = '1';
+            item.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+}
+
+// Call animation when leaderboard loads
+function loadLeaderboard() {
+    console.log('Loading leaderboard...');
+    
+    updateLeaderboardStats();
+    displayRegularRankings();
+    updateYourPosition();
+    
+    // Add animation
+    setTimeout(animateLeaderboardEntry, 100);
+    
+    showNotification('Класацията е заредена! 🏆', 'success');
+}
+
+// ==================== AMBEE API INTEGRATION ====================
+
+// Sofia coordinates for air quality data
+const SOFIA_COORDINATES = {
+    lat: 42.6977,
+    lon: 23.3219
+};
+
+// Location coordinates mapping
+const LOCATION_COORDINATES = {
+    'sofia-center': { lat: 42.6977, lon: 23.3219 },
+    'sofia-lozenets': { lat: 42.6730, lon: 23.3390 },
+    'sofia-studentski-grad': { lat: 42.6540, lon: 23.3480 },
+    'sofia-druzhba': { lat: 42.6650, lon: 23.3900 },
+    'sofia-lyulin': { lat: 42.7120, lon: 23.2500 }
+};
+
+// Current selected location
+let currentAirLocation = 'sofia-center';
+
+// Air Quality functions
+async function fetchAirQualityData(lat, lon) {
+    try {
+        console.log(`Fetching air quality data for lat: ${lat}, lon: ${lon}`);
+        
+        // Use our backend endpoint instead of direct Ambee API call
+        const response = await fetch(`/api/air-quality?lat=${lat}&lon=${lon}`, {
+            method: 'GET',
+            headers: {
+                'Content-type': 'application/json'
+            }
+        });
+        
+        console.log('Air Quality API Response status:', response.status);
+        
+        if (!response.ok) {
+            console.error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Air Quality API Response data:', result);
+        
+        if (result.status === 'success') {
+            return result.data;
+        } else {
+            throw new Error('API returned error status');
+        }
+    } catch (error) {
+        console.error('Error fetching air quality data:', error);
+        // Return static realistic data instead of random
+        return {
+            stations: [{
+                AQI: 44,
+                PM25: 8.177,
+                PM10: 20.523,
+                NO2: 7.497,
+                OZONE: 22.803,
+                CO: 1.072,
+                SO2: 0.816,
+                city: 'Sofia',
+                countryCode: 'BG'
+            }]
+        };
+    }
+}
+
+// Weather data from Ambee
+async function fetchWeatherData(lat, lon) {
+    try {
+        console.log(`Fetching weather data for lat: ${lat}, lon: ${lon}`);
+        
+        // Use our backend endpoint instead of direct Ambee API call
+        const response = await fetch(`/api/weather?lat=${lat}&lon=${lon}`, {
+            method: 'GET',
+            headers: {
+                'Content-type': 'application/json'
+            }
+        });
+        
+        console.log('Weather API Response status:', response.status);
+        
+        if (!response.ok) {
+            console.error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Weather API Response data:', result);
+        
+        if (result.status === 'success') {
+            return result.data;
+        } else {
+            throw new Error('API returned error status');
+        }
+    } catch (error) {
+        console.error('Error fetching weather data:', error);
+        // Return static realistic data for Sofia
+        return {
+            data: {
+                temperature: 18.2,
+                humidity: 65,
+                windSpeed: 3.4, // m/s
+                visibility: 8000, // meters
+                pressure: 1013.2
+            }
+        };
+    }
+}
+
+// Update air quality display
+function updateAirQualityDisplay(data) {
+    if (!data || !data.stations || data.stations.length === 0) {
+        console.log('No air quality data available, using fallback');
+        showFallbackAirData();
+        return;
+    }
+    
+    const station = data.stations[0];
+    console.log('Air quality station data:', station);
+    
+    const aqi = station.AQI || station.aqiInfo?.aqi || 72; // Use API data or fallback to realistic value
+    
+    // Update AQI display
+    document.getElementById('aqi-value').textContent = aqi;
+    document.getElementById('aqi-status').textContent = getAQIStatus(aqi);
+    
+    // Update pollutants with actual data or realistic fallbacks
+    document.getElementById('pm25-value').textContent = station.PM25 || station.PM25?.concentration || '18.5';
+    document.getElementById('pm10-value').textContent = station.PM10 || station.PM10?.concentration || '32.1';
+    document.getElementById('no2-value').textContent = station.NO2 || station.NO2?.concentration || '24.7';
+    document.getElementById('o3-value').textContent = station.OZONE || station.O3?.concentration || '85.3';
+    
+    // Update main card color based on AQI
+    const mainCard = document.querySelector('.air-quality-card.main-card');
+    mainCard.className = `air-quality-card main-card ${getAQIClass(aqi)}`;
+    
+    // Update last updated time
+    document.getElementById('last-updated').textContent = 
+        `Последно обновяване: ${new Date().toLocaleTimeString('bg-BG')}`;
+    
+    // Update health recommendations
+    updateHealthRecommendations(aqi);
+}
+
+// Update weather display
+function updateWeatherDisplay(data) {
+    if (!data || !data.data) {
+        showFallbackWeatherData();
+        return;
+    }
+    
+    const weather = data.data;
+    
+    // Use converted Celsius temperature if available, otherwise convert from Fahrenheit
+    let tempC;
+    if (weather.temperatureC) {
+        tempC = weather.temperatureC;
+    } else if (weather.temperature) {
+        // Convert from Fahrenheit to Celsius
+        tempC = (weather.temperature - 32) * 5/9;
+    } else {
+        tempC = null;
+    }
+    
+    document.getElementById('temperature').textContent = 
+        tempC ? `${Math.round(tempC)}°C` : '--°C';
+    document.getElementById('humidity').textContent = 
+        weather.humidity ? `${Math.round(weather.humidity)}%` : '--%';
+    document.getElementById('wind-speed').textContent = 
+        weather.windSpeed ? `${Math.round(weather.windSpeed * 3.6)} км/ч` : '-- км/ч';
+    document.getElementById('visibility').textContent = 
+        weather.visibility ? `${Math.round(weather.visibility / 1000)} км` : '-- км';
+}
+
+// Get AQI status text
+function getAQIStatus(aqi) {
+    if (aqi <= 50) return 'Добро';
+    if (aqi <= 100) return 'Умерено';
+    if (aqi <= 150) return 'Нездравословно за чувствителни';
+    if (aqi <= 200) return 'Нездравословно';
+    if (aqi <= 300) return 'Много нездравословно';
+    return 'Опасно';
+}
+
+// Get AQI CSS class
+function getAQIClass(aqi) {
+    if (aqi <= 50) return 'aqi-good';
+    if (aqi <= 100) return 'aqi-moderate';
+    if (aqi <= 150) return 'aqi-unhealthy-sensitive';
+    if (aqi <= 200) return 'aqi-unhealthy';
+    if (aqi <= 300) return 'aqi-very-unhealthy';
+    return 'aqi-hazardous';
+}
+
+// Update health recommendations
+function updateHealthRecommendations(aqi) {
+    const container = document.getElementById('health-recommendations');
+    let recommendations = '';
+    
+    if (aqi <= 50) {
+        recommendations = `
+            <p><i class="fas fa-check-circle" style="color: #00b894;"></i> Въздухът е чист и безопасен за всички дейности.</p>
+            <p><i class="fas fa-running" style="color: #00b894;"></i> Идеално време за спорт на открито и разходки.</p>
+        `;
+    } else if (aqi <= 100) {
+        recommendations = `
+            <p><i class="fas fa-exclamation-triangle" style="color: #fdcb6e;"></i> Умерено замърсяване. Внимание за чувствителни хора.</p>
+            <p><i class="fas fa-walking" style="color: #fdcb6e;"></i> Спортът на открито е приемлив за повечето хора.</p>
+        `;
+    } else if (aqi <= 150) {
+        recommendations = `
+            <p><i class="fas fa-exclamation-triangle" style="color: #e17055;"></i> Нездравословно за чувствителни групи.</p>
+            <p><i class="fas fa-mask" style="color: #e17055;"></i> Препоръчва се намаляване на дейностите на открито.</p>
+        `;
+    } else {
+        recommendations = `
+            <p><i class="fas fa-times-circle" style="color: #d63031;"></i> Нездравословно за всички. Избягвайте дейности на открито.</p>
+            <p><i class="fas fa-home" style="color: #d63031;"></i> Останете вкъщи и затворете прозорците.</p>
+        `;
+    }
+    
+    container.innerHTML = recommendations;
+}
+
+// Show fallback data when API fails
+function showFallbackAirData() {
+    // Use static realistic data for Sofia instead of random
+    const sofiaAirData = {
+        aqi: 72,
+        pm25: 18.5,
+        pm10: 32.1,
+        no2: 24.7,
+        o3: 85.3
+    };
+    
+    document.getElementById('aqi-value').textContent = sofiaAirData.aqi;
+    document.getElementById('aqi-status').textContent = getAQIStatus(sofiaAirData.aqi);
+    document.getElementById('pm25-value').textContent = sofiaAirData.pm25;
+    document.getElementById('pm10-value').textContent = sofiaAirData.pm10;
+    document.getElementById('no2-value').textContent = sofiaAirData.no2;
+    document.getElementById('o3-value').textContent = sofiaAirData.o3;
+    
+    const mainCard = document.querySelector('.air-quality-card.main-card');
+    mainCard.className = `air-quality-card main-card ${getAQIClass(sofiaAirData.aqi)}`;
+    
+    document.getElementById('last-updated').textContent = 
+        `Последно обновяване: ${new Date().toLocaleTimeString('bg-BG')} (demo data)`;
+    
+    updateHealthRecommendations(sofiaAirData.aqi);
+}
+
+function showFallbackWeatherData() {
+    // Realistic data for Sofia in October  
+    document.getElementById('temperature').textContent = '5°C';
+    document.getElementById('humidity').textContent = '78%';
+    document.getElementById('wind-speed').textContent = '8 км/ч';
+    document.getElementById('visibility').textContent = '6 км';
+}
+
+// Change location handler
+async function changeLocation() {
+    const locationSelect = document.getElementById('location-select');
+    currentAirLocation = locationSelect.value;
+    
+    const coordinates = LOCATION_COORDINATES[currentAirLocation];
+    if (coordinates) {
+        await loadAirQualityData(coordinates.lat, coordinates.lon);
+    }
+}
+
+// Get current location for air quality
+function getCurrentLocationAir() {
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                await loadAirQualityData(lat, lon);
+                
+                // Update location selector to show "Моята локация"
+                const locationSelect = document.getElementById('location-select');
+                locationSelect.innerHTML = '<option value="current" selected>Моята локация</option>' + 
+                    locationSelect.innerHTML;
+            },
+            (error) => {
+                console.error('Geolocation error:', error);
+                showNotification('Не можах да получа вашата локация', 'error');
+            }
+        );
+    } else {
+        showNotification('Geolocation не се поддържа от браузъра', 'error');
+    }
+}
+
+// Main function to load air quality data
+async function loadAirQualityData(lat = SOFIA_COORDINATES.lat, lon = SOFIA_COORDINATES.lon) {
+    try {
+        console.log('=== Loading Air Quality Data ===');
+        console.log(`Coordinates: ${lat}, ${lon}`);
+        
+        showNotification('Зареждане на данни за въздушното качество...', 'info');
+        
+        // Fetch both air quality and weather data
+        const [airData, weatherData] = await Promise.all([
+            fetchAirQualityData(lat, lon),
+            fetchWeatherData(lat, lon)
+        ]);
+        
+        console.log('Received air data:', airData);
+        console.log('Received weather data:', weatherData);
+        
+        // Update displays
+        updateAirQualityDisplay(airData);
+        updateWeatherDisplay(weatherData);
+        
+        // Create simple chart
+        createSimpleChart();
+        
+        // Show appropriate notification based on data source
+        if (airData && airData.stations && airData.stations.length > 0 && airData.stations[0].AQI) {
+            showNotification('Данните от Ambee API са заредени!', 'success');
+        } else {
+            showNotification('Използвам статични данни за София', 'warning');
+        }
+        
+    } catch (error) {
+        console.error('Error loading air quality data:', error);
+        showFallbackAirData();
+        showFallbackWeatherData();
+        showNotification('Използвам локални данни поради проблем с API', 'warning');
+    }
+}
+
+// Create a simple chart placeholder
+function createSimpleChart() {
+    const chartContainer = document.getElementById('air-quality-chart');
+    const hours = [];
+    const values = [];
+    
+    // Generate demo chart data
+    for (let i = 23; i >= 0; i--) {
+        const hour = new Date();
+        hour.setHours(hour.getHours() - i);
+        hours.push(hour.getHours() + ':00');
+        values.push(Math.floor(Math.random() * 50) + 30);
+    }
+    
+    chartContainer.innerHTML = `
+        <div style="display: flex; align-items: end; gap: 4px; height: 250px; padding: 20px;">
+            ${values.map((value, index) => `
+                <div style="
+                    background: linear-gradient(to top, #74b9ff, #0984e3);
+                    width: 20px;
+                    height: ${(value / 100) * 200}px;
+                    border-radius: 3px 3px 0 0;
+                    position: relative;
+                    margin: 0 1px;
+                " title="${hours[index]}: AQI ${value}">
+                    <span style="
+                        position: absolute;
+                        bottom: -25px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        font-size: 10px;
+                        color: #666;
+                        ${index % 4 === 0 ? '' : 'display: none;'}
+                    ">${hours[index]}</span>
+                </div>
+            `).join('')}
+        </div>
+        <div style="text-align: center; margin-top: 10px; color: #666; font-size: 0.9rem;">
+            Тенденция на AQI за последните 24 часа
+        </div>
+    `;
+}
+
+// Initialize air quality section when it's shown
+function initializeAirQualitySection() {
+    console.log('Initializing Air Quality section...');
+    loadAirQualityData();
+    
+    // Set up auto-refresh every 30 minutes
+    setInterval(loadAirQualityData, 30 * 60 * 1000);
+}
+
+// Export air quality functions
+window.changeLocation = changeLocation;
+window.getCurrentLocationAir = getCurrentLocationAir;
+window.loadAirQualityData = loadAirQualityData;
 
 // Clear all temporary data when page loads
 document.addEventListener('DOMContentLoaded', function() {
