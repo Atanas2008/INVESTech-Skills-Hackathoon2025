@@ -6,6 +6,14 @@
     <title>PlantATree - Еко инициативи София</title>
     <link rel="stylesheet" href="design.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Geoapify Maps CSS and JS -->
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/@geoapify/leaflet-address-search-plugin@^1/dist/L.Control.GeoapifyAddressSearch.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <!-- Leaflet Draw for drawing shapes on map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    <script src="https://unpkg.com/@geoapify/leaflet-address-search-plugin@^1/dist/L.Control.GeoapifyAddressSearch.min.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -16,10 +24,10 @@
                 <span>PlantATree</span>
             </div>
             <ul class="nav-menu">
-                <li><a href="#home" class="nav-link">Начало</a></li>
-                <li><a href="#map" class="nav-link">Карта</a></li>
-                <li><a href="#feed" class="nav-link">Еко действия</a></li>
-                <li><a href="#profile" class="nav-link">Профил</a></li>
+                <li><a href="#" onclick="showSection('home')" class="nav-link">Начало</a></li>
+                <li><a href="#" onclick="showSection('map')" class="nav-link">Карта</a></li>
+                <li><a href="#" onclick="showSection('feed')" class="nav-link">Еко действия</a></li>
+                <li><a href="#" onclick="showSection('profile')" class="nav-link">Профил</a></li>
             </ul>
             <div class="auth-buttons">
                 <button class="btn-login">Вход</button>
@@ -64,24 +72,265 @@
             <h2><i class="fas fa-map-marked-alt"></i> Карта на зелените зони</h2>
             <p>Открий паркове, еко пътеки и велоалеи в София</p>
         </div>
+        
+        <!-- Sofia Redesign Tools Panel -->
+        <div class="sofia-tools-panel">
+            <h3><i class="fas fa-hammer"></i> Инструменти за преустройване на София</h3>
+            <div class="temporary-notice">
+                <i class="fas fa-info-circle"></i>
+                <span>Всички промени са временни и ще се загубят при презареждане на страницата</span>
+            </div>
+            <div class="redesign-tools">
+                <button class="redesign-tool active" id="select-tool" onclick="setRedesignTool('select')">
+                    <i class="fas fa-mouse-pointer"></i>
+                    Селектиране
+                </button>
+                <button class="redesign-tool" id="park-tool" onclick="setRedesignTool('park')">
+                    <i class="fas fa-tree"></i>
+                    Парк
+                </button>
+                <button class="redesign-tool" id="alley-tool" onclick="setRedesignTool('alley')">
+                    <i class="fas fa-road"></i>
+                    Алея/Улица
+                </button>
+                <button class="redesign-tool" id="green-zone-tool" onclick="setRedesignTool('greenzone')">
+                    <i class="fas fa-leaf"></i>
+                    Зелена зона
+                </button>
+                <button class="redesign-tool" id="bike-lane-tool" onclick="setRedesignTool('bikelane')">
+                    <i class="fas fa-bicycle"></i>
+                    Велоалея
+                </button>
+                <button class="redesign-tool" id="clear-tool" onclick="clearAllRedesigns()">
+                    <i class="fas fa-eraser"></i>
+                    Изчисти всичко
+                </button>
+            </div>
+            <div class="current-tool-info">
+                <span id="current-redesign-tool">Избран инструмент: Селектиране област</span>
+                <small>Кликнете и влачете върху картата за да селектирате област за преустройство. Промените са временни.</small>
+            </div>
+        </div>
+        
         <div class="map-container">
             <div id="map-canvas" class="map-canvas">
-                <div class="map-placeholder">
+                <div class="map-placeholder" id="map-placeholder">
                     <i class="fas fa-map"></i>
-                    <p>Картата се зарежда...</p>
+                    <p>Кликнете "Покажи карта" за да заредите интерактивната карта</p>
+                    <button onclick="loadMapWithRedesign()" style="background: #7bc142; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
+                        🗺️ Покажи карта на София
+                    </button>
                 </div>
             </div>
             <div class="map-sidebar">
+                <!-- Sofia Stats Panel -->
+                <div class="sofia-sidebar-stats">
+                    <h3><i class="fas fa-city"></i> София</h3>
+                    <div class="sidebar-stats-grid">
+                        <div class="sidebar-stat-item">
+                            <i class="fas fa-tree stat-icon"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Зеленина</span>
+                                <span class="stat-value" id="sidebar-green-percent">30%</span>
+                            </div>
+                        </div>
+                        <div class="sidebar-stat-item">
+                            <i class="fas fa-leaf stat-icon"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Паркове</span>
+                                <span class="stat-value" id="sidebar-parks-count">126</span>
+                            </div>
+                        </div>
+                        <div class="sidebar-stat-item">
+                            <i class="fas fa-users stat-icon"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Население</span>
+                                <span class="stat-value" id="sidebar-population">1.4М</span>
+                            </div>
+                        </div>
+                        <div class="sidebar-stat-item">
+                            <i class="fas fa-expand-arrows-alt stat-icon"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Площ</span>
+                                <span class="stat-value" id="sidebar-area">492 км²</span>
+                            </div>
+                        </div>
+                        <div class="sidebar-stat-item">
+                            <i class="fas fa-seedling stat-icon"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Зелени зони</span>
+                                <span class="stat-value" id="sidebar-green-area">147.6 км²</span>
+                            </div>
+                        </div>
+                        <div class="sidebar-stat-item air-quality-item">
+                            <i class="fas fa-wind stat-icon"></i>
+                            <div class="stat-info">
+                                <span class="stat-label">Качество въздух</span>
+                                <span class="stat-value" id="sidebar-air-quality">72</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <h3>Филтри</h3>
                 <div class="filter-group">
-                    <label><input type="checkbox" checked> Паркове</label>
-                    <label><input type="checkbox" checked> Еко пътеки</label>
-                    <label><input type="checkbox" checked> Велоалеи</label>
-                    <label><input type="checkbox" checked> Места за засаждане</label>
+                    <label><input type="checkbox" checked onchange="filterLocationsByType()"> Паркове</label>
+                    <label><input type="checkbox" checked onchange="filterLocationsByType()"> Еко пътеки</label>
+                    <label><input type="checkbox" checked onchange="filterLocationsByType()"> Велоалеи</label>
+                    <label><input type="checkbox" checked onchange="filterLocationsByType()"> Места за засаждане</label>
                 </div>
                 <button class="btn-primary" onclick="showAddLocationModal()">
                     <i class="fas fa-plus"></i> Добави локация
                 </button>
+            </div>
+        </div>
+        
+        <!-- Sofia Facts Panel -->
+        <div class="sofia-facts-panel" id="sofia-facts-panel" style="display: none;">
+            <h3><i class="fas fa-lightbulb"></i> Знаете ли, че...</h3>
+            <div class="fact-container">
+                <div class="fact-item" id="current-fact">
+                    <p>Зареждане на интересни факти за София...</p>
+                </div>
+                <button class="fact-btn" onclick="showRandomFact()">
+                    <i class="fas fa-refresh"></i> Нов факт
+                </button>
+            </div>
+        </div>
+    </section>
+
+
+        
+        <div class="builder-container" style="display: none;">
+            <!-- City Stats Panel -->
+            <div class="city-stats-panel">
+                <h3><i class="fas fa-chart-line"></i> Статистики на града</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="population">5000</span>
+                            <span class="stat-label">Население</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🌿</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="eco-score">75</span>
+                            <span class="stat-label">Еко Рейтинг</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="budget">25000</span>
+                            <span class="stat-label">Бюджет</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">😊</div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="happiness">80</span>
+                            <span class="stat-label">Щастие %</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Building Tools Panel -->
+            <div class="building-tools-panel">
+                <h3><i class="fas fa-tools"></i> Инструменти за строене</h3>
+                <div class="tool-categories">
+                    <div class="tool-category">
+                        <h4>🌳 Зелени зони</h4>
+                        <div class="tools-grid">
+                            <button class="tool-btn" onclick="selectTool('park')" data-tool="park">
+                                <i class="fas fa-tree"></i>
+                                <span>Парк</span>
+                                <small>Цена: 500</small>
+                            </button>
+                            <button class="tool-btn" onclick="selectTool('forest')" data-tool="forest">
+                                <i class="fas fa-seedling"></i>
+                                <span>Гора</span>
+                                <small>Цена: 800</small>
+                            </button>
+                            <button class="tool-btn" onclick="selectTool('garden')" data-tool="garden">
+                                <i class="fas fa-leaf"></i>
+                                <span>Градина</span>
+                                <small>Цена: 300</small>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-category">
+                        <h4>🏢 Сгради</h4>
+                        <div class="tools-grid">
+                            <button class="tool-btn" onclick="selectTool('residential')" data-tool="residential">
+                                <i class="fas fa-home"></i>
+                                <span>Жилищна</span>
+                                <small>Цена: 1200</small>
+                            </button>
+                            <button class="tool-btn" onclick="selectTool('commercial')" data-tool="commercial">
+                                <i class="fas fa-store"></i>
+                                <span>Търговска</span>
+                                <small>Цена: 1500</small>
+                            </button>
+                            <button class="tool-btn" onclick="selectTool('industrial')" data-tool="industrial">
+                                <i class="fas fa-industry"></i>
+                                <span>Индустриална</span>
+                                <small>Цена: 2000</small>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-category">
+                        <h4>🚗 Инфраструктура</h4>
+                        <div class="tools-grid">
+                            <button class="tool-btn" onclick="selectTool('road')" data-tool="road">
+                                <i class="fas fa-road"></i>
+                                <span>Път</span>
+                                <small>Цена: 100</small>
+                            </button>
+                            <button class="tool-btn" onclick="selectTool('bike-path')" data-tool="bike-path">
+                                <i class="fas fa-bicycle"></i>
+                                <span>Велоалея</span>
+                                <small>Цена: 200</small>
+                            </button>
+                            <button class="tool-btn" onclick="selectTool('solar')" data-tool="solar">
+                                <i class="fas fa-solar-panel"></i>
+                                <span>Соларни панели</span>
+                                <small>Цена: 1000</small>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="tool-category">
+                        <h4>🛠️ Utilities</h4>
+                        <div class="tools-grid">
+                            <button class="tool-btn" onclick="selectTool('demolish')" data-tool="demolish">
+                                <i class="fas fa-trash"></i>
+                                <span>Съборяване</span>
+                                <small>Безплатно</small>
+                            </button>
+                            <button class="tool-btn" onclick="selectTool('info')" data-tool="info">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Информация</span>
+                                <small>Безплатно</small>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- City Grid -->
+            <div class="city-grid-container">
+                <h3><i class="fas fa-th"></i> Планировка на града</h3>
+                <div class="selected-tool-info" id="selected-tool-info">
+                    <span>Избран инструмент: <strong id="current-tool">Няма</strong></span>
+                </div>
+                <div class="city-grid" id="city-grid">
+                    <!-- Grid cells will be generated by JavaScript -->
+                </div>
             </div>
         </div>
     </section>

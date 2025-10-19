@@ -92,6 +92,18 @@ def init_db():
         )
     ''')
     
+    # Sofia Redesigns table for map redesign functionality
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS sofia_redesigns (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            type TEXT NOT NULL,
+            geometry TEXT NOT NULL,
+            coordinates TEXT NOT NULL,
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
     # Insert sample data if tables are empty
     cursor.execute('SELECT COUNT(*) FROM locations')
     if cursor.fetchone()[0] == 0:
@@ -418,6 +430,125 @@ def approve_location(location_id):
     conn.close()
     
     return jsonify({'success': True, 'message': 'Локацията е одобрена!'})
+
+# Sofia Redesign API Endpoints
+@app.route('/api/redesigns', methods=['GET'])
+def get_redesigns():
+    """Get all Sofia redesigns"""
+    try:
+        conn = sqlite3.connect('plantatree.db')
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM sofia_redesigns ORDER BY created_at DESC')
+        redesigns = []
+        for row in cursor.fetchall():
+            redesigns.append({
+                'id': row[0],
+                'type': row[1],
+                'geometry': json.loads(row[2]),
+                'coordinates': json.loads(row[3]),
+                'description': row[4],
+                'created_at': row[5]
+            })
+        
+        conn.close()
+        return jsonify(redesigns)
+    except Exception as e:
+        print(f"Error getting redesigns: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/redesigns', methods=['POST'])
+def add_redesign():
+    """Add new Sofia redesign"""
+    try:
+        conn = sqlite3.connect('plantatree.db')
+        cursor = conn.cursor()
+        data = request.get_json()
+        
+        redesign_type = data.get('type')
+        geometry = json.dumps(data.get('geometry'))
+        coordinates = json.dumps(data.get('coordinates'))
+        description = data.get('description', '')
+        
+        cursor.execute(
+            'INSERT INTO sofia_redesigns (type, geometry, coordinates, description) VALUES (?, ?, ?, ?)',
+            (redesign_type, geometry, coordinates, description)
+        )
+        conn.commit()
+        
+        redesign_id = cursor.lastrowid
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Преустройството е запазено!',
+            'id': redesign_id
+        })
+    except Exception as e:
+        print(f"Error adding redesign: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/redesigns/<int:redesign_id>', methods=['PUT'])
+def update_redesign(redesign_id):
+    """Update Sofia redesign"""
+    try:
+        conn = sqlite3.connect('plantatree.db')
+        cursor = conn.cursor()
+        data = request.get_json()
+        
+        geometry = json.dumps(data.get('geometry'))
+        coordinates = json.dumps(data.get('coordinates'))
+        description = data.get('description', '')
+        
+        cursor.execute(
+            'UPDATE sofia_redesigns SET geometry = ?, coordinates = ?, description = ? WHERE id = ?',
+            (geometry, coordinates, description, redesign_id)
+        )
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Преустройството е обновено!'
+        })
+    except Exception as e:
+        print(f"Error updating redesign: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/redesigns/<int:redesign_id>', methods=['DELETE'])
+def delete_redesign(redesign_id):
+    """Delete Sofia redesign"""
+    try:
+        conn = sqlite3.connect('plantatree.db')
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM sofia_redesigns WHERE id = ?', (redesign_id,))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Преустройството е изтрито!'
+        })
+    except Exception as e:
+        print(f"Error deleting redesign: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/redesigns', methods=['DELETE'])
+def clear_all_redesigns():
+    """Clear all Sofia redesigns"""
+    try:
+        conn = sqlite3.connect('plantatree.db')
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM sofia_redesigns')
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Всички преустройства са изчистени!'
+        })
+    except Exception as e:
+        print(f"Error clearing redesigns: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 if __name__ == '__main__':
     print("🌱 PlantATree Server стартира...")

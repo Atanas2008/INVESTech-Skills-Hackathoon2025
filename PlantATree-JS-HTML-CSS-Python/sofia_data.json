@@ -1,0 +1,122 @@
+{
+  "city_info": {
+    "name": "София",
+    "total_area_km2": 492,
+    "population": 1396000,
+    "population_density_per_km2": 2838,
+    "altitude_m": 550
+  },
+  "green_data": {
+    "total_green_area_km2": 231.2,
+    "green_percentage": 47.0,
+    "parks_count": 126,
+    "protected_areas_count": 8,
+    "major_parks": [
+      {
+        "name": "Борисова градина",
+        "area_hectares": 300,
+        "coordinates": [42.6755, 23.3348],
+        "description": "Най-големият парк в София, създаден през 1884 г."
+      },
+      {
+        "name": "Витоша парк", 
+        "area_hectares": 100,
+        "coordinates": [42.6447, 23.2750],
+        "description": "Парк в подножието на Витоша"
+      },
+      {
+        "name": "Южен парк",
+        "area_hectares": 380,
+        "coordinates": [42.6420, 23.3190],
+        "description": "Голям парк в южната част на София"
+      },
+      {
+        "name": "Западен парк",
+        "area_hectares": 160,
+        "coordinates": [42.6950, 23.2980],
+        "description": "Парк в западната част на града"
+      },
+      {
+        "name": "Северен парк",
+        "area_hectares": 220,
+        "coordinates": [42.7200, 23.3200],
+        "description": "Парк в северната част на София"
+      }
+    ]
+  },
+  "environmental_data": {
+    "air_quality_index": 72,
+    "co2_emissions_tons_per_year": 3200000,
+    "recycling_rate_percentage": 35,
+    "renewable_energy_percentage": 18,
+    "water_quality_rating": "Добра",
+    "noise_pollution_db": 65
+  },
+  "districts": [
+    {
+      "name": "Център",
+      "population": 85000,
+      "green_percentage": 15,
+      "coordinates": [42.6977, 23.3219]
+    },
+    {
+      "name": "Лозенец", 
+      "population": 65000,
+      "green_percentage": 35,
+      "coordinates": [42.6750, 23.3400]
+    },
+    {
+      "name": "Младост",
+      "population": 145000,
+      "green_percentage": 25,
+      "coordinates": [42.6550, 23.3780]
+    },
+    {
+      "name": "Люлин",
+      "population": 120000,
+      "green_percentage": 20,
+      "coordinates": [42.7100, 23.2800]
+    },
+    {
+      "name": "Витоша",
+      "population": 95000,
+      "green_percentage": 45,
+      "coordinates": [42.6400, 23.2900]
+    },
+    {
+      "name": "Овча купел",
+      "population": 75000,
+      "green_percentage": 30,
+      "coordinates": [42.6800, 23.2600]
+    }
+  ],
+  "eco_projects": [
+    {
+      "name": "Зелена София 2025",
+      "description": "Програма за увеличаване на зелените площи с 15%",
+      "status": "активна",
+      "budget_bgn": 50000000
+    },
+    {
+      "name": "Велоалеи София",
+      "description": "Изграждане на 150 км нови велосипедни алеи",
+      "status": "планирана", 
+      "budget_bgn": 25000000
+    },
+    {
+      "name": "Чист въздух",
+      "description": "Намаляване на емисиите с 30% до 2030 г.",
+      "status": "активна",
+      "budget_bgn": 80000000
+    }
+  ],
+  "facts": [
+    "София е една от най-зелените столици в Европа",
+    "30% от територията на града са зелени площи",
+    "Борисова градина е по-стара от Централ парк в Ню Йорк",
+    "В София има над 126 официални парка",
+    "Планината Витоша е на 20 минути от центъра",
+    "София има 8 защитени природни територии",
+    "Градът има най-много минерални извори в Европа"
+  ]
+}

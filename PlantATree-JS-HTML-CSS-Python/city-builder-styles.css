@@ -1,0 +1,126 @@
+/* Building Types on Grid */
+.grid-cell.park {
+    background-color: #90EE90;
+    position: relative;
+}
+
+.grid-cell.park::after {
+    content: '🌳';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+}
+
+.grid-cell.forest {
+    background-color: #228B22;
+    position: relative;
+}
+
+.grid-cell.forest::after {
+    content: '🌲';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+}
+
+.grid-cell.garden {
+    background-color: #FFB6C1;
+    position: relative;
+}
+
+.grid-cell.garden::after {
+    content: '🌸';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+}
+
+.grid-cell.residential {
+    background-color: #87CEEB;
+    position: relative;
+}
+
+.grid-cell.residential::after {
+    content: '🏠';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+}
+
+.grid-cell.commercial {
+    background-color: #DDA0DD;
+    position: relative;
+}
+
+.grid-cell.commercial::after {
+    content: '🏢';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+}
+
+.grid-cell.industrial {
+    background-color: #CD853F;
+    position: relative;
+}
+
+.grid-cell.industrial::after {
+    content: '🏭';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+}
+
+.grid-cell.road {
+    background-color: #696969;
+    position: relative;
+}
+
+.grid-cell.road::after {
+    content: '🛣️';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+}
+
+.grid-cell.bike-path {
+    background-color: #32CD32;
+    position: relative;
+}
+
+.grid-cell.bike-path::after {
+    content: '🚴';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+}
+
+.grid-cell.solar {
+    background-color: #FFD700;
+    position: relative;
+}
+
+.grid-cell.solar::after {
+    content: '☀️';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+}

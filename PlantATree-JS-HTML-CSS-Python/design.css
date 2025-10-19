@@ -199,6 +199,10 @@ body {
     display: none;
 }
 
+.hero.hidden {
+    display: none;
+}
+
 .section-header {
     text-align: center;
     margin-bottom: 3rem;
@@ -584,6 +588,508 @@ body {
     color: #666;
 }
 
+/* City Builder Styles */
+.builder-container {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.city-stats-panel, .building-tools-panel {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    height: fit-content;
+}
+
+.city-stats-panel h3, .building-tools-panel h3 {
+    color: #2d5a27;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.stat-card {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-left: 4px solid #7bc142;
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #2d5a27;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.tool-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.tool-category h4 {
+    color: #2d5a27;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.tools-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+.tool-btn {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    text-align: center;
+}
+
+.tool-btn:hover {
+    border-color: #7bc142;
+    background: #f8fff8;
+    transform: translateY(-2px);
+}
+
+.tool-btn.selected {
+    border-color: #7bc142;
+    background: #7bc142;
+    color: white;
+}
+
+.tool-btn i {
+    font-size: 1.2rem;
+}
+
+.tool-btn span {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.tool-btn small {
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+
+.city-grid-container {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.city-grid-container h3 {
+    color: #2d5a27;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.selected-tool-info {
+    background: #e8f5e8;
+    padding: 0.75rem;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.city-grid {
+    display: grid;
+    grid-template-columns: repeat(20, 1fr);
+    grid-template-rows: repeat(15, 1fr);
+    gap: 1px;
+    background: #ddd;
+    border: 2px solid #7bc142;
+    border-radius: 5px;
+    overflow: hidden;
+    aspect-ratio: 4/3;
+    max-width: 100%;
+}
+
+.grid-cell {
+    background: #e8f5e8;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    position: relative;
+}
+
+.grid-cell:hover {
+    background: #d4f1d4;
+    transform: scale(1.1);
+    z-index: 10;
+    border-radius: 3px;
+}
+
+.grid-cell.park { background: #2ecc71; color: white; }
+.grid-cell.forest { background: #27ae60; color: white; }
+.grid-cell.garden { background: #58d68d; color: white; }
+.grid-cell.residential { background: #3498db; color: white; }
+.grid-cell.commercial { background: #f39c12; color: white; }
+.grid-cell.industrial { background: #95a5a6; color: white; }
+.grid-cell.road { background: #34495e; color: white; }
+.grid-cell.bike-path { background: #16a085; color: white; }
+.grid-cell.solar { background: #f1c40f; color: black; }
+
+.grid-cell.park::before { content: '🌳'; }
+.grid-cell.forest::before { content: '🌲'; }
+.grid-cell.garden::before { content: '🌸'; }
+.grid-cell.residential::before { content: '🏠'; }
+.grid-cell.commercial::before { content: '🏢'; }
+.grid-cell.industrial::before { content: '🏭'; }
+.grid-cell.road::before { content: '🛣️'; }
+.grid-cell.bike-path::before { content: '🚴'; }
+.grid-cell.solar::after {
+    content: '☀️';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+}
+
+/* Sofia Redesign Tools Panel */
+.sofia-tools-panel {
+    background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+    border: 2px solid #7bc142;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(123, 193, 66, 0.2);
+}
+
+.sofia-tools-panel h3 {
+    color: #2d5016;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.temporary-notice {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #856404;
+    font-size: 0.9rem;
+}
+
+.temporary-notice i {
+    color: #f39c12;
+}
+
+.redesign-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.redesign-tool {
+    background: white;
+    border: 2px solid #7bc142;
+    border-radius: 8px;
+    padding: 10px 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #2d5016;
+    transition: all 0.3s ease;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.redesign-tool:hover {
+    background: #7bc142;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(123, 193, 66, 0.3);
+}
+
+.redesign-tool.active {
+    background: #7bc142;
+    color: white;
+    box-shadow: 0 4px 12px rgba(123, 193, 66, 0.4);
+}
+
+.redesign-tool i {
+    font-size: 1.1rem;
+}
+
+.current-tool-info {
+    background: rgba(123, 193, 66, 0.1);
+    border-radius: 8px;
+    padding: 12px;
+    border-left: 4px solid #7bc142;
+}
+
+.current-tool-info span {
+    font-weight: 600;
+    color: #2d5016;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.current-tool-info small {
+    color: #5a7c32;
+    font-style: italic;
+}
+
+/* Responsive design for tools panel */
+@media (max-width: 768px) {
+    .redesign-tools {
+        flex-direction: column;
+    }
+    
+    .redesign-tool {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .sofia-tools-panel {
+        padding: 15px;
+    }
+}
+
+
+
+/* Map container adjustments */
+.map-container {
+    position: relative;
+    height: 600px;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Sofia Sidebar Stats */
+.sofia-sidebar-stats {
+    background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+    border: 2px solid #7bc142;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(123, 193, 66, 0.1);
+}
+
+.sofia-sidebar-stats h3 {
+    color: #2d5016;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    justify-content: center;
+    border-bottom: 2px solid #7bc142;
+    padding-bottom: 8px;
+}
+
+.sidebar-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.sidebar-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #7bc142;
+}
+
+.stat-icon {
+    font-size: 1.2rem;
+    width: 32px;
+    text-align: center;
+    color: #7bc142;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.sidebar-stat-item .stat-label {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.sidebar-stat-item .stat-value {
+    font-weight: bold;
+    color: #2d5016;
+    font-size: 1rem;
+}
+
+.air-quality-item .stat-value {
+    background: #fff3cd;
+    color: #856404;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+}
+
+/* Adjust map sidebar width */
+.map-sidebar {
+    min-width: 280px;
+}
+
+@media (max-width: 768px) {
+    .sidebar-stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    
+    .sidebar-stat-item {
+        padding: 8px;
+        gap: 8px;
+    }
+    
+    .stat-icon {
+        font-size: 1rem;
+        width: 24px;
+    }
+    
+    .sidebar-stat-item .stat-value {
+        font-size: 0.9rem;
+    }
+}
+
+/* Sofia Facts Panel */
+.sofia-facts-panel {
+    background: linear-gradient(135deg, #f8f9fa, #e8f5e8);
+    border: 2px solid #7bc142;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 4px 15px rgba(123, 193, 66, 0.1);
+}
+
+.sofia-facts-panel h3 {
+    color: #2d5016;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.fact-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.fact-item {
+    flex: 1;
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    border-left: 4px solid #7bc142;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.fact-item p {
+    margin: 0;
+    color: #2d5016;
+    font-size: 1rem;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+.fact-btn {
+    background: #7bc142;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 15px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.fact-btn:hover {
+    background: #5a9031;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(123, 193, 66, 0.3);
+}
+
+.fact-btn i {
+    margin-right: 5px;
+}
+
+@media (max-width: 768px) {
+    .fact-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .fact-btn {
+        width: 100%;
+    }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .nav-container {
@@ -631,5 +1137,23 @@ body {
 
     .section {
         padding: 40px 1rem;
+    }
+
+    .builder-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tools-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .city-grid {
+        grid-template-columns: repeat(15, 1fr);
+        grid-template-rows: repeat(12, 1fr);
     }
 }
