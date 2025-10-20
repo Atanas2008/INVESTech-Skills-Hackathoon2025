@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, g
 from flask_cors import CORS
 import json
 import os
@@ -7,22 +7,99 @@ import sqlite3
 from werkzeug.utils import secure_filename
 import requests
 import google.generativeai as genai
+import time
 
 from dotenv import load_dotenv
 load_dotenv()  # Load environment variables from .env
 
+# Environment Variables Validation
+def validate_environment():
+    """Validate required environment variables"""
+    required_vars = {
+        'SECRET_KEY': 'Flask secret key for sessions',
+        'AMBEE_API_KEY': 'Air quality API key',
+    }
+    
+    missing_vars = []
+    for var, description in required_vars.items():
+        if not os.getenv(var):
+            missing_vars.append(f"  • {var}: {description}")
+    
+    if missing_vars:
+        print("❌ Missing required environment variables:")
+        print("\n".join(missing_vars))
+        print("📝 Please update your .env file with the required values.")
+        return False
+    return True
+
+# Validate environment on startup
+if not validate_environment():
+    print("🛑 Server cannot start due to missing configuration.")
+    exit(1)
+
+# Import Express.js-style enhancements (with error handling)
+try:
+    from middleware import (
+        request_logger, rate_limit, require_auth, validate_json, 
+        handle_errors, add_cors_headers, add_security_headers
+    )
+    MIDDLEWARE_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ Middleware not available: {e}")
+    MIDDLEWARE_AVAILABLE = False
+
+try:
+    from routes_v1 import api_v1, admin_routes
+    ROUTES_V1_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ Routes V1 not available: {e}")
+    ROUTES_V1_AVAILABLE = False
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all domains
 
-# Ambee API Configuration
-AMBEE_API_KEY = 'bdeedc716f3882fa7005eaf1c617bdeb943df52c1b3f3cc43b6334daf19689cc'
-AMBEE_BASE_URL = 'https://api.ambeedata.com'
+# Express.js-style middleware registration
+@app.before_request
+def before_request():
+    g.start_time = time.time()
 
-# Configuration
-app.config['SECRET_KEY'] = 'your-secret-key-here'
-app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+@app.after_request
+def after_request(response):
+    # Apply Express.js-style middleware if available
+    if MIDDLEWARE_AVAILABLE:
+        response = add_cors_headers(response)
+        response = add_security_headers(response)
+    else:
+        # Basic CORS and security headers
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+    
+    # Log request (like Morgan middleware)
+    if hasattr(g, 'start_time'):
+        duration = round((time.time() - g.start_time) * 1000, 2)
+        print(f"{request.method} {request.path} - {response.status_code} - {duration}ms")
+    
+    return response
+
+# Register blueprints (like Express.js routers) if available
+if ROUTES_V1_AVAILABLE:
+    app.register_blueprint(api_v1)
+    app.register_blueprint(admin_routes)
+    print("✅ V1 API Routes registered")
+else:
+    print("⚠️ V1 API Routes not available - using legacy routes")
+
+# Ambee API Configuration from environment
+AMBEE_API_KEY = os.getenv('AMBEE_API_KEY')
+AMBEE_BASE_URL = os.getenv('AMBEE_BASE_URL', 'https://api.ambeedata.com')
+
+# Configuration from environment
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback-secret-key')
+app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', 'uploads')
+app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_CONTENT_LENGTH', '16777216'))  # 16MB max file size
 
 # Cloud database configuration
 CLOUD_DB_URL = os.environ.get('DATABASE_URL')  # For Heroku/Railway/etc
@@ -181,14 +258,21 @@ init_db()
 # Google Generative AI (Gemini) configuration
 import os
 from dotenv import load_dotenv
-import google.generativeai as genai
+try:
+    import google.generativeai as genai
+    GENAI_AVAILABLE = True
+except ImportError:
+    print("⚠️ Google Generative AI not available - chat functionality disabled")
+    GENAI_AVAILABLE = False
+    genai = None
 
-load_dotenv()
+# Get API key from environment (loaded above)
 GENAI_API_KEY = os.getenv('GENAI_API_KEY')
 GEMINI_MODEL = None
-if GENAI_API_KEY:
-    genai.configure(api_key=GENAI_API_KEY)
+
+if GENAI_AVAILABLE and GENAI_API_KEY:
     try:
+        genai.configure(api_key=GENAI_API_KEY)
         GEMINI_MODEL = genai.GenerativeModel(
             model_name='gemini-2.5-flash',
             system_instruction=(
@@ -203,9 +287,73 @@ if GENAI_API_KEY:
     except Exception as e:
         print(f"❌ Gemini грешка: {e}")
         GEMINI_MODEL = None
+elif not GENAI_AVAILABLE:
+    print("❌ Google Generative AI не е инсталиран")
 else:
-    print("❌ Липсва GENAI_API_KEY в .env")
+    print("ℹ️ GENAI_API_KEY not set - AI chat functionality will be disabled")
 # Routes
+# Express.js-style API info endpoint
+@app.route('/api', methods=['GET'])
+def api_info():
+    """API information endpoint (like Express.js API documentation)"""
+    return jsonify({
+        'name': 'PlantATree API',
+        'version': '1.0.0',
+        'description': 'Еко платформа за София API',
+        'endpoints': {
+            'v1': '/api/v1/',
+            'admin': '/api/admin/',
+            'health': '/api/health',
+            'docs': '/api/docs'
+        },
+        'features': [
+            'Locations management',
+            'Eco actions tracking',
+            'Real-time statistics',
+            'Air quality data',
+            'Weather information',
+            'AI chat assistant'
+        ],
+        'timestamp': datetime.now().isoformat()
+    })
+
+# Express.js-style health check
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Comprehensive health check endpoint"""
+    try:
+        # Test database connection
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT 1')
+        db_status = 'healthy'
+        conn.close()
+    except Exception as e:
+        db_status = f'unhealthy: {str(e)}'
+    
+    # Test external APIs
+    external_apis = {}
+    try:
+        # Test a simple request to check connectivity
+        response = requests.get('https://httpbin.org/status/200', timeout=5)
+        external_apis['connectivity'] = 'healthy' if response.status_code == 200 else 'unhealthy'
+    except Exception:
+        external_apis['connectivity'] = 'unhealthy'
+    
+    overall_status = 'healthy' if db_status == 'healthy' and external_apis['connectivity'] == 'healthy' else 'degraded'
+    
+    return jsonify({
+        'status': overall_status,
+        'timestamp': datetime.now().isoformat(),
+        'services': {
+            'database': db_status,
+            'external_apis': external_apis,
+            'server': 'healthy'
+        },
+        'uptime_seconds': time.time() - app.config.get('START_TIME', time.time()),
+        'version': '1.0.0'
+    })
+
 @app.route('/')
 def index():
     """Serve the main HTML page"""
@@ -581,14 +729,73 @@ def uploaded_file(filename):
     """Serve uploaded files"""
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# Error handlers
+# Express.js-style comprehensive error handlers
+@app.errorhandler(400)
+def bad_request(error):
+    return jsonify({
+        'error': 'Bad Request',
+        'message': 'Invalid request format or parameters',
+        'status_code': 400,
+        'timestamp': datetime.now().isoformat()
+    }), 400
+
+@app.errorhandler(401)
+def unauthorized(error):
+    return jsonify({
+        'error': 'Unauthorized',
+        'message': 'Authentication required',
+        'status_code': 401,
+        'timestamp': datetime.now().isoformat()
+    }), 401
+
+@app.errorhandler(403)
+def forbidden(error):
+    return jsonify({
+        'error': 'Forbidden',
+        'message': 'Access denied',
+        'status_code': 403,
+        'timestamp': datetime.now().isoformat()
+    }), 403
+
 @app.errorhandler(404)
 def not_found(error):
-    return jsonify({'error': 'Ресурсът не е намерен'}), 404
+    return jsonify({
+        'error': 'Not Found',
+        'message': 'Ресурсът не е намерен',
+        'status_code': 404,
+        'timestamp': datetime.now().isoformat()
+    }), 404
+
+@app.errorhandler(429)
+def rate_limit_exceeded(error):
+    return jsonify({
+        'error': 'Too Many Requests',
+        'message': 'Rate limit exceeded. Please try again later.',
+        'status_code': 429,
+        'timestamp': datetime.now().isoformat()
+    }), 429
 
 @app.errorhandler(500)
 def internal_error(error):
-    return jsonify({'error': 'Вътрешна грешка на сървъра'}), 500
+    return jsonify({
+        'error': 'Internal Server Error',
+        'message': 'Вътрешна грешка на сървъра',
+        'status_code': 500,
+        'timestamp': datetime.now().isoformat()
+    }), 500
+
+# Global exception handler
+@app.errorhandler(Exception)
+def handle_unexpected_error(error):
+    # Log the error for debugging
+    app.logger.error(f'Unexpected error: {str(error)}', exc_info=True)
+    
+    return jsonify({
+        'error': 'Internal Server Error',
+        'message': 'An unexpected error occurred',
+        'status_code': 500,
+        'timestamp': datetime.now().isoformat()
+    }), 500
 
 # Admin routes (for future implementation)
 @app.route('/api/admin/locations/pending', methods=['GET'])
@@ -917,6 +1124,9 @@ def chat():
     if not user_message:
         return jsonify({'error': 'No message provided'}), 400
 
+    if not GENAI_AVAILABLE:
+        return jsonify({'error': 'AI chat not available. Google Generative AI not installed.'}), 503
+
     if GEMINI_MODEL is None:
         return jsonify({'error': 'Gemini model not configured. Set GENAI_API_KEY in environment.'}), 500
 
@@ -930,8 +1140,62 @@ def chat():
         print(f"Gemini request error: {e}")
         return jsonify({'error': str(e)}), 500
 
+# Express.js-style startup configuration
+def create_app():
+    """Application factory pattern (like Express.js app creation)"""
+    # Set startup time for uptime tracking
+    app.config['START_TIME'] = time.time()
+    
+    # Configure logging
+    import logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
+    # Initialize database
+    init_db()
+    
+    return app
+
 if __name__ == '__main__':
-    print("🌱 PlantATree Server стартира...")
-    print("📍 Отворете http://localhost:5000 в браузъра")
-    print("🔧 За спиране използвайте Ctrl+C")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Create and configure app
+    app = create_app()
+    
+    # Express.js-style startup messages
+    print("\n" + "="*50)
+    print("🌱 PlantATree Server Starting...")
+    print("="*50)
+    print(f"� Environment: {'Development' if app.debug else 'Production'}")
+    print(f"�📍 Server URL: http://localhost:5000")
+    print(f"🔗 API Endpoints:")
+    print(f"   • API Info: http://localhost:5000/api")
+    print(f"   • Health Check: http://localhost:5000/api/health")
+    print(f"   • V1 API: http://localhost:5000/api/v1/")
+    print(f"   • Admin API: http://localhost:5000/api/admin/")
+    print(f"�️  Features:")
+    print(f"   ✓ Sofia Redesign Tools")
+    print(f"   ✓ Air Quality Monitoring")
+    print(f"   ✓ AI Chat Assistant")
+    print(f"   ✓ Real-time Statistics")
+    print(f"   ✓ Rate Limiting")
+    print(f"   ✓ Security Headers")
+    print(f"🔧 Press Ctrl+C to stop server")
+    print("="*50 + "\n")
+    
+    try:
+        app.run(
+            debug=os.getenv('FLASK_DEBUG', 'True').lower() == 'true', 
+            host=os.getenv('HOST', '0.0.0.0'), 
+            port=int(os.getenv('PORT', '5000')),
+            threaded=True  # Express.js-style concurrent request handling
+        )
+    except KeyboardInterrupt:
+        print("\n🛑 Server stopped by user")
+    except Exception as e:
+        print(f"\n❌ Server error: {e}")
+    finally:
+        print("👋 Goodbye!")
+        
+# Export app for deployment (like module.exports in Express.js)
+application = create_app()  # For WSGI servers
