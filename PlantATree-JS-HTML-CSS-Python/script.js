@@ -1241,12 +1241,60 @@ function showAddLocationModal() {
     document.getElementById('addLocationModal').classList.remove('hidden');
 }
 
+function handleAddActionClick() {
+    console.log('handleAddActionClick called');
+    
+    // Check if user is logged in
+    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+    console.log('Token found:', !!token);
+    
+    if (!token) {
+        // User not logged in - show registration modal
+        console.log('User not logged in, showing registration modal');
+        if (typeof showModal === 'function') {
+            showModal('registerModal');
+        } else {
+            // Fallback to direct modal show
+            const registerModal = document.getElementById('registerModal');
+            if (registerModal) {
+                registerModal.classList.remove('hidden');
+            }
+        }
+        return;
+    }
+    
+    // User is logged in - show add action modal
+    console.log('User is logged in, showing add action modal');
+    showAddActionModal();
+}
+
 function showAddActionModal() {
-    document.getElementById('addActionModal').classList.remove('hidden');
+    console.log('showAddActionModal called');
+    const modal = document.getElementById('addActionModal');
+    if (modal) {
+        console.log('Modal found, showing modal');
+        // Remove hidden class and add show class for consistent behavior
+        modal.classList.remove('hidden');
+        modal.classList.add('show');
+        // Force display flex as backup
+        modal.style.display = 'flex';
+        modal.style.opacity = '1';
+        console.log('Modal classes:', modal.className);
+        console.log('Modal style display:', modal.style.display);
+    } else {
+        console.error('addActionModal not found!');
+    }
 }
 
 function closeModal(modalId) {
-    document.getElementById(modalId).classList.add('hidden');
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('show');
+        // Also reset inline styles
+        modal.style.display = '';
+        modal.style.opacity = '';
+    }
 }
 
 // Form Handlers
@@ -1317,9 +1365,19 @@ async function handleActionSubmit(form) {
     }
     
     try {
-        // Send to backend API
+        // Get authentication token
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        if (!token) {
+            showNotification('Моля влезте в профила си за да добавите действие', 'error');
+            return;
+        }
+        
+        // Send to backend API with authentication
         const response = await fetch('/api/eco-actions', {
             method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
             body: formData
         });
         
@@ -1329,6 +1387,10 @@ async function handleActionSubmit(form) {
             // Show success message
             showNotification(result.message, 'success');
             
+            // Get current user info
+            const currentUser = getCurrentUser();
+            const username = currentUser ? currentUser.username : 'Вие';
+            
             // Add to feed display
             const actionData = {
                 title: title,
@@ -1337,7 +1399,7 @@ async function handleActionSubmit(form) {
                 location: location,
                 points: result.points,
                 timestamp: new Date().toISOString(),
-                username: 'Вие'
+                username: username
             };
             addActionToFeed(actionData);
             
@@ -1348,7 +1410,16 @@ async function handleActionSubmit(form) {
             // Refresh feed from server
             setTimeout(() => loadEcoActions(), 1000);
         } else {
-            showNotification('Грешка при добавяне на действието: ' + result.error, 'error');
+            // Handle specific error cases
+            if (response.status === 401) {
+                showNotification('Сесията ви е изтекла. Моля влезте отново.', 'error');
+                // Redirect to login
+                if (typeof showModal === 'function') {
+                    showModal('loginModal');
+                }
+            } else {
+                showNotification('Грешка при добавяне на действието: ' + result.error, 'error');
+            }
         }
     } catch (error) {
         console.error('Error submitting action:', error);
@@ -1356,8 +1427,8 @@ async function handleActionSubmit(form) {
     }
 }
 
-// Load eco actions from server
-async function loadEcoActions() {
+// Load eco actions from server - Updated for new design
+async function loadEcoActionsOld() {
     try {
         const response = await fetch('/api/eco-actions');
         const actions = await response.json();
@@ -1375,7 +1446,7 @@ async function loadEcoActions() {
         }
         
         // Update charity statistics
-        updateCharityStats();
+        updateCharityProgress();
         
         console.log(`Loaded ${actions.length} eco actions from server`);
     } catch (error) {
@@ -2110,6 +2181,137 @@ function clearCityData() {
 window.showSection = showSection;
 window.showAddLocationModal = showAddLocationModal;
 window.showAddActionModal = showAddActionModal;
+window.handleAddActionClick = handleAddActionClick;
+
+// Load and display eco actions
+async function loadEcoActions() {
+    try {
+        const response = await fetch('/api/eco-actions');
+        const actions = await response.json();
+        
+        const grid = document.getElementById('ecoActionsGrid');
+        if (!grid) return;
+        
+        // Clear existing content
+        grid.innerHTML = '';
+        
+        // Display actions
+        actions.forEach(action => {
+            const actionCard = createEcoActionCard(action);
+            grid.appendChild(actionCard);
+        });
+        
+        // Update charity progress
+        updateCharityProgress();
+        
+    } catch (error) {
+        console.error('Error loading eco actions:', error);
+    }
+}
+
+function createEcoActionCard(action) {
+    const card = document.createElement('div');
+    card.className = 'eco-action-card';
+    
+    // Format date
+    const date = new Date(action.created_at);
+    const timeAgo = getTimeAgo(date);
+    
+    // Default image if none provided
+    const imageUrl = action.image_path ? `/static/${action.image_path}` : 'https://via.placeholder.com/400x200?text=Еко+Действие';
+    
+    card.innerHTML = `
+        <div class="eco-card-header">
+            <div class="eco-user-info">
+                <img src="https://via.placeholder.com/50?text=${action.username[0]}" alt="user" class="eco-user-avatar">
+                <div class="eco-user-details">
+                    <h4 class="eco-username">${action.username}</h4>
+                    <span class="eco-post-date">${timeAgo}</span>
+                </div>
+            </div>
+            <div class="eco-points-badge">+${action.points} точки</div>
+        </div>
+        
+        <div class="eco-card-content">
+            <img src="${imageUrl}" alt="eco action" class="eco-action-image" 
+                 onerror="this.src='https://via.placeholder.com/400x200?text=Еко+Действие'">
+            <div class="eco-card-body">
+                <h3 class="eco-action-title">${action.title}</h3>
+                <p class="eco-action-description">${action.description}</p>
+                <div class="eco-action-location">
+                    <i class="fas fa-map-marker-alt"></i> 
+                    <span>${action.location_name || 'София'}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="eco-card-actions">
+            <button class="eco-action-btn eco-like-btn" onclick="likeAction(${action.id})">
+                <i class="fas fa-heart"></i> 
+                <span>0</span>
+            </button>
+            <button class="eco-action-btn eco-comment-btn" onclick="commentAction(${action.id})">
+                <i class="fas fa-comment"></i> 
+                <span>0</span>
+            </button>
+            <button class="eco-action-btn eco-share-btn" onclick="shareAction(${action.id})">
+                <i class="fas fa-share"></i> 
+                <span>Сподели</span>
+            </button>
+        </div>
+    `;
+    
+    return card;
+}
+
+function getTimeAgo(date) {
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'току-що';
+    if (diffMins < 60) return `преди ${diffMins} мин`;
+    if (diffHours < 24) return `преди ${diffHours} ч`;
+    if (diffDays < 7) return `преди ${diffDays} дни`;
+    return date.toLocaleDateString('bg-BG');
+}
+
+async function updateCharityProgress() {
+    try {
+        const response = await fetch('/api/charity-stats');
+        const data = await response.json();
+        
+        const totalPoints = data.total_points || 0;
+        const targetPoints = 500;
+        const percentage = Math.min((totalPoints / targetPoints) * 100, 100);
+        
+        // Update UI elements
+        document.getElementById('charity-total-points').textContent = totalPoints;
+        document.getElementById('charity-progress-fill').style.width = `${percentage}%`;
+        document.getElementById('charity-percentage').textContent = `${Math.round(percentage)}%`;
+        
+    } catch (error) {
+        console.error('Error updating charity progress:', error);
+    }
+}
+
+// Action functions (placeholders for future implementation)
+function likeAction(actionId) {
+    console.log('Like action:', actionId);
+    // TODO: Implement like functionality
+}
+
+function commentAction(actionId) {
+    console.log('Comment action:', actionId);
+    // TODO: Implement comment functionality
+}
+
+function shareAction(actionId) {
+    console.log('Share action:', actionId);
+    // TODO: Implement share functionality
+}
 window.closeModal = closeModal;
 window.showLocationInfo = showLocationInfo;
 window.visitLocation = visitLocation;

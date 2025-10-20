@@ -1274,7 +1274,21 @@ body {
 }
 
 .modal.hidden {
-    display: none;
+    display: none !important;
+}
+
+.modal.show {
+    display: flex !important;
+    opacity: 1;
+}
+
+/* Specific styles for action modal to override auth styles */
+#addActionModal {
+    z-index: 2001;
+}
+
+#addActionModal.show {
+    display: flex !important;
 }
 
 .modal-content {
@@ -3859,5 +3873,439 @@ body {
     .impact-stats {
         padding: 2.5rem 1.5rem;
         margin: 3rem 0;
+    }
+}
+
+/* ===============================================
+   ECO ACTIONS SECTION STYLES
+   =============================================== */
+
+/* Eco Actions Header - Similar to Sponsors */
+.eco-actions-header {
+    text-align: center;
+    margin-bottom: 4rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+    backdrop-filter: blur(15px);
+    padding: 3rem 2rem;
+    border-radius: 25px;
+    box-shadow: 0 25px 80px rgba(45, 90, 39, 0.15);
+    border: 1px solid rgba(123, 193, 66, 0.3);
+}
+
+.eco-actions-header h1 {
+    font-size: 3.2rem;
+    color: #2d5a27;
+    margin-bottom: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -2px;
+    background: linear-gradient(135deg, #2d5a27, #7bc142);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.eco-actions-subtitle {
+    font-size: 1.4rem;
+    color: #4a7c59;
+    max-width: 700px;
+    margin: 0 auto 2.5rem auto;
+    line-height: 1.6;
+    font-weight: 500;
+}
+
+/* Charity Card - Enhanced Design */
+.charity-card {
+    background: linear-gradient(135deg, rgba(123, 193, 66, 0.1) 0%, rgba(141, 214, 85, 0.05) 100%);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2.5rem;
+    border: 1px solid rgba(123, 193, 66, 0.2);
+    box-shadow: 0 15px 40px rgba(123, 193, 66, 0.1);
+    transition: all 0.3s ease;
+}
+
+.charity-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 25px 60px rgba(123, 193, 66, 0.15);
+}
+
+.charity-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+}
+
+.charity-icon {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+    flex-shrink: 0;
+}
+
+.charity-text h3 {
+    font-size: 1.6rem;
+    color: #2d5a27;
+    margin-bottom: 0.8rem;
+    font-weight: 700;
+}
+
+.charity-text p {
+    color: #4a7c59;
+    margin-bottom: 1.2rem;
+    line-height: 1.5;
+}
+
+.charity-progress {
+    width: 100%;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
+}
+
+.progress-text {
+    font-size: 1rem;
+    color: #4a7c59;
+    font-weight: 600;
+}
+
+.progress-percentage {
+    font-size: 1rem;
+    color: #7bc142;
+    font-weight: 700;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(123, 193, 66, 0.15);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7bc142, #8ed655);
+    border-radius: 10px;
+    transition: width 0.3s ease;
+    position: relative;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: progressShine 2s infinite;
+}
+
+@keyframes progressShine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Add Action Button */
+.eco-add-action-btn {
+    background: linear-gradient(135deg, #7bc142 0%, #8ed655 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2.5rem;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 8px 25px rgba(123, 193, 66, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+}
+
+.eco-add-action-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.eco-add-action-btn:hover::before {
+    left: 100%;
+}
+
+.eco-add-action-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 15px 40px rgba(123, 193, 66, 0.4);
+}
+
+.eco-add-action-btn:active {
+    transform: translateY(-1px) scale(1.02);
+}
+
+/* Eco Actions Container */
+.eco-actions-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.eco-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2.5rem;
+    margin-top: 2rem;
+}
+
+/* Eco Action Cards */
+.eco-action-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 252, 255, 0.95) 100%);
+    backdrop-filter: blur(20px);
+    border-radius: 25px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(45, 90, 39, 0.08);
+    border: 1px solid rgba(123, 193, 66, 0.15);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+}
+
+.eco-action-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #7bc142, #8ed655, #7bc142);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.eco-action-card:hover::before {
+    transform: scaleX(1);
+}
+
+.eco-action-card:hover {
+    transform: translateY(-15px) scale(1.02);
+    box-shadow: 0 35px 100px rgba(45, 90, 39, 0.20);
+    border-color: rgba(123, 193, 66, 0.4);
+}
+
+/* Card Header */
+.eco-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    background: rgba(248, 252, 255, 0.8);
+    border-bottom: 1px solid rgba(123, 193, 66, 0.1);
+}
+
+.eco-user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.eco-user-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 3px solid rgba(123, 193, 66, 0.3);
+    object-fit: cover;
+    transition: all 0.3s ease;
+}
+
+.eco-action-card:hover .eco-user-avatar {
+    border-color: rgba(123, 193, 66, 0.6);
+    transform: scale(1.1);
+}
+
+.eco-user-details h4 {
+    font-size: 1.1rem;
+    color: #2d5a27;
+    margin: 0;
+    font-weight: 700;
+}
+
+.eco-post-date {
+    font-size: 0.9rem;
+    color: #7c9885;
+    font-weight: 500;
+}
+
+.eco-points-badge {
+    background: linear-gradient(135deg, #7bc142, #8ed655);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(123, 193, 66, 0.3);
+}
+
+/* Card Content */
+.eco-card-content {
+    position: relative;
+}
+
+.eco-action-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.eco-action-card:hover .eco-action-image {
+    transform: scale(1.05);
+}
+
+.eco-card-body {
+    padding: 2rem;
+}
+
+.eco-action-title {
+    font-size: 1.4rem;
+    color: #2d5a27;
+    margin-bottom: 1rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.eco-action-description {
+    color: #4a7c59;
+    line-height: 1.6;
+    margin-bottom: 1.2rem;
+    font-size: 1rem;
+}
+
+.eco-action-location {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #7c9885;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.eco-action-location i {
+    color: #7bc142;
+}
+
+/* Card Actions */
+.eco-card-actions {
+    display: flex;
+    justify-content: space-between;
+    padding: 1.5rem 2rem;
+    background: rgba(248, 252, 255, 0.8);
+    border-top: 1px solid rgba(123, 193, 66, 0.1);
+}
+
+.eco-action-btn {
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.2rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #4a7c59;
+}
+
+.eco-like-btn:hover {
+    background: rgba(255, 107, 107, 0.1);
+    color: #ff6b6b;
+    transform: scale(1.05);
+}
+
+.eco-comment-btn:hover {
+    background: rgba(74, 144, 226, 0.1);
+    color: #4a90e2;
+    transform: scale(1.05);
+}
+
+.eco-share-btn:hover {
+    background: rgba(123, 193, 66, 0.1);
+    color: #7bc142;
+    transform: scale(1.05);
+}
+
+.eco-action-btn i {
+    font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .eco-actions-header {
+        padding: 2rem 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+    
+    .eco-actions-header h1 {
+        font-size: 2.4rem;
+    }
+    
+    .eco-actions-subtitle {
+        font-size: 1.2rem;
+    }
+    
+    .eco-actions-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .charity-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .progress-info {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+    
+    .eco-card-header {
+        padding: 1rem 1.5rem;
+    }
+    
+    .eco-card-body {
+        padding: 1.5rem;
+    }
+    
+    .eco-card-actions {
+        padding: 1rem 1.5rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .eco-action-btn {
+        flex: 1;
+        min-width: 100px;
+        justify-content: center;
     }
 }

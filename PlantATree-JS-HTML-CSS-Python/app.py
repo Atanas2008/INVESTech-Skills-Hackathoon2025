@@ -392,6 +392,62 @@ def health_check():
         'version': '1.0.0'
     })
 
+# Authentication Utility Functions
+def get_current_user():
+    """Get current user from JWT token in Authorization header"""
+    try:
+        # Check for Authorization header
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return None
+        
+        # Extract token
+        token = auth_header.replace('Bearer ', '')
+        if not token:
+            return None
+        
+        # Decode JWT token
+        try:
+            payload = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+            user_id = payload.get('user_id')
+            
+            if not user_id:
+                return None
+            
+            # Get user from database
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                SELECT id, username, email, role, created_at 
+                FROM users 
+                WHERE id = ?
+            ''', (user_id,))
+            
+            user_row = cursor.fetchone()
+            conn.close()
+            
+            if not user_row:
+                return None
+            
+            # Return user data as dict
+            return {
+                'id': user_row[0],
+                'username': user_row[1],
+                'email': user_row[2],
+                'role': user_row[3],
+                'created_at': user_row[4]
+            }
+            
+        except jwt.ExpiredSignatureError:
+            return None
+        except jwt.InvalidTokenError:
+            return None
+            
+    except Exception as e:
+        print(f"Error in get_current_user: {e}")
+        return None
+
 @app.route('/')
 def index():
     """Serve the main HTML page"""
@@ -513,6 +569,11 @@ def get_eco_actions():
 def add_eco_action():
     """Add a new eco action"""
     try:
+        # Get current user from JWT token
+        current_user = get_current_user()
+        if not current_user:
+            return jsonify({'success': False, 'error': 'Трябва да влезете в профила си'}), 401
+        
         # Handle file upload if present
         image_path = None
         if 'image' in request.files:
@@ -531,6 +592,10 @@ def add_eco_action():
         action_type = request.form.get('type')
         location_name = request.form.get('location')
         
+        # Validate required fields
+        if not all([title, description, action_type]):
+            return jsonify({'success': False, 'error': 'Моля попълнете всички задължителни полета'}), 400
+        
         # Calculate points based on action type
         points_map = {
             'tree': 15,
@@ -548,7 +613,7 @@ def add_eco_action():
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             title, description, action_type, location_name, 
-            image_path, points, 1, True  # Auto-approve for demo
+            image_path, points, current_user['id'], True  # Use actual user ID and auto-approve
         ))
         
         action_id = cursor.lastrowid

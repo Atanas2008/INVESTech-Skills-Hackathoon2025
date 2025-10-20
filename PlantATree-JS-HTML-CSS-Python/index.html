@@ -419,21 +419,27 @@
         </div>
     </section>
 
-    <!-- Eco Feed Section -->
+    <!-- Eco Actions Section -->
     <section id="feed" class="section hidden">
-        <div class="section-header">
-            <h2><i class="fas fa-leaf"></i> Еко действия</h2>
-            <p>Споделете вашите еко инициативи с общността</p>
+        <!-- Eco Actions Header -->
+        <div class="eco-actions-header">
+            <h1>Еко действия</h1>
+            <p class="eco-actions-subtitle">Споделете вашите еко инициативи с общността и вдъхновете други да следват вашия пример</p>
             
-            <!-- Charity Notice -->
-            <div class="charity-notice">
+            <!-- Charity Notice Card -->
+            <div class="charity-card">
                 <div class="charity-content">
-                    <i class="fas fa-heart"></i>
+                    <div class="charity-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
                     <div class="charity-text">
-                        <h4>Благотворителност</h4>
+                        <h3>Благотворителност</h3>
                         <p>За всеки 500 събрани точки от общността дарявame 1 лв. за залесяване и опазване на природата!</p>
                         <div class="charity-progress">
-                            <span id="charity-total-points">0</span>/500 точки до следващото дарение
+                            <div class="progress-info">
+                                <span class="progress-text"><span id="charity-total-points">0</span>/500 точки до следващото дарение</span>
+                                <span class="progress-percentage" id="charity-percentage">0%</span>
+                            </div>
                             <div class="progress-bar">
                                 <div class="progress-fill" id="charity-progress-fill" style="width: 0%"></div>
                             </div>
@@ -442,31 +448,54 @@
                 </div>
             </div>
             
-            <button class="btn-primary" onclick="showAddActionModal()">
-                <i class="fas fa-plus"></i> Добави действие
+            <button class="eco-add-action-btn" onclick="handleAddActionClick()">
+                <i class="fas fa-plus"></i> 
+                <span>Добави действие</span>
             </button>
         </div>
-        <div class="feed-container">
-            <div class="eco-post">
-                <div class="post-header">
-                    <img src="https://via.placeholder.com/40" alt="user" class="user-avatar">
-                    <div class="post-info">
-                        <h4>Мария Петрова</h4>
-                        <span class="post-date">преди 2 часа</span>
+
+        <!-- Eco Actions Feed -->
+        <div class="eco-actions-container">
+            <div class="eco-actions-grid" id="ecoActionsGrid">
+                <!-- Sample eco action card -->
+                <div class="eco-action-card">
+                    <div class="eco-card-header">
+                        <div class="eco-user-info">
+                            <img src="https://via.placeholder.com/50" alt="user" class="eco-user-avatar">
+                            <div class="eco-user-details">
+                                <h4 class="eco-username">Мария Петрова</h4>
+                                <span class="eco-post-date">преди 2 часа</span>
+                            </div>
+                        </div>
+                        <div class="eco-points-badge">+10 точки</div>
                     </div>
-                    <div class="post-points">+10 точки</div>
-                </div>
-                <div class="post-content">
-                    <img src="https://via.placeholder.com/400x300" alt="eco action" class="post-image">
-                    <h3>Засадих 3 дървета в Борисовата градина</h3>
-                    <p>Участвах в еко акция за засаждане на дървета. Всеки може да помогне!</p>
-                    <div class="post-location">
-                        <i class="fas fa-map-marker-alt"></i> Борисова градина, София
+                    
+                    <div class="eco-card-content">
+                        <img src="https://via.placeholder.com/400x200" alt="eco action" class="eco-action-image">
+                        <div class="eco-card-body">
+                            <h3 class="eco-action-title">Засадих 3 дървета в Борисовата градина</h3>
+                            <p class="eco-action-description">Участвах в еко акция за засаждане на дървета. Всеки може да помогне за по-зелена София!</p>
+                            <div class="eco-action-location">
+                                <i class="fas fa-map-marker-alt"></i> 
+                                <span>Борисова градина, София</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="post-actions">
-                    <button class="btn-like"><i class="fas fa-heart"></i> 15</button>
-                    <button class="btn-comment"><i class="fas fa-comment"></i> 3</button>
+                    
+                    <div class="eco-card-actions">
+                        <button class="eco-action-btn eco-like-btn">
+                            <i class="fas fa-heart"></i> 
+                            <span>15</span>
+                        </button>
+                        <button class="eco-action-btn eco-comment-btn">
+                            <i class="fas fa-comment"></i> 
+                            <span>3</span>
+                        </button>
+                        <button class="eco-action-btn eco-share-btn">
+                            <i class="fas fa-share"></i> 
+                            <span>Сподели</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

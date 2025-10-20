@@ -267,3 +267,9 @@ async function authenticatedFetch(url, options = {}) {
         headers
     });
 }
+
+// Export functions to global scope
+window.showModal = showModal;
+window.hideModal = hideModal;
+window.getCurrentUser = getCurrentUser;
+window.isAdmin = isAdmin;
