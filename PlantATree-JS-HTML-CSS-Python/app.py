@@ -6,6 +6,11 @@ from datetime import datetime
 import sqlite3
 from werkzeug.utils import secure_filename
 import requests
+import google.generativeai as genai
+
+from dotenv import load_dotenv
+load_dotenv()  # Load environment variables from .env
+
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all domains
@@ -173,6 +178,33 @@ def init_db():
 # Initialize database on startup
 init_db()
 
+# Google Generative AI (Gemini) configuration
+import os
+from dotenv import load_dotenv
+import google.generativeai as genai
+
+load_dotenv()
+GENAI_API_KEY = os.getenv('GENAI_API_KEY')
+GEMINI_MODEL = None
+if GENAI_API_KEY:
+    genai.configure(api_key=GENAI_API_KEY)
+    try:
+        GEMINI_MODEL = genai.GenerativeModel(
+            model_name='gemini-2.5-flash',
+            system_instruction=(
+                "Ти си Еко Асистент за платформата PlantATree, фокусирана върху еко инициативи в София, България. "
+                "Отговаряй на български език, кратко, ясно и полезно, в обикновен текст без Markdown форматиране. "
+                "Не използвай удебелен текст, списъци, нови редове със знаци (напр. \n, *, -) или други специални символи за форматиране. "
+                "Предоставяй информация за засаждане на дървета, почистване, велоалеи, зелени зони и други еко действия. "
+                "Бъди дружелюбен и насърчавай потребителите да се включат в еко инициативи."
+            )
+        )
+        print("✅ Gemini 2.5 готов с главен промпт!")
+    except Exception as e:
+        print(f"❌ Gemini грешка: {e}")
+        GEMINI_MODEL = None
+else:
+    print("❌ Липсва GENAI_API_KEY в .env")
 # Routes
 @app.route('/')
 def index():
@@ -871,6 +903,32 @@ def get_weather():
             },
             'source': 'fallback'
         })
+
+
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    """Simple chat endpoint that proxies messages to Google Gemini (Generative AI).
+
+    POST JSON: { "message": "..." }
+    Returns: { "reply": "..." }
+    """
+    data = request.get_json() or {}
+    user_message = data.get('message')
+    if not user_message:
+        return jsonify({'error': 'No message provided'}), 400
+
+    if GEMINI_MODEL is None:
+        return jsonify({'error': 'Gemini model not configured. Set GENAI_API_KEY in environment.'}), 500
+
+    try:
+        # Use the model to generate a completion
+        response = GEMINI_MODEL.generate_content(user_message)
+        # .text holds the text reply in the current client
+        ai_reply = getattr(response, 'text', None) or response.get('output', {}).get('text', '')
+        return jsonify({'reply': ai_reply})
+    except Exception as e:
+        print(f"Gemini request error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     print("🌱 PlantATree Server стартира...")
