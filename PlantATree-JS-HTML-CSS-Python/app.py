@@ -135,12 +135,12 @@ def get_db_connection():
             return psycopg2.connect(CLOUD_DB_URL)
         except ImportError:
             print("psycopg2 not installed, falling back to SQLite")
-            return sqlite3.connect('plantatree.db')
+            return sqlite3.connect('infousers.db')
         except Exception as e:
             print(f"Cloud DB connection failed: {e}, falling back to SQLite")
-            return sqlite3.connect('plantatree.db')
+            return sqlite3.connect('infousers.db')
     else:
-        return sqlite3.connect('plantatree.db')
+        return sqlite3.connect('infousers.db')
 
 # Database initialization
 def init_db():
@@ -148,15 +148,31 @@ def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Users table
+    # Users table with role support and profile pictures
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             email TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
+            role TEXT DEFAULT 'regular' CHECK(role IN ('regular', 'admin')),
+            profile_picture TEXT DEFAULT NULL,
             points INTEGER DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            is_active BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_login TIMESTAMP DEFAULT NULL
+        )
+    ''')
+    
+    # User sessions table for better security
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            session_token TEXT UNIQUE NOT NULL,
+            expires_at TIMESTAMP NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
         )
     ''')
     
@@ -228,6 +244,16 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
+    # Create default admin user if it doesn't exist
+    cursor.execute('SELECT COUNT(*) FROM users WHERE role = "admin"')
+    if cursor.fetchone()[0] == 0:
+        admin_password_hash = generate_password_hash('admin123')  # Change this in production!
+        cursor.execute('''
+            INSERT INTO users (username, email, password_hash, role, points)
+            VALUES (?, ?, ?, ?, ?)
+        ''', ('admin', 'admin@plantatree.com', admin_password_hash, 'admin', 1000))
+        print("✓ Default admin user created (admin@plantatree.com / admin123)")
     
     # Insert sample data if tables are empty
     cursor.execute('SELECT COUNT(*) FROM locations')
@@ -421,7 +447,7 @@ def add_location():
     try:
         data = request.get_json()
         
-        conn = sqlite3.connect('plantatree.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         
         cursor.execute('''
@@ -514,7 +540,7 @@ def add_eco_action():
         }
         points = points_map.get(action_type, 5)
         
-        conn = sqlite3.connect('plantatree.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         
         cursor.execute('''
@@ -679,7 +705,7 @@ def get_leaderboard():
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
     """Get platform statistics"""
-    conn = sqlite3.connect('plantatree.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     # Count locations
@@ -705,7 +731,7 @@ def get_stats():
 @app.route('/api/user/<int:user_id>/profile', methods=['GET'])
 def get_user_profile(user_id):
     """Get user profile with stats and badges"""
-    conn = sqlite3.connect('plantatree.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     # Get user info
@@ -750,6 +776,12 @@ def get_user_profile(user_id):
 def uploaded_file(filename):
     """Serve uploaded files"""
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route('/uploads/profiles/<filename>')
+def profile_picture(filename):
+    """Serve profile pictures"""
+    profiles_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'profiles')
+    return send_from_directory(profiles_dir, filename)
 
 # Express.js-style comprehensive error handlers
 @app.errorhandler(400)
@@ -822,97 +854,408 @@ def handle_unexpected_error(error):
 # Auth routes
 @app.route('/api/auth/register', methods=['POST'])
 def register():
-    """Register a new user"""
-    data = request.get_json()
-    
-    if not data or not all(k in data for k in ['username', 'email', 'password']):
-        return jsonify({'message': 'Missing required fields'}), 400
-        
-    # Check if user already exists
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute('SELECT id FROM users WHERE email = ?', (data['email'],))
-    if cursor.fetchone():
-        return jsonify({'message': 'Email already registered'}), 400
-        
-    cursor.execute('SELECT id FROM users WHERE username = ?', (data['username'],))
-    if cursor.fetchone():
-        return jsonify({'message': 'Username already taken'}), 400
-    
-    # Create new user
-    hashed_password = generate_password_hash(data['password'])
+    """Register a new user with profile picture support"""
     try:
-        cursor.execute(
-            'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
-            (data['username'], data['email'], hashed_password)
-        )
-        conn.commit()
+        # Handle both JSON and form data
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            # Form data with file upload
+            username = request.form.get('username')
+            email = request.form.get('email')
+            password = request.form.get('password')
+            confirm_password = request.form.get('confirm_password')
+            role = 'regular'  # Always set to regular for new registrations
+            
+            # Handle profile picture upload
+            profile_picture_path = None
+            if 'profile_picture' in request.files:
+                file = request.files['profile_picture']
+                if file and file.filename:
+                    # Validate file type
+                    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+                    file_extension = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
+                    
+                    if file_extension in allowed_extensions:
+                        filename = secure_filename(file.filename)
+                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
+                        filename = f"profile_{timestamp}{filename}"
+                        
+                        # Create profiles directory if it doesn't exist
+                        profiles_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'profiles')
+                        os.makedirs(profiles_dir, exist_ok=True)
+                        
+                        file_path = os.path.join(profiles_dir, filename)
+                        file.save(file_path)
+                        profile_picture_path = f'uploads/profiles/{filename}'
+                    else:
+                        return jsonify({'success': False, 'message': 'Invalid file type. Please use PNG, JPG, JPEG, GIF, or WebP.'}), 400
+        else:
+            # JSON data
+            data = request.get_json()
+            if not data:
+                return jsonify({'success': False, 'message': 'No data provided'}), 400
+                
+            username = data.get('username')
+            email = data.get('email')
+            password = data.get('password')
+            confirm_password = data.get('confirm_password')
+            role = 'regular'  # Always set to regular for new registrations
+            profile_picture_path = None
         
-        # Get the new user's id
-        cursor.execute('SELECT last_insert_rowid()')
-        user_id = cursor.fetchone()[0]
+        # Validation
+        if not all([username, email, password, confirm_password]):
+            return jsonify({'success': False, 'message': 'All fields are required'}), 400
         
-        # Generate token
-        token = jwt.encode({
+        if password != confirm_password:
+            return jsonify({'success': False, 'message': 'Passwords do not match'}), 400
+        
+        if len(password) < 6:
+            return jsonify({'success': False, 'message': 'Password must be at least 6 characters long'}), 400
+        
+        if role not in ['regular', 'admin']:
+            role = 'regular'  # Force to regular since admins are created manually
+        
+        # Check if user already exists
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT id FROM users WHERE email = ?', (email,))
+        if cursor.fetchone():
+            conn.close()
+            return jsonify({'success': False, 'message': 'Email already registered'}), 400
+            
+        cursor.execute('SELECT id FROM users WHERE username = ?', (username,))
+        if cursor.fetchone():
+            conn.close()
+            return jsonify({'success': False, 'message': 'Username already taken'}), 400
+        
+        # Create new user
+        hashed_password = generate_password_hash(password)
+        
+        cursor.execute('''
+            INSERT INTO users (username, email, password_hash, role, profile_picture, points)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (username, email, hashed_password, role, profile_picture_path, 0))
+        
+        user_id = cursor.lastrowid
+        
+        # Create session token
+        session_token = jwt.encode({
             'user_id': user_id,
-            'exp': datetime.now() + timedelta(days=1)
+            'exp': datetime.now() + timedelta(days=7)  # 7 days expiry
         }, app.config['SECRET_KEY'], algorithm='HS256')
         
+        # Store session in database
+        expires_at = datetime.now() + timedelta(days=7)
+        cursor.execute('''
+            INSERT INTO user_sessions (user_id, session_token, expires_at)
+            VALUES (?, ?, ?)
+        ''', (user_id, session_token, expires_at))
+        
+        conn.commit()
+        conn.close()
+        
         return jsonify({
-            'message': 'Successfully registered',
-            'token': token,
+            'success': True,
+            'message': 'Registration successful!',
+            'token': session_token,
             'user': {
                 'id': user_id,
-                'username': data['username'],
-                'email': data['email']
+                'username': username,
+                'email': email,
+                'role': role,
+                'profile_picture': profile_picture_path,
+                'points': 0
             }
         }), 201
         
     except Exception as e:
-        conn.rollback()
-        return jsonify({'message': str(e)}), 500
-    finally:
-        conn.close()
+        print(f"Registration error: {e}")
+        return jsonify({'success': False, 'message': f'Registration failed: {str(e)}'}), 500
 
 @app.route('/api/auth/login', methods=['POST'])
 def login():
-    """Login user"""
-    data = request.get_json()
-    
-    if not data or not data.get('email') or not data.get('password'):
-        return jsonify({'message': 'Missing email or password'}), 400
-    
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute('SELECT id, username, email, password_hash FROM users WHERE email = ?', (data['email'],))
-    user = cursor.fetchone()
-    conn.close()
-    
-    if not user or not check_password_hash(user[3], data['password']):
-        return jsonify({'message': 'Invalid email or password'}), 401
-    
-    # Generate token
-    token = jwt.encode({
-        'user_id': user[0],
-        'exp': datetime.now() + timedelta(days=1)
-    }, app.config['SECRET_KEY'], algorithm='HS256')
-    
-    return jsonify({
-        'token': token,
-        'user': {
-            'id': user[0],
-            'username': user[1],
-            'email': user[2]
-        }
-    }), 200
+    """Login user with enhanced security"""
+    try:
+        data = request.get_json()
+        
+        if not data or not data.get('email') or not data.get('password'):
+            return jsonify({'success': False, 'message': 'Email and password are required'}), 400
+        
+        email = data.get('email')
+        password = data.get('password')
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get user with role and profile picture
+        cursor.execute('''
+            SELECT id, username, email, password_hash, role, profile_picture, points, is_active
+            FROM users WHERE email = ?
+        ''', (email,))
+        user = cursor.fetchone()
+        
+        if not user:
+            conn.close()
+            return jsonify({'success': False, 'message': 'Invalid email or password'}), 401
+        
+        if not user[7]:  # is_active
+            conn.close()
+            return jsonify({'success': False, 'message': 'Account is deactivated'}), 401
+        
+        if not check_password_hash(user[3], password):
+            conn.close()
+            return jsonify({'success': False, 'message': 'Invalid email or password'}), 401
+        
+        # Update last login
+        cursor.execute('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', (user[0],))
+        
+        # Create session token
+        session_token = jwt.encode({
+            'user_id': user[0],
+            'role': user[4],
+            'exp': datetime.now() + timedelta(days=7)
+        }, app.config['SECRET_KEY'], algorithm='HS256')
+        
+        # Store session in database
+        expires_at = datetime.now() + timedelta(days=7)
+        cursor.execute('''
+            INSERT INTO user_sessions (user_id, session_token, expires_at)
+            VALUES (?, ?, ?)
+        ''', (user[0], session_token, expires_at))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Login successful!',
+            'token': session_token,
+            'user': {
+                'id': user[0],
+                'username': user[1],
+                'email': user[2],
+                'role': user[4],
+                'profile_picture': user[5],
+                'points': user[6]
+            }
+        }), 200
+        
+    except Exception as e:
+        print(f"Login error: {e}")
+        return jsonify({'success': False, 'message': f'Login failed: {str(e)}'}), 500
+
+@app.route('/api/auth/logout', methods=['POST'])
+def logout():
+    """Logout user and invalidate session"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return jsonify({'success': False, 'message': 'No authorization header'}), 401
+        
+        token = auth_header.replace('Bearer ', '')
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Remove session from database
+        cursor.execute('DELETE FROM user_sessions WHERE session_token = ?', (token,))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': 'Logged out successfully'}), 200
+        
+    except Exception as e:
+        print(f"Logout error: {e}")
+        return jsonify({'success': False, 'message': 'Logout failed'}), 500
+
+@app.route('/api/auth/profile', methods=['GET'])
+def get_profile():
+    """Get current user profile"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return jsonify({'success': False, 'message': 'No authorization header'}), 401
+        
+        token = auth_header.replace('Bearer ', '')
+        
+        # Verify token
+        try:
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            user_id = payload['user_id']
+        except jwt.ExpiredSignatureError:
+            return jsonify({'success': False, 'message': 'Token expired'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'success': False, 'message': 'Invalid token'}), 401
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if session exists
+        cursor.execute('''
+            SELECT u.id, u.username, u.email, u.role, u.profile_picture, u.points, u.created_at
+            FROM users u
+            JOIN user_sessions s ON u.id = s.user_id
+            WHERE s.session_token = ? AND s.expires_at > CURRENT_TIMESTAMP
+        ''', (token,))
+        
+        user = cursor.fetchone()
+        if not user:
+            conn.close()
+            return jsonify({'success': False, 'message': 'Invalid session'}), 401
+        
+        # Get user's eco actions count
+        cursor.execute('SELECT COUNT(*) FROM eco_actions WHERE user_id = ? AND approved = TRUE', (user_id,))
+        actions_count = cursor.fetchone()[0]
+        
+        # Get user's badges
+        cursor.execute('''
+            SELECT b.name, b.description, b.icon, ub.earned_at
+            FROM badges b
+            JOIN user_badges ub ON b.id = ub.badge_id
+            WHERE ub.user_id = ?
+        ''', (user_id,))
+        
+        badges = []
+        for row in cursor.fetchall():
+            badges.append({
+                'name': row[0],
+                'description': row[1], 
+                'icon': row[2],
+                'earned_at': row[3]
+            })
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'user': {
+                'id': user[0],
+                'username': user[1],
+                'email': user[2],
+                'role': user[3],
+                'profile_picture': user[4],
+                'points': user[5],
+                'created_at': user[6],
+                'actions_count': actions_count,
+                'badges': badges
+            }
+        }), 200
+        
+    except Exception as e:
+        print(f"Profile error: {e}")
+        return jsonify({'success': False, 'message': 'Failed to get profile'}), 500
 
 # Admin routes (for future implementation)
+@app.route('/api/admin/users', methods=['GET'])
+def get_all_users():
+    """Get all users (admin only)"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return jsonify({'success': False, 'message': 'No authorization header'}), 401
+        
+        token = auth_header.replace('Bearer ', '')
+        
+        # Verify token and check admin role
+        try:
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            user_role = payload.get('role')
+        except jwt.ExpiredSignatureError:
+            return jsonify({'success': False, 'message': 'Token expired'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'success': False, 'message': 'Invalid token'}), 401
+        
+        if user_role != 'admin':
+            return jsonify({'success': False, 'message': 'Admin access required'}), 403
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT id, username, email, role, profile_picture, points, is_active, created_at, last_login
+            FROM users
+            ORDER BY created_at DESC
+        ''')
+        
+        users = []
+        for row in cursor.fetchall():
+            users.append({
+                'id': row[0],
+                'username': row[1],
+                'email': row[2],
+                'role': row[3],
+                'profile_picture': row[4],
+                'points': row[5],
+                'is_active': row[6],
+                'created_at': row[7],
+                'last_login': row[8]
+            })
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'users': users,
+            'total_count': len(users)
+        }), 200
+        
+    except Exception as e:
+        print(f"Admin users error: {e}")
+        return jsonify({'success': False, 'message': 'Failed to get users'}), 500
+
+@app.route('/api/admin/users/<int:user_id>/toggle-status', methods=['POST'])
+def toggle_user_status(user_id):
+    """Toggle user active status (admin only)"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return jsonify({'success': False, 'message': 'No authorization header'}), 401
+        
+        token = auth_header.replace('Bearer ', '')
+        
+        # Verify token and check admin role
+        try:
+            payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            user_role = payload.get('role')
+        except jwt.ExpiredSignatureError:
+            return jsonify({'success': False, 'message': 'Token expired'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'success': False, 'message': 'Invalid token'}), 401
+        
+        if user_role != 'admin':
+            return jsonify({'success': False, 'message': 'Admin access required'}), 403
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get current status
+        cursor.execute('SELECT is_active FROM users WHERE id = ?', (user_id,))
+        user = cursor.fetchone()
+        
+        if not user:
+            conn.close()
+            return jsonify({'success': False, 'message': 'User not found'}), 404
+        
+        # Toggle status
+        new_status = not user[0]
+        cursor.execute('UPDATE users SET is_active = ? WHERE id = ?', (new_status, user_id))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': f'User {"activated" if new_status else "deactivated"} successfully',
+            'new_status': new_status
+        }), 200
+        
+    except Exception as e:
+        print(f"Toggle user status error: {e}")
+        return jsonify({'success': False, 'message': 'Failed to toggle user status'}), 500
+
 @app.route('/api/admin/locations/pending', methods=['GET'])
 def get_pending_locations():
     """Get locations waiting for approval"""
-    conn = sqlite3.connect('plantatree.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     cursor.execute('''
@@ -940,7 +1283,7 @@ def get_pending_locations():
 @app.route('/api/admin/locations/<int:location_id>/approve', methods=['POST'])
 def approve_location(location_id):
     """Approve a pending location"""
-    conn = sqlite3.connect('plantatree.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     cursor.execute('UPDATE locations SET approved = TRUE WHERE id = ?', (location_id,))
@@ -954,7 +1297,7 @@ def approve_location(location_id):
 def get_redesigns():
     """Get all Sofia redesigns"""
     try:
-        conn = sqlite3.connect('plantatree.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute('SELECT * FROM sofia_redesigns ORDER BY created_at DESC')
         redesigns = []
@@ -978,7 +1321,7 @@ def get_redesigns():
 def add_redesign():
     """Add new Sofia redesign"""
     try:
-        conn = sqlite3.connect('plantatree.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         data = request.get_json()
         
@@ -1009,7 +1352,7 @@ def add_redesign():
 def update_redesign(redesign_id):
     """Update Sofia redesign"""
     try:
-        conn = sqlite3.connect('plantatree.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         data = request.get_json()
         
@@ -1036,7 +1379,7 @@ def update_redesign(redesign_id):
 def delete_redesign(redesign_id):
     """Delete Sofia redesign"""
     try:
-        conn = sqlite3.connect('plantatree.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute('DELETE FROM sofia_redesigns WHERE id = ?', (redesign_id,))
         conn.commit()
@@ -1054,7 +1397,7 @@ def delete_redesign(redesign_id):
 def clear_all_redesigns():
     """Clear all Sofia redesigns"""
     try:
-        conn = sqlite3.connect('plantatree.db')
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute('DELETE FROM sofia_redesigns')
         conn.commit()
