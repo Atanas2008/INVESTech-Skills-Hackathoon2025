@@ -12,14 +12,259 @@ let mapInstance = null;
 let ecoActions = [];
 let locations = [];
 
+// Video Background Handler
+function initializeVideoBackground() {
+    const video = document.getElementById('hero-video');
+    const slideshow = document.getElementById('fallback-slideshow');
+    const heroSection = document.querySelector('.hero');
+    
+    if (video) {
+        let videoLoaded = false;
+        video.classList.add('loading');
+        
+        // Preload and prepare video
+        video.addEventListener('loadstart', function() {
+            console.log('Video loading started...');
+        });
+        
+        video.addEventListener('progress', function() {
+            console.log('Video loading progress...');
+        });
+        
+        video.addEventListener('canplay', function() {
+            console.log('Video can start playing');
+            smoothVideoTransition();
+        });
+        
+        video.addEventListener('canplaythrough', function() {
+            console.log('Video fully buffered and ready');
+            smoothVideoTransition();
+        });
+        
+        function smoothVideoTransition() {
+            if (videoLoaded) return;
+            videoLoaded = true;
+            
+            // Add loading complete class to hero
+            heroSection.classList.add('video-loaded');
+            
+            // Smooth transition to video
+            setTimeout(() => {
+                video.classList.remove('loading');
+                video.classList.add('loaded');
+                
+                // Hide slideshow smoothly
+                if (slideshow) {
+                    slideshow.style.opacity = '0';
+                    setTimeout(() => {
+                        slideshow.style.display = 'none';
+                    }, 500);
+                }
+                
+                console.log('Video transition complete');
+            }, 300);
+        }
+        
+        video.addEventListener('error', function(e) {
+            console.log('Video error occurred:', e);
+            handleVideoError();
+        });
+        
+        function handleVideoError() {
+            video.style.display = 'none';
+            heroSection.classList.remove('video-loaded');
+            initializeFallbackSlideshow();
+        }
+        
+        // Force load and play
+        video.load();
+        
+        // Gentle timeout with retry
+        setTimeout(() => {
+            if (!videoLoaded) {
+                console.log('Attempting to force video play...');
+                video.play().then(() => {
+                    console.log('Video play successful');
+                    smoothVideoTransition();
+                }).catch((error) => {
+                    console.log('Video play failed:', error);
+                    handleVideoError();
+                });
+            }
+        }, 1500);
+        
+        // Video restart every 10 seconds with smooth transition
+        video.addEventListener('timeupdate', function() {
+            if (video.currentTime >= 10) {
+                video.style.opacity = '0.8';
+                setTimeout(() => {
+                    video.currentTime = 0;
+                    video.style.opacity = '1';
+                }, 200);
+            }
+        });
+        
+    } else {
+        console.log('Video element not found');
+        initializeFallbackSlideshow();
+    }
+}
+
+// Enhanced Fallback Slideshow Handler
+function initializeFallbackSlideshow() {
+    const slideshow = document.getElementById('fallback-slideshow');
+    const heroSection = document.querySelector('.hero');
+    
+    if (!slideshow) return;
+    
+    slideshow.classList.add('active');
+    const slides = slideshow.querySelectorAll('.slide');
+    let currentSlide = 0;
+    
+    // Smooth slide transitions
+    function nextSlide() {
+        slides[currentSlide].classList.remove('active');
+        
+        setTimeout(() => {
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add('active');
+        }, 500);
+    }
+    
+    // Stagger initial slide appearance
+    slides.forEach((slide, index) => {
+        setTimeout(() => {
+            if (index === 0) slide.classList.add('active');
+        }, index * 200);
+    });
+    
+    // Change slide every 3 seconds with smooth transitions
+    setInterval(nextSlide, 3000);
+    console.log('Enhanced slideshow initialized with', slides.length, 'slides');
+}
+
+// Smooth Number Counter Animation
+function animateNumbers() {
+    const statNumbers = document.querySelectorAll('.stat-number[data-target]');
+    
+    statNumbers.forEach((element, index) => {
+        const target = parseInt(element.getAttribute('data-target'));
+        const duration = 2000; // 2 seconds
+        const increment = target / (duration / 16); // 60fps
+        let current = 0;
+        
+        // Add staggered delay for each stat
+        const delay = index * 300;
+        
+        setTimeout(() => {
+            const timer = setInterval(() => {
+                current += increment;
+                
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                
+                // Update the display with + sign
+                element.textContent = Math.floor(current) + '+';
+                
+                // Add a subtle scale effect during counting
+                const progress = current / target;
+                const scale = 1 + (Math.sin(progress * Math.PI) * 0.1);
+                element.style.transform = `scale(${scale})`;
+                
+                if (current >= target) {
+                    element.style.transform = 'scale(1)';
+                    // Add completion effect
+                    element.style.color = '#7bc142';
+                    setTimeout(() => {
+                        element.style.color = '';
+                    }, 500);
+                }
+            }, 16);
+        }, delay);
+    });
+}
+
+// Fallback Slideshow Handler
+function initializeFallbackSlideshow() {
+    const slideshow = document.getElementById('fallback-slideshow');
+    if (!slideshow) return;
+    
+    const slides = slideshow.querySelectorAll('.slide');
+    let currentSlide = 0;
+    
+    function nextSlide() {
+        slides[currentSlide].classList.remove('active');
+        currentSlide = (currentSlide + 1) % slides.length;
+        slides[currentSlide].classList.add('active');
+    }
+    
+    // Change slide every 2.5 seconds to create video-like movement
+    setInterval(nextSlide, 2500);
+    console.log('Fallback slideshow initialized with', slides.length, 'slides');
+}
+
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing app...');
     console.log('Leaflet available:', typeof L !== 'undefined');
     
+    initializeVideoBackground();
+    initializeNavbarEffects();
     initializeApp();
     loadSampleData();
+    
+    // Start number animations after a delay to let content fade in
+    setTimeout(() => {
+        animateNumbers();
+    }, 1500);
 });
+
+// Enhanced Navbar Effects
+function initializeNavbarEffects() {
+    const navbar = document.querySelector('.navbar');
+    let lastScrollY = window.scrollY;
+    
+    // Scroll effect for navbar transparency and blur
+    window.addEventListener('scroll', () => {
+        const scrollY = window.scrollY;
+        const scrolled = scrollY > 50;
+        
+        if (scrolled) {
+            navbar.style.background = 'rgba(255, 255, 255, 0.98)';
+            navbar.style.backdropFilter = 'blur(20px)';
+            navbar.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.15)';
+        } else {
+            navbar.style.background = 'rgba(255, 255, 255, 0.95)';
+            navbar.style.backdropFilter = 'blur(15px)';
+            navbar.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.1)';
+        }
+        
+        // Hide/show navbar on scroll direction (optional)
+        if (scrollY > lastScrollY && scrollY > 100) {
+            navbar.style.transform = 'translateY(-100%)';
+        } else {
+            navbar.style.transform = 'translateY(0)';
+        }
+        
+        lastScrollY = scrollY;
+    });
+    
+    // Smooth navbar item animations on hover
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+        
+        link.addEventListener('mouseleave', function() {
+            if (!this.classList.contains('active')) {
+                this.style.transform = 'translateY(0)';
+            }
+        });
+    });
+}
 
 // App Initialization
 function initializeApp() {
@@ -47,6 +292,16 @@ function showSection(sectionName) {
             console.log(`Section ${index}: ${section.id || section.className}`);
             section.classList.add('hidden');
         });
+        
+        // Update navbar active states
+        const allNavLinks = document.querySelectorAll('.nav-link');
+        allNavLinks.forEach(link => link.classList.remove('active'));
+        
+        // Find and activate the current nav link
+        const activeNavLink = document.querySelector(`[onclick="showSection('${sectionName}')"]`);
+        if (activeNavLink) {
+            activeNavLink.classList.add('active');
+        }
         
         // Show target section
         if (sectionName === 'home') {
@@ -84,6 +339,8 @@ function showSection(sectionName) {
             setTimeout(loadLeaderboard, 100);
         } else if (sectionName === 'air-quality') {
             setTimeout(initializeAirQualitySection, 100);
+        } else if (sectionName === 'sponsors') {
+            setTimeout(initializeSponsorsPage, 100);
         }
         
         // Show success notification (except for home)
@@ -93,6 +350,7 @@ function showSection(sectionName) {
                 'feed': 'Еко действия',
                 'leaderboard': 'Класация',
                 'air-quality': 'Въздушно качество',
+                'sponsors': 'Спонсори',
                 'profile': 'Профил'
             };
             
@@ -1871,6 +2129,453 @@ function saveRedesignToBackend(layer, toolType) {
         layer._redesignId = data.id; // Store ID for updates/deletes
     })
     .catch(error => console.error('Error saving redesign:', error));
+}
+
+// Enhanced Map UX Functions for карта page
+function loadMapWithRedesign() {
+    const placeholder = document.getElementById('map-placeholder');
+    const loading = document.getElementById('map-loading');
+    const btn = document.getElementById('load-map-btn');
+    
+    // Show loading state
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Зареждане...';
+    
+    setTimeout(() => {
+        placeholder.style.opacity = '0';
+        setTimeout(() => {
+            placeholder.style.display = 'none';
+            loading.style.display = 'flex';
+            loading.style.opacity = '0';
+            
+            setTimeout(() => {
+                loading.style.opacity = '1';
+            }, 100);
+            
+            // Simulate map loading
+            setTimeout(() => {
+                loading.style.opacity = '0';
+                setTimeout(() => {
+                    loading.style.display = 'none';
+                    showNotification('Картата е заредена успешно!', 'success');
+                    // Here you would initialize the actual map
+                    initializeInteractiveMap();
+                }, 500);
+            }, 2500);
+        }, 300);
+    }, 500);
+}
+
+function initializeInteractiveMap() {
+    const mapCanvas = document.getElementById('map-canvas');
+    mapCanvas.innerHTML = `
+        <div class="interactive-map-placeholder">
+            <div class="map-success">
+                <i class="fas fa-check-circle"></i>
+                <h3>Картата е готова!</h3>
+                <p>Използвайте инструментите за преустройване за да редактирате София</p>
+            </div>
+        </div>
+    `;
+    
+    // Add success styling
+    mapCanvas.style.background = 'linear-gradient(135deg, #e8f5e8 0%, #f0f9f0 100%)';
+    mapCanvas.style.border = '2px solid #7bc142';
+}
+
+function toggleAllFilters() {
+    const checkboxes = document.querySelectorAll('.filter-item input[type="checkbox"]');
+    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    
+    checkboxes.forEach(cb => {
+        cb.checked = !allChecked;
+        // Trigger change event for each
+        cb.dispatchEvent(new Event('change'));
+    });
+    
+    const btn = document.querySelector('.filter-toggle-all');
+    btn.innerHTML = allChecked ? 
+        '<i class="fas fa-eye"></i> Всички' : 
+        '<i class="fas fa-eye-slash"></i> Скрий всички';
+    
+    showNotification(
+        allChecked ? 'Всички филтри са изключени' : 'Всички филтри са включени', 
+        'info'
+    );
+}
+
+function getCurrentLocation() {
+    const btn = event.target.closest('.map-action-btn');
+    const originalHTML = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Намиране...</span>';
+    btn.disabled = true;
+    
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                showNotification(`Вашата позиция: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`, 'success');
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+                
+                // Animate button success
+                btn.style.background = '#28a745';
+                setTimeout(() => {
+                    btn.style.background = '';
+                }, 1000);
+            },
+            (error) => {
+                showNotification('Не може да се определи позицията', 'error');
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
+        );
+    } else {
+        showNotification('Геолокацията не се поддържа', 'error');
+        btn.innerHTML = originalHTML;
+        btn.disabled = false;
+    }
+}
+
+function shareMapView() {
+    const btn = event.target.closest('.map-action-btn');
+    const originalHTML = btn.innerHTML;
+    
+    // Copy to clipboard simulation
+    const shareURL = window.location.href + '?view=sofia-map';
+    
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(shareURL).then(() => {
+            btn.innerHTML = '<i class="fas fa-check"></i> <span>Копирано!</span>';
+            btn.style.background = '#28a745';
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.style.background = '';
+            }, 2000);
+            
+            showNotification('Връзката е копирана в клипборда', 'success');
+        });
+    } else {
+        showNotification('Споделянето не се поддържа от браузъра', 'error');
+    }
+}
+
+// Enhanced redesign tool selection with better feedback
+function setRedesignTool(toolType) {
+    // Remove active from all tools
+    document.querySelectorAll('.redesign-tool').forEach(tool => {
+        tool.classList.remove('active');
+    });
+    
+    // Add active to selected tool
+    const selectedTool = document.getElementById(`${toolType}-tool`);
+    if (selectedTool) {
+        selectedTool.classList.add('active');
+        
+        // Add animation effect
+        selectedTool.style.transform = 'scale(1.1)';
+        setTimeout(() => {
+            selectedTool.style.transform = '';
+        }, 200);
+    }
+    
+    // Update tool info with more detailed descriptions
+    const toolDescriptions = {
+        'select': 'Селектиране област - Кликнете и влачете за избор на район',
+        'park': 'Създаване на парк - Кликнете за добавяне на зелена зона',
+        'alley': 'Планиране на алея - Начертайте нови улици и пътища',
+        'greenzone': 'Зелена зона - Добавете дървета и растителност',
+        'bikelane': 'Велоалея - Създайте велосипедни пътеки',
+        'clear': 'Изчистване - Премахнете всички промени'
+    };
+    
+    const toolInfo = document.getElementById('current-redesign-tool');
+    if (toolInfo) {
+        toolInfo.textContent = `Избран инструмент: ${toolDescriptions[toolType] || 'Неизвестен инструмент'}`;
+    }
+    
+    showNotification(`Избран инструмент: ${toolType}`, 'info');
+}
+
+// Add enhanced filter interaction
+function filterLocationsByType() {
+    const checkedFilters = Array.from(document.querySelectorAll('.filter-item input[type="checkbox"]:checked'));
+    const filterTypes = checkedFilters.map(cb => cb.closest('.filter-item').querySelector('span').textContent);
+    
+    showNotification(`Показват се: ${filterTypes.join(', ')}`, 'info');
+    
+    // Add visual feedback to map canvas
+    const mapCanvas = document.getElementById('map-canvas');
+    mapCanvas.style.borderColor = checkedFilters.length > 0 ? '#7bc142' : '#ccc';
+}
+
+// Sponsors page functions
+function showBecomeSponsorModal() {
+    // Create modal if it doesn't exist
+    if (!document.getElementById('becomeSponsorModal')) {
+        const modal = document.createElement('div');
+        modal.id = 'becomeSponsorModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('becomeSponsorModal')">&times;</span>
+                <h3><i class="fas fa-handshake"></i> Станете наш спонсор</h3>
+                <form id="sponsorForm">
+                    <div class="form-group">
+                        <label>Име на компанията</label>
+                        <input type="text" name="company" placeholder="Вашата компания" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Контактен имейл</label>
+                        <input type="email" name="email" placeholder="company@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Тип на бизнеса</label>
+                        <select name="businessType" required>
+                            <option value="">Изберете тип</option>
+                            <option value="technology">Технологии</option>
+                            <option value="energy">Енергия</option>
+                            <option value="construction">Строителство</option>
+                            <option value="transport">Транспорт</option>
+                            <option value="food">Храни и напитки</option>
+                            <option value="other">Друго</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Желан тип партньорство</label>
+                        <select name="sponsorshipType" required>
+                            <option value="">Изберете тип</option>
+                            <option value="gold">Златно партньорство (50,000+ лв)</option>
+                            <option value="silver">Сребърно партньорство (25,000+ лв)</option>
+                            <option value="bronze">Бронзово партньорство (10,000+ лв)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Съобщение</label>
+                        <textarea name="message" placeholder="Разкажете ни повече за вашите цели и как можем да работим заедно..." rows="4"></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-paper-plane"></i>
+                        Изпратете заявката
+                    </button>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        // Add form handler
+        document.getElementById('sponsorForm').addEventListener('submit', handleSponsorApplication);
+    }
+    
+    document.getElementById('becomeSponsorModal').classList.remove('hidden');
+    document.getElementById('becomeSponsorModal').style.display = 'flex';
+}
+
+function showContactModal() {
+    // Create modal if it doesn't exist
+    if (!document.getElementById('contactModal')) {
+        const modal = document.createElement('div');
+        modal.id = 'contactModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <span class="close" onclick="closeModal('contactModal')">&times;</span>
+                <h3><i class="fas fa-envelope"></i> Свържете се с нас</h3>
+                <form id="contactForm">
+                    <div class="form-group">
+                        <label>Вашето име</label>
+                        <input type="text" name="name" placeholder="Име и фамилия" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Имейл адрес</label>
+                        <input type="email" name="email" placeholder="your@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Тема</label>
+                        <select name="subject" required>
+                            <option value="">Изберете тема</option>
+                            <option value="sponsorship">Спонсорство</option>
+                            <option value="partnership">Партньорство</option>
+                            <option value="collaboration">Сътрудничество</option>
+                            <option value="media">Медии</option>
+                            <option value="general">Общи въпроси</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Съобщение</label>
+                        <textarea name="message" placeholder="Вашето съобщение..." rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-paper-plane"></i>
+                        Изпратете съобщението
+                    </button>
+                </form>
+                
+                <div class="contact-info">
+                    <h4>Други начини за контакт:</h4>
+                    <div class="contact-methods">
+                        <div class="contact-method">
+                            <i class="fas fa-envelope"></i>
+                            <span>info@plantatree.bg</span>
+                        </div>
+                        <div class="contact-method">
+                            <i class="fas fa-phone"></i>
+                            <span>+359 888 123 456</span>
+                        </div>
+                        <div class="contact-method">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>бул. Витоша 1, София 1000</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        // Add form handler
+        document.getElementById('contactForm').addEventListener('submit', handleContactForm);
+    }
+    
+    document.getElementById('contactModal').classList.remove('hidden');
+    document.getElementById('contactModal').style.display = 'flex';
+}
+
+function handleSponsorApplication(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const sponsorData = {
+        company: formData.get('company'),
+        email: formData.get('email'),
+        businessType: formData.get('businessType'),
+        sponsorshipType: formData.get('sponsorshipType'),
+        message: formData.get('message'),
+        timestamp: new Date().toISOString()
+    };
+    
+    console.log('Sponsor application:', sponsorData);
+    
+    // Simulate sending to backend
+    showNotification('Заявката за спонсорство е изпратена успешно! Ще се свържем с вас скоро. 🤝', 'success');
+    
+    closeModal('becomeSponsorModal');
+    e.target.reset();
+    
+    // Add sparkle animation effect
+    createSparkleEffect();
+}
+
+function handleContactForm(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const contactData = {
+        name: formData.get('name'),
+        email: formData.get('email'),
+        subject: formData.get('subject'),
+        message: formData.get('message'),
+        timestamp: new Date().toISOString()
+    };
+    
+    console.log('Contact form:', contactData);
+    
+    // Simulate sending to backend
+    showNotification('Съобщението е изпратено успешно! Очаквайте отговор в рамките на 24 часа. 📧', 'success');
+    
+    closeModal('contactModal');
+    e.target.reset();
+}
+
+function createSparkleEffect() {
+    // Create sparkle animation for sponsor application success
+    for (let i = 0; i < 20; i++) {
+        setTimeout(() => {
+            const sparkle = document.createElement('div');
+            sparkle.style.cssText = `
+                position: fixed;
+                top: ${Math.random() * window.innerHeight}px;
+                left: ${Math.random() * window.innerWidth}px;
+                width: 10px;
+                height: 10px;
+                background: #7bc142;
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 9999;
+                animation: sparkle 1s ease-out forwards;
+            `;
+            
+            document.body.appendChild(sparkle);
+            
+            setTimeout(() => sparkle.remove(), 1000);
+        }, i * 50);
+    }
+}
+
+// Add sparkle animation CSS
+const sparkleStyle = document.createElement('style');
+sparkleStyle.textContent = `
+    @keyframes sparkle {
+        0% {
+            transform: scale(0) rotate(0deg);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1) rotate(180deg);
+            opacity: 0.8;
+        }
+        100% {
+            transform: scale(0) rotate(360deg);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(sparkleStyle);
+
+// Initialize sponsors page when loaded
+function initializeSponsorsPage() {
+    // Animate statistics when sponsors page is viewed
+    const sponsorStats = document.querySelectorAll('#sponsors .stat-number[data-target]');
+    
+    if (sponsorStats.length > 0) {
+        sponsorStats.forEach((element, index) => {
+            const target = parseInt(element.getAttribute('data-target'));
+            const duration = 2000;
+            const increment = target / (duration / 16);
+            let current = 0;
+            
+            const delay = index * 200;
+            
+            setTimeout(() => {
+                const timer = setInterval(() => {
+                    current += increment;
+                    
+                    if (current >= target) {
+                        current = target;
+                        clearInterval(timer);
+                    }
+                    
+                    // Update display
+                    if (target > 1000) {
+                        element.textContent = Math.floor(current).toLocaleString();
+                    } else {
+                        element.textContent = Math.floor(current);
+                    }
+                    
+                    // Add completion effect
+                    if (current >= target) {
+                        element.style.color = '#7bc142';
+                        setTimeout(() => {
+                            element.style.color = '';
+                        }, 500);
+                    }
+                }, 16);
+            }, delay);
+        });
+    }
+    
+    console.log('Sponsors page initialized with animated statistics');
 }
 
 function updateRedesignInBackend(layer) {
