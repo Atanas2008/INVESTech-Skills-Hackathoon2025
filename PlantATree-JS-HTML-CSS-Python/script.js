@@ -241,6 +241,16 @@ function showSection(sectionName) {
     console.log('Current section:', currentSection);
     
     try {
+        // Check if user is logged in when trying to access profile
+        if (sectionName === 'profile') {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user) {
+                showNotification('Моля, влезте в профила си за достъп до тази секция!', 'error');
+                showModal('loginModal');
+                return;
+            }
+        }
+
         // Hide all sections first
         const allSections = document.querySelectorAll('.section, .hero');
         console.log('Found sections:', allSections.length);
