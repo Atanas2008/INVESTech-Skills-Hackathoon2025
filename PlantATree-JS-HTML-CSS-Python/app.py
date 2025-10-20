@@ -2,11 +2,13 @@ from flask import Flask, render_template, request, jsonify, send_from_directory,
 from flask_cors import CORS
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import sqlite3
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 import requests
 import google.generativeai as genai
+import jwt
 import time
 
 from dotenv import load_dotenv
@@ -796,6 +798,95 @@ def handle_unexpected_error(error):
         'status_code': 500,
         'timestamp': datetime.now().isoformat()
     }), 500
+
+# Auth routes
+@app.route('/api/auth/register', methods=['POST'])
+def register():
+    """Register a new user"""
+    data = request.get_json()
+    
+    if not data or not all(k in data for k in ['username', 'email', 'password']):
+        return jsonify({'message': 'Missing required fields'}), 400
+        
+    # Check if user already exists
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT id FROM users WHERE email = ?', (data['email'],))
+    if cursor.fetchone():
+        return jsonify({'message': 'Email already registered'}), 400
+        
+    cursor.execute('SELECT id FROM users WHERE username = ?', (data['username'],))
+    if cursor.fetchone():
+        return jsonify({'message': 'Username already taken'}), 400
+    
+    # Create new user
+    hashed_password = generate_password_hash(data['password'])
+    try:
+        cursor.execute(
+            'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
+            (data['username'], data['email'], hashed_password)
+        )
+        conn.commit()
+        
+        # Get the new user's id
+        cursor.execute('SELECT last_insert_rowid()')
+        user_id = cursor.fetchone()[0]
+        
+        # Generate token
+        token = jwt.encode({
+            'user_id': user_id,
+            'exp': datetime.now() + timedelta(days=1)
+        }, app.config['SECRET_KEY'], algorithm='HS256')
+        
+        return jsonify({
+            'message': 'Successfully registered',
+            'token': token,
+            'user': {
+                'id': user_id,
+                'username': data['username'],
+                'email': data['email']
+            }
+        }), 201
+        
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'message': str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    """Login user"""
+    data = request.get_json()
+    
+    if not data or not data.get('email') or not data.get('password'):
+        return jsonify({'message': 'Missing email or password'}), 400
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT id, username, email, password_hash FROM users WHERE email = ?', (data['email'],))
+    user = cursor.fetchone()
+    conn.close()
+    
+    if not user or not check_password_hash(user[3], data['password']):
+        return jsonify({'message': 'Invalid email or password'}), 401
+    
+    # Generate token
+    token = jwt.encode({
+        'user_id': user[0],
+        'exp': datetime.now() + timedelta(days=1)
+    }, app.config['SECRET_KEY'], algorithm='HS256')
+    
+    return jsonify({
+        'token': token,
+        'user': {
+            'id': user[0],
+            'username': user[1],
+            'email': user[2]
+        }
+    }), 200
 
 # Admin routes (for future implementation)
 @app.route('/api/admin/locations/pending', methods=['GET'])

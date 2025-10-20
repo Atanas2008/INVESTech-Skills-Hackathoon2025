@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PlantATree - Еко инициативи София</title>
     <link rel="stylesheet" href="design.css">
+    <link rel="stylesheet" href="static/css/auth.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- Geoapify Maps CSS and JS -->
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/@geoapify/leaflet-address-search-plugin@^1/dist/L.Control.GeoapifyAddressSearch.min.css" />
@@ -33,8 +34,8 @@
                 <li><a href="#" onclick="showSection('profile')" class="nav-link">Профил</a></li>
             </ul>
             <div class="auth-buttons">
-                <button class="btn-login">Вход</button>
-                <button class="btn-register">Регистрация</button>
+                <button class="btn-login" onclick="showModal('loginModal')">Вход</button>
+                <button class="btn-register" onclick="showModal('registerModal')">Регистрация</button>
             </div>
         </div>
     </nav>
@@ -1145,5 +1146,59 @@
     </script>
 
     <script src="script.js"></script>
+    <script src="static/js/auth.js"></script>
+
+    <!-- Auth Modals -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('loginModal')">&times;</span>
+            <h3>Вход</h3>
+            <form id="loginForm" onsubmit="loginUser(event)">
+                <div class="form-group">
+                    <label for="login-email">Имейл</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Парола</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit" class="btn-primary">Вход</button>
+                <p class="form-footer">
+                    Нямате профил? 
+                    <a href="#" onclick="switchModal('loginModal', 'registerModal')">Регистрирайте се</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('registerModal')">&times;</span>
+            <h3>Регистрация</h3>
+            <form id="registerForm" onsubmit="registerUser(event)">
+                <div class="form-group">
+                    <label for="register-username">Потребителско име</label>
+                    <input type="text" id="register-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Имейл</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Парола</label>
+                    <input type="password" id="register-password" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm-password">Повтори парола</label>
+                    <input type="password" id="register-confirm-password" required>
+                </div>
+                <button type="submit" class="btn-primary">Регистрация</button>
+                <p class="form-footer">
+                    Вече имате профил? 
+                    <a href="#" onclick="switchModal('registerModal', 'loginModal')">Влезте</a>
+                </p>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

@@ -1,10 +1,16 @@
 # Core Flask dependencies
 Flask>=3.0.0
 Flask-CORS>=4.0.0
+Flask-SQLAlchemy>=3.1.1
+Flask-Login>=0.6.3
 Werkzeug>=3.0.0
 
 # Database support
 psycopg2-binary>=2.9.0
+SQLAlchemy>=2.0.23
+
+# Authentication
+PyJWT>=2.8.0
 
 # Environment configuration
 python-dotenv>=1.0.0
