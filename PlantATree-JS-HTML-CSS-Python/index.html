@@ -51,9 +51,17 @@
                 <li><a href="#" onclick="showSection('sponsors')" class="nav-link">Спонсори</a></li>
                 <li><a href="#" onclick="showSection('profile')" class="nav-link">Профил</a></li>
             </ul>
-            <div class="auth-buttons">
-                <button class="btn-login" onclick="showModal('loginModal')">Вход</button>
-                <button class="btn-register" onclick="showModal('registerModal')">Регистрация</button>
+            <div class="nav-right">
+                <div class="language-switch">
+                    <button id="language-toggle" class="btn-language" onclick="toggleLanguage()" title="Switch Language">
+                        <i class="fas fa-language"></i>
+                        <span id="language-text">EN</span>
+                    </button>
+                </div>
+                <div class="auth-buttons">
+                    <button class="btn-login" onclick="showModal('loginModal')">Вход</button>
+                    <button class="btn-register" onclick="showModal('registerModal')">Регистрация</button>
+                </div>
             </div>
         </div>
     </nav>
@@ -114,88 +122,88 @@
             <h3><i class="fas fa-hammer"></i> Инструменти за преустройване на София</h3>
             <div class="save-notice">
                 <i class="fas fa-database"></i>
-                <span>Промените се запазват автоматично в базата данни</span>
+                <span data-translate="auto_save_notice">Промените се запазват автоматично в базата данни</span>
             </div>
             <div class="redesign-tools">
                 <button class="redesign-tool active" id="select-tool" onclick="setRedesignTool('select')">
                     <i class="fas fa-mouse-pointer"></i>
-                    Селектиране
+                    <span data-translate="tool_selection">Селектиране</span>
                 </button>
                 <button class="redesign-tool" id="park-tool" onclick="setRedesignTool('park')">
                     <i class="fas fa-tree"></i>
-                    Парк
+                    <span data-translate="tool_park">Парк</span>
                 </button>
                 <button class="redesign-tool" id="alley-tool" onclick="setRedesignTool('alley')">
                     <i class="fas fa-road"></i>
-                    Алея/Улица
+                    <span data-translate="tool_alley">Алея/Улица</span>
                 </button>
                 <button class="redesign-tool" id="green-zone-tool" onclick="setRedesignTool('greenzone')">
                     <i class="fas fa-leaf"></i>
-                    Зелена зона
+                    <span data-translate="tool_green_zone">Зелена зона</span>
                 </button>
                 <button class="redesign-tool" id="bike-lane-tool" onclick="setRedesignTool('bikelane')">
                     <i class="fas fa-bicycle"></i>
-                    Велоалея
+                    <span data-translate="tool_bike_lane">Велоалея</span>
                 </button>
                 <div class="zone-dropdown-container">
                     <button class="redesign-tool dropdown-toggle" id="zone-tool" onclick="toggleZoneDropdown()">
                         <i class="fas fa-city"></i>
-                        Зони
+                        <span data-translate="tool_zones">Зони</span>
                         <i class="fas fa-chevron-down dropdown-arrow"></i>
                     </button>
                     <div class="zone-dropdown" id="zone-dropdown">
                         <button class="zone-option" onclick="setRedesignTool('residential')">
                             <i class="fas fa-home"></i>
-                            Жилищна зона
+                            <span data-translate="zone_residential">Жилищна зона</span>
                         </button>
                         <button class="zone-option" onclick="setRedesignTool('commercial')">
                             <i class="fas fa-store"></i>
-                            Търговска зона
+                            <span data-translate="zone_commercial">Търговска зона</span>
                         </button>
                         <button class="zone-option" onclick="setRedesignTool('industrial')">
                             <i class="fas fa-industry"></i>
-                            Индустриална зона
+                            <span data-translate="zone_industrial">Индустриална зона</span>
                         </button>
                         <button class="zone-option" onclick="setRedesignTool('office')">
                             <i class="fas fa-building"></i>
-                            Офис зона
+                            <span data-translate="zone_office">Офис зона</span>
                         </button>
                         <button class="zone-option" onclick="setRedesignTool('mixed')">
                             <i class="fas fa-puzzle-piece"></i>
-                            Смесена зона
+                            <span data-translate="zone_mixed">Смесена зона</span>
                         </button>
                         <button class="zone-option" onclick="setRedesignTool('public')">
                             <i class="fas fa-landmark"></i>
-                            Обществена зона
+                            <span data-translate="zone_public">Обществена зона</span>
                         </button>
                     </div>
                 </div>
                 <button class="redesign-tool" id="boundary-tool" onclick="setRedesignTool('boundary')">
                     <i class="fas fa-circle"></i>
-                    Граници
+                    <span data-translate="tool_boundaries">Граници</span>
                 </button>
                 <button class="redesign-tool" id="clear-tool" onclick="clearAllRedesigns()">
                     <i class="fas fa-eraser"></i>
-                    Изчисти всичко
+                    <span data-translate="tool_clear">Изчисти всичко</span>
                 </button>
             </div>
             <div class="save-controls">
                 <button class="save-btn" onclick="saveDrawnItems()" title="Запази текущите промени">
                     <i class="fas fa-save"></i>
-                    Запази
+                    <span data-translate="btn_save">Запази</span>
                 </button>
                 <button class="load-btn" onclick="loadDrawnItems()" title="Зареди запазените промени">
                     <i class="fas fa-download"></i>
-                    Зареди
+                    <span data-translate="btn_load">Зареди</span>
                 </button>
                 <button class="clear-saved-btn" onclick="clearSavedItems()" title="Изтрий запазените данни">
                     <i class="fas fa-trash"></i>
-                    Изтрий запазеното
+                    <span data-translate="btn_delete_saved">Изтрий запазеното</span>
                 </button>
             </div>
             <div class="current-tool-info">
-                <span id="current-redesign-tool">Избран инструмент: Селектиране област</span>
-                <small>Кликнете и влачете върху картата за да селектирате област за преустройство. Промените са временни.</small>
+                <span id="current-redesign-tool" data-translate="current_tool_info">Избран инструмент: Селектиране област</span>
+                <small data-translate="tool_selection_desc">Кликнете и влачете върху картата за да селектирате област за преустройство. Промените са временни.</small>
             </div>
         </div>
         
@@ -203,9 +211,9 @@
             <div id="map-canvas" class="map-canvas">
                 <div class="map-placeholder" id="map-placeholder">
                     <i class="fas fa-map"></i>
-                    <p>Кликнете "Покажи карта" за да заредите интерактивната карта</p>
+                    <p data-translate="map_placeholder_text">Кликнете "Покажи карта" за да заредите интерактивната карта</p>
                     <button onclick="loadMapWithRedesign()" style="background: #7bc142; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
-                        Покажи карта на София
+                        <span data-translate="btn_show_map">Покажи карта на София</span>
                     </button>
                 </div>
             </div>
@@ -259,12 +267,12 @@
                     </div>
                 </div>
 
-                <h3>Филтри</h3>
+                <h3 data-translate="map_filters_title">Филтри</h3>
                 <div class="filter-group">
-                    <label><input type="checkbox" checked onchange="filterLocationsByType()"> Паркове</label>
-                    <label><input type="checkbox" checked onchange="filterLocationsByType()"> Еко пътеки</label>
-                    <label><input type="checkbox" checked onchange="filterLocationsByType()"> Велоалеи</label>
-                    <label><input type="checkbox" checked onchange="filterLocationsByType()"> Места за засаждане</label>
+                    <label><input type="checkbox" checked onchange="filterLocationsByType()"> <span data-translate="filter_parks">Паркове</span></label>
+                    <label><input type="checkbox" checked onchange="filterLocationsByType()"> <span data-translate="filter_eco_trails">Еко пътеки</span></label>
+                    <label><input type="checkbox" checked onchange="filterLocationsByType()"> <span data-translate="filter_bike_lanes">Велоалеи</span></label>
+                    <label><input type="checkbox" checked onchange="filterLocationsByType()"> <span data-translate="filter_planting_areas">Места за засаждане</span></label>
                 </div>
                 <button class="btn-primary" onclick="showAddLocationModal()">
                     <i class="fas fa-plus"></i> Добави локация
@@ -274,13 +282,13 @@
         
         <!-- Sofia Facts Panel -->
         <div class="sofia-facts-panel" id="sofia-facts-panel" style="display: none;">
-            <h3><i class="fas fa-lightbulb"></i> Знаете ли, че...</h3>
+            <h3><i class="fas fa-lightbulb"></i> <span data-translate="facts_title">Знаете ли, че...</span></h3>
             <div class="fact-container">
                 <div class="fact-item" id="current-fact">
-                    <p>Зареждане на интересни факти за София...</p>
+                    <p data-translate="map_loading_text">Зареждане на интересни факти за София...</p>
                 </div>
                 <button class="fact-btn" onclick="showRandomFact()">
-                    <i class="fas fa-refresh"></i> Нов факт
+                    <i class="fas fa-refresh"></i> <span data-translate="new_fact_btn">нов факт</span>
                 </button>
             </div>
         </div>
@@ -531,11 +539,11 @@
         <div class="leaderboard-container">
             <div class="leaderboard-table">
                 <div class="table-header">
-                    <div class="rank-header">Позиция</div>
-                    <div class="user-header">Потребител</div>
-                    <div class="points-header">Точки</div>
-                    <div class="actions-header">Действия</div>
-                    <div class="badges-header">Баджове</div>
+                    <div class="rank-header" data-translate="position_header">Позиция</div>
+                    <div class="user-header" data-translate="user_header">Потребител</div>
+                    <div class="points-header" data-translate="points_header">Точки</div>
+                    <div class="actions-header" data-translate="actions_header">Действия</div>
+                    <div class="badges-header" data-translate="badges_header">Баджове</div>
                 </div>
                 
                 <!-- Top 3 Special Podium -->
@@ -556,8 +564,8 @@
                                 <span class="actions">85 действия</span>
                             </div>
                             <div class="podium-badges">
-                                <span class="badge eco-hero">Еко герой</span>
-                                <span class="badge tree-master">Майстор дървета</span>
+                                <span class="badge eco-hero" data-translate="eco_hero_badge">Еко герой</span>
+                                <span class="badge tree-master" data-translate="tree_master_badge">Майстор дървета</span>
                             </div>
                         </div>
                     </div>
@@ -577,7 +585,7 @@
                                 <span class="actions">72 действия</span>
                             </div>
                             <div class="podium-badges">
-                                <span class="badge bike-rider">Велосипедист</span>
+                                <span class="badge bike-rider" data-translate="cyclist_badge">Велосипедист</span>
                             </div>
                         </div>
                     </div>
@@ -597,7 +605,7 @@
                                 <span class="actions">63 действия</span>
                             </div>
                             <div class="podium-badges">
-                                <span class="badge cleaner">Почистител</span>
+                                <span class="badge cleaner" data-translate="cleaner_badge">Почистител</span>
                             </div>
                         </div>
                     </div>
@@ -646,14 +654,14 @@
             <!-- Current Air Quality Card -->
             <div class="air-quality-card main-card">
                 <div class="card-header">
-                    <h3><i class="fas fa-map-marker-alt"></i> София Център</h3>
-                    <div class="last-updated" id="last-updated">Последно обновяване: зареждане...</div>
+                    <h3><i class="fas fa-map-marker-alt"></i> <span data-translate="sofia_center">София Център</span></h3>
+                    <div class="last-updated" id="last-updated"><span data-translate="last_updated">Последно обновяване</span>: зареждане...</div>
                 </div>
                 
                 <div class="aqi-display">
                     <div class="aqi-value" id="aqi-value">--</div>
-                    <div class="aqi-label">AQI</div>
-                    <div class="aqi-status" id="aqi-status">Зареждане...</div>
+                    <div class="aqi-label" data-translate="aqi_label">AQI</div>
+                    <div class="aqi-status" id="aqi-status" data-translate="loading">Зареждане...</div>
                 </div>
                 
                 <div class="pollutants-grid">
@@ -690,46 +698,46 @@
             
             <!-- Weather Information -->
             <div class="weather-card">
-                <h3><i class="fas fa-cloud-sun"></i> Метеорологични условия</h3>
+                <h3><i class="fas fa-cloud-sun"></i> <span data-translate="weather_conditions">Метеорологични условия</span></h3>
                 <div class="weather-info">
                     <div class="weather-item">
                         <i class="fas fa-thermometer-half"></i>
-                        <span>Температура: <span id="temperature">--°C</span></span>
+                        <span><span data-translate="temperature_label">Температура</span>: <span id="temperature">--°C</span></span>
                     </div>
                     <div class="weather-item">
                         <i class="fas fa-tint"></i>
-                        <span>Влажност: <span id="humidity">--%</span></span>
+                        <span><span data-translate="humidity_label">Влажност</span>: <span id="humidity">--%</span></span>
                     </div>
                     <div class="weather-item">
                         <i class="fas fa-wind"></i>
-                        <span>Вятър: <span id="wind-speed">-- км/ч</span></span>
+                        <span><span data-translate="wind_label">Вятър</span>: <span id="wind-speed">-- км/ч</span></span>
                     </div>
                     <div class="weather-item">
                         <i class="fas fa-eye"></i>
-                        <span>Видимост: <span id="visibility">-- км</span></span>
+                        <span><span data-translate="visibility_label">Видимост</span>: <span id="visibility">-- км</span></span>
                     </div>
                 </div>
             </div>
             
             <!-- Health Recommendations -->
             <div class="health-recommendations">
-                <h3><i class="fas fa-heart"></i> Препоръки за здравето</h3>
+                <h3><i class="fas fa-heart"></i> <span data-translate="health_rec_title">Препоръки за здравето</span></h3>
                 <div class="recommendation-content" id="health-recommendations">
-                    <p>Зареждане на препоръки...</p>
+                    <p data-translate="loading">Зареждане на препоръки...</p>
                 </div>
             </div>
             
             <!-- Historical Data Chart -->
             <div class="chart-container">
-                <h3><i class="fas fa-chart-line"></i> 24-часова тенденция</h3>
+                <h3><i class="fas fa-chart-line"></i> <span data-translate="aqi_trend_title">24-часова тенденция</span></h3>
                 <div class="chart-placeholder" id="air-quality-chart">
-                    <p>Зареждане на графика...</p>
+                    <p data-translate="loading">Зареждане на графика...</p>
                 </div>
             </div>
             
             <!-- Location Selector -->
             <div class="location-selector">
-                <h3><i class="fas fa-location-arrow"></i> Избери локация</h3>
+                <h3><i class="fas fa-location-arrow"></i> <span data-translate="location_selector_title">Избери локация</span></h3>
                 <select id="location-select" onchange="changeLocation()">
                     <option value="sofia-center">София Център</option>
                     <option value="sofia-lozenets">София Лозенец</option>
@@ -738,7 +746,7 @@
                     <option value="sofia-lyulin">София Люлин</option>
                 </select>
                 <button class="btn-secondary" onclick="getCurrentLocationAir()">
-                    <i class="fas fa-crosshairs"></i> Моята локация
+                    <i class="fas fa-crosshairs"></i> <span data-translate="btn_my_location">Моята локация</span>
                 </button>
             </div>
         </div>
@@ -807,21 +815,21 @@
                             <i class="fas fa-leaf" style="font-size: 3rem; color: #2e7d32;"></i>
                         </div>
                         <h3>EcoVision България</h3>
-                        <p class="sponsor-type">Еко технологии</p>
+                        <p class="sponsor-type" data-translate="eco_technologies">Еко технологии</p>
                         <p class="sponsor-description">Водеща компания в областта на възобновяемата енергия и устойчивото развитие в България.</p>
                         <div class="sponsor-contribution">
                             <div class="contribution-item">
                                 <i class="fas fa-tree"></i>
-                                <span>1,500 дървета засадени</span>
+                                <span>1,500 <span data-translate="trees_planted">дървета засадени</span></span>
                             </div>
                             <div class="contribution-item">
                                 <i class="fas fa-euro-sign"></i>
-                                <span>50,000 лв. инвестиция</span>
+                                <span>50,000 <span data-translate="investment_amount">лв. инвестиция</span></span>
                             </div>
                         </div>
                         <div class="sponsor-badges">
-                            <span class="badge premium">Премиум партньор</span>
-                            <span class="badge verified">Верифициран</span>
+                            <span class="badge premium" data-translate="premium_partner">Премиум партньор</span>
+                            <span class="badge verified" data-translate="verified_badge">Верифициран</span>
                         </div>
                     </div>
 
@@ -830,7 +838,7 @@
                             <i class="fas fa-solar-panel" style="font-size: 3rem; color: #ff9800;"></i>
                         </div>
                         <h3>GreenTech Solutions</h3>
-                        <p class="sponsor-type">Соларни решения</p>
+                        <p class="sponsor-type" data-translate="solar_solutions">Соларни решения</p>
                         <p class="sponsor-description">Иновативни решения за чиста енергия и интелигентни градове на бъдещето.</p>
                         <div class="sponsor-contribution">
                             <div class="contribution-item">
@@ -843,8 +851,8 @@
                             </div>
                         </div>
                         <div class="sponsor-badges">
-                            <span class="badge premium">Премиум партньор</span>
-                            <span class="badge innovation">Иновация</span>
+                            <span class="badge premium" data-translate="premium_partner">Премиум партньор</span>
+                            <span class="badge innovation" data-translate="innovation_badge">Иновация</span>
                         </div>
                     </div>
                 </div>
@@ -976,7 +984,7 @@
                         <div class="benefit-icon">
                             <i class="fas fa-eye"></i>
                         </div>
-                        <h3>Видимост</h3>
+                        <h3 data-translate="visibility_benefit">Видимост</h3>
                         <p>Вашият бранд ще бъде видян от хиляди екологично съзнателни граждани</p>
                     </div>
 
@@ -984,7 +992,7 @@
                         <div class="benefit-icon">
                             <i class="fas fa-heart"></i>
                         </div>
-                        <h3>Социална отговорност</h3>
+                        <h3 data-translate="social_responsibility">Социална отговорност</h3>
                         <p>Покажете своята ангажираност към устойчивото развитие на града</p>
                     </div>
 
@@ -992,7 +1000,7 @@
                         <div class="benefit-icon">
                             <i class="fas fa-users"></i>
                         </div>
-                        <h3>Общност</h3>
+                        <h3 data-translate="community_benefit">Общност</h3>
                         <p>Станете част от активна общност, която се грижи за околната среда</p>
                     </div>
 
@@ -1000,13 +1008,13 @@
                         <div class="benefit-icon">
                             <i class="fas fa-chart-line"></i>
                         </div>
-                        <h3>Растеж</h3>
+                        <h3 data-translate="growth_benefit">Растеж</h3>
                         <p>Достигнете до нови клиенти, които ценят екологичните инициативи</p>
                     </div>
                 </div>
 
                 <div class="cta-section">
-                    <h3>Готови ли сте да направите разликата?</h3>
+                    <h3 data-translate="ready_to_make_difference">Готови ли сте да направите разликата?</h3>
                     <div class="cta-buttons">
                         <button class="btn-primary become-sponsor" onclick="showBecomeSponsorModal()">
                             <i class="fas fa-handshake"></i>
@@ -1022,23 +1030,23 @@
 
             <!-- Impact Statistics -->
             <div class="impact-stats">
-                <h2>Въздействие на партньорствата</h2>
+                <h2 data-translate="partnership_impact">Въздействие на партньорствата</h2>
                 <div class="stats-grid">
                     <div class="stat-item">
                         <div class="stat-number" data-target="2500">0</div>
-                        <div class="stat-label">Засадени дървета</div>
+                        <div class="stat-label" data-translate="trees_planted">Засадени дървета</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-number" data-target="150000">0</div>
-                        <div class="stat-label">Лева инвестиции</div>
+                        <div class="stat-label" data-translate="investment_amount">Лева инвестиции</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-number" data-target="35">0</div>
-                        <div class="stat-label">% по-чист въздух</div>
+                        <div class="stat-label" data-translate="cleaner_air">% по-чист въздух</div>
                     </div>
                     <div class="stat-item">
                         <div class="stat-number" data-target="12">0</div>
-                        <div class="stat-label">Нови паркове</div>
+                        <div class="stat-label" data-translate="new_parks">Нови паркове</div>
                     </div>
                 </div>
             </div>

@@ -11,6 +11,423 @@ let currentSection = 'home';
 let mapInstance = null;
 let ecoActions = [];
 let locations = [];
+let currentLanguage = 'bg'; // Default to Bulgarian
+
+// Language translations object
+const translations = {
+    'bg': {
+        // Navigation
+        'nav_home': 'Начало',
+        'nav_map': 'Карта',
+        'nav_feed': 'Еко действия',
+        'nav_air': 'Въздух',
+        'nav_leaderboard': 'Класация',
+        'nav_sponsors': 'Спонсори',
+        'nav_profile': 'Профил',
+        'btn_login': 'Вход',
+        'btn_register': 'Регистрация',
+        'lang_switch': 'EN',
+        
+        // Home section
+        'hero_title': 'Помогни да направим София по-зелена',
+        'hero_subtitle': 'Платформа за картиране на зелени зони, еко пътеки и споделяне на еко инициативи в България',
+        'btn_explore_map': 'Разгледай картата',
+        'btn_eco_actions': 'Еко действия',
+        'stat_green_zones': 'Зелени зони',
+        'stat_trees_planted': 'Засадени дървета',
+        'stat_active_users': 'Активни потребители',
+        
+        // Map section
+        'map_title': 'Карта на зелените зони',
+        'map_subtitle': 'Открий паркове, еко пътеки и велоалеи в София',
+        'redesign_tools_title': 'Инструменти за преустройване на София',
+        'tool_selection': 'Селектиране',
+        'tool_park': 'Парк',
+        'tool_alley': 'Алея/Улица',
+        'tool_green_zone': 'Зелена зона',
+        'tool_bike_lane': 'Велоалея',
+        'tool_zones': 'Зони',
+        'tool_boundaries': 'Граници',
+        'tool_clear': 'Изчисти всичко',
+        'btn_save': 'Запази',
+        'btn_load': 'Зареди',
+        'btn_delete_saved': 'Изтрий запазеното',
+        'current_tool_info': 'Избран инструмент: Селектиране област',
+        'btn_show_map': 'Покажи карта на София',
+        'sofia_stats_title': 'София',
+        'sidebar_greenery': 'Зеленина',
+        'sidebar_parks': 'Паркове',
+        'sidebar_population': 'Население',
+        'sidebar_area': 'Площ',
+        'sidebar_green_zones': 'Зелени зони',
+        'sidebar_air_quality': 'Качество въздух',
+        
+        // Feed section
+        'feed_title': 'Еко действия',
+        'feed_subtitle': 'Споделете вашите еко инициативи с общността',
+        'charity_title': 'Благотворителност',
+        'charity_text': 'За всеки 500 събрани точки от общността дарявame 1 лв. за залесяване и опазване на природата!',
+        'btn_add_action': 'Добави действие',
+        
+        // Air Quality section
+        'air_title': 'Качество на въздуха',
+        'air_subtitle': 'Данни в реално време за въздушното качество в София',
+        'aqi_label': 'AQI',
+        'last_updated': 'Последно обновяване',
+        'weather_conditions': 'Метеорологични условия',
+        'health_recommendations': 'Препоръки за здравето',
+        'air_chart_title': '24-часова тенденция',
+        'location_selector_title': 'Избери локация',
+        'btn_my_location': 'Моята локация',
+        
+        // Leaderboard section
+        'leaderboard_title': 'Класация',
+        'leaderboard_subtitle': 'Топ еко герои на София',
+        'total_users': 'Активни потребители',
+        'total_actions': 'Общо действия',
+        'total_points': 'Общо точки',
+        'filter_all': 'Всички',
+        'filter_this_month': 'Този месец',
+        'filter_trees': 'Дървета',
+        'filter_cleanup': 'Почистване',
+        'filter_bike': 'Велосипед',
+        'your_position': 'Твоята позиция',
+        
+        // Profile section
+        'profile_title': 'Потребителски профил',
+        'profile_points': 'Точки',
+        'profile_actions': 'Действия',
+        'profile_badges': 'Баджове',
+        'actions_history': 'История на действията',
+        
+        // Sponsors section
+        'sponsors_title': 'Нашите спонсори',
+        'sponsors_subtitle': 'Компании, които подкрепят зелената мисия на София',
+        'gold_partners': 'Златни партньори',
+        'silver_partners': 'Сребърни партньори',
+        'corporate_partners': 'Корпоративни партньори',
+        'become_partner': 'Станете наш партньор',
+        'partnership_benefits': 'Станете наш партньор',
+        'btn_become_sponsor': 'Станете спонсор',
+        'btn_contact_us': 'Свържете се с нас',
+        
+        // Modals and forms
+        'modal_add_location': 'Добави нова локация',
+        'modal_add_action': 'Добави еко действие',
+        'form_location_name': 'Име на локацията',
+        'form_description': 'Описание',
+        'form_type': 'Избери тип',
+        'form_action_title': 'Заглавие на действието',
+        'form_action_description': 'Опиши какво си направил...',
+        'form_location': 'Локация',
+        'btn_add_location': 'Добави локация',
+        'btn_share_action': 'Сподели действието',
+        
+        // Auth forms
+        'login_title': 'Вход',
+        'register_title': 'Регистрация',
+        'email_label': 'Имейл',
+        'password_label': 'Парола',
+        'username_label': 'Потребителско име',
+        'confirm_password_label': 'Повтори парола',
+        'no_account': 'Нямате профил?',
+        'register_link': 'Регистрирайте се',
+        'have_account': 'Вече имате профил?',
+        'login_link': 'Влезте',
+        
+        // Chat
+        'chat_button': 'Чат',
+        'chat_title': 'Еко Асистент',
+        'chat_placeholder': 'Попитай за еко инициативи...',
+        'chat_send': 'Изпрати',
+        
+        // Map page specific
+        'map_filters_title': 'Филтри',
+        'filter_parks': 'Паркове',
+        'filter_eco_trails': 'Еко пътеки', 
+        'filter_bike_lanes': 'Велоалеи',
+        'filter_planting_areas': 'Места за засаждане',
+        'auto_save_notice': 'Промените се запазват автоматично в базата данни',
+        'tool_selection_desc': 'Кликнете и влачете върху картата за да селектирате област за преустройство. Промените са временни.',
+        'map_placeholder_text': 'Кликнете "Покажи карта" за да заредите интерактивната карта',
+        'facts_title': 'Знаете ли, че...',
+        'new_fact_btn': 'нов факт',
+        'map_loading_text': 'Зареждане на интересни факти за София...',
+        
+        // Zone dropdown options
+        'zone_residential': 'Жилищна зона',
+        'zone_commercial': 'Търговска зона', 
+        'zone_industrial': 'Индустриална зона',
+        'zone_office': 'Офис зона',
+        'zone_mixed': 'Смесена зона',
+        'zone_public': 'Обществена зона',
+        
+        // Air quality details
+        'sofia_center': 'София Център',
+        'air_quality_good': 'Добро',
+        'temperature_label': 'Температура',
+        'humidity_label': 'Влажност', 
+        'wind_label': 'Вятър',
+        'visibility_label': 'Видимост',
+        'health_rec_title': 'Препоръки за здравето',
+        'air_clean_safe': 'Въздухът е чист и безопасен за всички дейности.',
+        'perfect_outdoor': 'Идеално време за спорт на открито и разходки.',
+        'aqi_trend_title': 'Тенденция на AQI за последните 24 часа',
+        
+        // Leaderboard specific  
+        'position_header': 'Позиция',
+        'user_header': 'Потребител',
+        'points_header': 'Точки',
+        'actions_header': 'Действия',
+        'badges_header': 'Баджове',
+        'eco_hero_badge': 'Еко герой',
+        'tree_master_badge': 'Майстор дървета', 
+        'cyclist_badge': 'Велосипедист',
+        'cleaner_badge': 'Почистител',
+        'eco_activist_badge': 'Еко активист',
+        'eco_enthusiast_badge': 'Еко ентусиаст',
+        'eco_newbie_badge': 'Еко новак',
+        
+        // Sponsors specific
+        'eco_technologies': 'Еко технологии',
+        'solar_solutions': 'Соларни решения',
+        'recycling': 'Рециклиране',
+        'urban_mobility': 'Градска мобилност', 
+        'water_purification': 'Пречистване на вода',
+        'shopping_center': 'Търговски център',
+        'organic_food': 'Био храни',
+        'electric_vehicles': 'Електромобили',
+        'eco_construction': 'Еко строителство',
+        'trees_planted': 'Засадени дървета',
+        'investment_amount': 'Лева инвестиции',
+        'cleaner_air': '% по-чист въздух',
+        'new_parks': 'Нови паркове',
+        'premium_partner': 'Премиум партньор',
+        'verified_badge': 'Верифициран',
+        'innovation_badge': 'Иновация',
+        'standard_partner': 'Стандартен партньор',
+        'bronze_partner': 'Бронзов партньор',
+        'visibility_benefit': 'Видимост',
+        'social_responsibility': 'Социална отговорност',
+        'community_benefit': 'Общност',
+        'growth_benefit': 'Растеж',
+        'partnership_impact': 'Въздействие на партньорствата',
+        'ready_to_make_difference': 'Готови ли сте да направите разликата?',
+        
+        // Notifications and messages
+        'loading': 'Зареждане...',
+        'error': 'Грешка',
+        'success': 'Успех',
+        'info': 'Информация',
+        'warning': 'Внимание'
+    },
+    'en': {
+        // Navigation
+        'nav_home': 'Home',
+        'nav_map': 'Map',
+        'nav_feed': 'Eco Actions',
+        'nav_air': 'Air Quality',
+        'nav_leaderboard': 'Leaderboard',
+        'nav_sponsors': 'Sponsors',
+        'nav_profile': 'Profile',
+        'btn_login': 'Login',
+        'btn_register': 'Register',
+        'lang_switch': 'БГ',
+        
+        // Home section
+        'hero_title': 'Help Make Sofia Greener',
+        'hero_subtitle': 'Platform for mapping green zones, eco trails and sharing eco initiatives in Bulgaria',
+        'btn_explore_map': 'Explore Map',
+        'btn_eco_actions': 'Eco Actions',
+        'stat_green_zones': 'Green Zones',
+        'stat_trees_planted': 'Trees Planted',
+        'stat_active_users': 'Active Users',
+        
+        // Map section
+        'map_title': 'Green Zones Map',
+        'map_subtitle': 'Discover parks, eco trails and bike lanes in Sofia',
+        'redesign_tools_title': 'Sofia Redesign Tools',
+        'tool_selection': 'Selection',
+        'tool_park': 'Park',
+        'tool_alley': 'Street/Alley',
+        'tool_green_zone': 'Green Zone',
+        'tool_bike_lane': 'Bike Lane',
+        'tool_zones': 'Zones',
+        'tool_boundaries': 'Boundaries',
+        'tool_clear': 'Clear All',
+        'btn_save': 'Save',
+        'btn_load': 'Load',
+        'btn_delete_saved': 'Delete Saved',
+        'current_tool_info': 'Selected tool: Area Selection',
+        'btn_show_map': 'Show Sofia Map',
+        'sofia_stats_title': 'Sofia',
+        'sidebar_greenery': 'Greenery',
+        'sidebar_parks': 'Parks',
+        'sidebar_population': 'Population',
+        'sidebar_area': 'Area',
+        'sidebar_green_zones': 'Green Zones',
+        'sidebar_air_quality': 'Air Quality',
+        
+        // Feed section
+        'feed_title': 'Eco Actions',
+        'feed_subtitle': 'Share your eco initiatives with the community',
+        'charity_title': 'Charity',
+        'charity_text': 'For every 500 points collected by the community, we donate 1 BGN for tree planting and nature conservation!',
+        'btn_add_action': 'Add Action',
+        
+        // Air Quality section
+        'air_title': 'Air Quality',
+        'air_subtitle': 'Real-time air quality data for Sofia',
+        'aqi_label': 'AQI',
+        'last_updated': 'Last updated',
+        'weather_conditions': 'Weather Conditions',
+        'health_recommendations': 'Health Recommendations',
+        'air_chart_title': '24-hour Trend',
+        'location_selector_title': 'Select Location',
+        'btn_my_location': 'My Location',
+        
+        // Leaderboard section
+        'leaderboard_title': 'Leaderboard',
+        'leaderboard_subtitle': 'Top eco heroes of Sofia',
+        'total_users': 'Active Users',
+        'total_actions': 'Total Actions',
+        'total_points': 'Total Points',
+        'filter_all': 'All',
+        'filter_this_month': 'This Month',
+        'filter_trees': 'Trees',
+        'filter_cleanup': 'Cleanup',
+        'filter_bike': 'Bicycle',
+        'your_position': 'Your Position',
+        
+        // Profile section
+        'profile_title': 'User Profile',
+        'profile_points': 'Points',
+        'profile_actions': 'Actions',
+        'profile_badges': 'Badges',
+        'actions_history': 'Actions History',
+        
+        // Sponsors section
+        'sponsors_title': 'Our Sponsors',
+        'sponsors_subtitle': 'Companies supporting Sofia\'s green mission',
+        'gold_partners': 'Gold Partners',
+        'silver_partners': 'Silver Partners',
+        'corporate_partners': 'Corporate Partners',
+        'become_partner': 'Become Our Partner',
+        'partnership_benefits': 'Become Our Partner',
+        'btn_become_sponsor': 'Become Sponsor',
+        'btn_contact_us': 'Contact Us',
+        
+        // Modals and forms
+        'modal_add_location': 'Add New Location',
+        'modal_add_action': 'Add Eco Action',
+        'form_location_name': 'Location Name',
+        'form_description': 'Description',
+        'form_type': 'Select Type',
+        'form_action_title': 'Action Title',
+        'form_action_description': 'Describe what you did...',
+        'form_location': 'Location',
+        'btn_add_location': 'Add Location',
+        'btn_share_action': 'Share Action',
+        
+        // Auth forms
+        'login_title': 'Login',
+        'register_title': 'Register',
+        'email_label': 'Email',
+        'password_label': 'Password',
+        'username_label': 'Username',
+        'confirm_password_label': 'Confirm Password',
+        'no_account': 'Don\'t have an account?',
+        'register_link': 'Register',
+        'have_account': 'Already have an account?',
+        'login_link': 'Login',
+        
+        // Chat
+        'chat_button': 'Chat',
+        'chat_title': 'Eco Assistant',
+        'chat_placeholder': 'Ask about eco initiatives...',
+        'chat_send': 'Send',
+        
+        // Map page specific
+        'map_filters_title': 'Filters',
+        'filter_parks': 'Parks',
+        'filter_eco_trails': 'Eco Trails', 
+        'filter_bike_lanes': 'Bike Lanes',
+        'filter_planting_areas': 'Planting Areas',
+        'auto_save_notice': 'Changes are automatically saved to the database',
+        'tool_selection_desc': 'Click and drag on the map to select area for redesign. Changes are temporary.',
+        'map_placeholder_text': 'Click "Show Map" to load the interactive map',
+        'facts_title': 'Did you know...',
+        'new_fact_btn': 'new fact',
+        'map_loading_text': 'Loading interesting facts about Sofia...',
+        
+        // Zone dropdown options
+        'zone_residential': 'Residential Zone',
+        'zone_commercial': 'Commercial Zone', 
+        'zone_industrial': 'Industrial Zone',
+        'zone_office': 'Office Zone',
+        'zone_mixed': 'Mixed Zone',
+        'zone_public': 'Public Zone',
+        
+        // Air quality details
+        'sofia_center': 'Sofia Center',
+        'air_quality_good': 'Good',
+        'temperature_label': 'Temperature',
+        'humidity_label': 'Humidity', 
+        'wind_label': 'Wind',
+        'visibility_label': 'Visibility',
+        'health_rec_title': 'Health Recommendations',
+        'air_clean_safe': 'The air is clean and safe for all activities.',
+        'perfect_outdoor': 'Perfect time for outdoor sports and walks.',
+        'aqi_trend_title': 'AQI trend for the last 24 hours',
+        
+        // Leaderboard specific  
+        'position_header': 'Position',
+        'user_header': 'User',
+        'points_header': 'Points',
+        'actions_header': 'Actions',
+        'badges_header': 'Badges',
+        'eco_hero_badge': 'Eco Hero',
+        'tree_master_badge': 'Tree Master', 
+        'cyclist_badge': 'Cyclist',
+        'cleaner_badge': 'Cleaner',
+        'eco_activist_badge': 'Eco Activist',
+        'eco_enthusiast_badge': 'Eco Enthusiast',
+        'eco_newbie_badge': 'Eco Newbie',
+        
+        // Sponsors specific
+        'eco_technologies': 'Eco Technologies',
+        'solar_solutions': 'Solar Solutions',
+        'recycling': 'Recycling',
+        'urban_mobility': 'Urban Mobility', 
+        'water_purification': 'Water Purification',
+        'shopping_center': 'Shopping Center',
+        'organic_food': 'Organic Food',
+        'electric_vehicles': 'Electric Vehicles',
+        'eco_construction': 'Eco Construction',
+        'trees_planted': 'Trees Planted',
+        'investment_amount': 'BGN Investment',
+        'cleaner_air': '% Cleaner Air',
+        'new_parks': 'New Parks',
+        'premium_partner': 'Premium Partner',
+        'verified_badge': 'Verified',
+        'innovation_badge': 'Innovation',
+        'standard_partner': 'Standard Partner',
+        'bronze_partner': 'Bronze Partner',
+        'visibility_benefit': 'Visibility',
+        'social_responsibility': 'Social Responsibility',
+        'community_benefit': 'Community',
+        'growth_benefit': 'Growth',
+        'partnership_impact': 'Partnership Impact',
+        'ready_to_make_difference': 'Ready to make a difference?',
+        
+        // Notifications and messages
+        'loading': 'Loading...',
+        'error': 'Error',
+        'success': 'Success',
+        'info': 'Information',
+        'warning': 'Warning'
+    }
+};
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
@@ -1049,7 +1466,7 @@ function formatTimeAgo(timestamp) {
     return actionTime.toLocaleDateString('bg-BG');
 }
 
-// Notification system
+// Notification system with language support
 function showNotification(message, type = 'info') {
     // Remove existing notifications
     const existingNotification = document.querySelector('.notification');
@@ -1063,13 +1480,15 @@ function showNotification(message, type = 'info') {
         position: fixed;
         top: 20px;
         right: 20px;
-        background: ${type === 'success' ? '#2ecc71' : '#3498db'};
+        background: ${type === 'success' ? '#2ecc71' : type === 'error' ? '#e74c3c' : type === 'warning' ? '#f39c12' : '#3498db'};
         color: white;
         padding: 1rem 2rem;
         border-radius: 5px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         z-index: 3000;
         animation: slideIn 0.3s ease-out;
+        max-width: 350px;
+        font-weight: 500;
     `;
     
     notification.textContent = message;
@@ -1080,6 +1499,18 @@ function showNotification(message, type = 'info') {
         notification.style.animation = 'slideOut 0.3s ease-in';
         setTimeout(() => notification.remove(), 300);
     }, 3000);
+}
+
+// Get translated message
+function getTranslatedMessage(key, fallback) {
+    const langData = translations[currentLanguage];
+    return (langData && langData[key]) ? langData[key] : fallback;
+}
+
+// Show notification with automatic translation
+function showTranslatedNotification(messageKey, fallbackBg, fallbackEn, type = 'info') {
+    const message = currentLanguage === 'bg' ? fallbackBg : fallbackEn;
+    showNotification(message, type);
 }
 
 // Add CSS animations
@@ -1758,7 +2189,7 @@ function setRedesignTool(toolType) {
         'zone-industrial': 'Индустриална зона',
         'zone-office': 'Офис зона',
         'zone-mixed': 'Смесена зона',
-        'zone-public': 'Обществена зона 🏛️'
+        'zone-public': 'Обществена зона '
     };
     
     document.getElementById('current-redesign-tool').textContent = 
@@ -1902,9 +2333,9 @@ function getDrawOptions() {
 function onAreaDrawn(e) {
     const layer = e.layer;
     const type = e.layerType;
-    
-    console.log('🎨 Area drawn:', type, 'Tool:', currentRedesignTool);
-    console.log('🎨 Layer object:', layer);
+
+    console.log(' Area drawn:', type, 'Tool:', currentRedesignTool);
+    console.log(' Layer object:', layer);
     
     // Explicitly set layer pane BEFORE adding to map
     if (layer.options) {
@@ -1936,9 +2367,9 @@ function onAreaDrawn(e) {
             // Only update Sofia stats if park is within current Sofia boundaries (blue circle)
             if (isWithinSofiaBounds(layer)) {
                 updateSofiaStatsWithNewPark(parkAreaKm2);
-                showNotification(`🏞️ Парк добавен в границите на София! Статистиките са актуализирани.`, 'success');
+                showNotification(` Парк добавен в границите на София! Статистиките са актуализирани.`, 'success');
             } else {
-                showNotification(`🏞️ Парк добавен извън София. Статистиките остават непроменени.`, 'info');
+                showNotification(` Парк добавен извън София. Статистиките остават непроменени.`, 'info');
             }
         }
     } else {
@@ -2255,7 +2686,7 @@ let originalSofiaData = null;
 
 // Save single drawn item to database
 async function saveDrawnItem(layer) {
-    console.log('💾 Attempting to save item to database:', layer.toolType);
+    console.log(' Attempting to save item to database:', layer.toolType);
     if (!layer || !layer.toolType) {
         console.warn('Cannot save: missing layer or toolType');
         return;
@@ -2281,7 +2712,7 @@ async function saveDrawnItem(layer) {
         const result = await response.json();
         if (result.status === 'success') {
             layer.databaseId = result.id; // Store database ID on layer
-            console.log(`💾 Saved ${layer.toolType} to database with ID: ${result.id}`);
+            console.log(` Saved ${layer.toolType} to database with ID: ${result.id}`);
             return result.id;
         } else {
             console.error('Error saving item:', result.message);
@@ -2309,8 +2740,8 @@ async function saveDrawnItems() {
     
     if (promises.length > 0) {
         await Promise.all(promises);
-        console.log(`💾 Saved ${savedCount} new items to database`);
-        showNotification(`Запазени са ${savedCount} нови елемента в базата данни! 💾`, 'success');
+        console.log(` Saved ${savedCount} new items to database`);
+        showNotification(`Запазени са ${savedCount} нови елемента в базата данни! `, 'success');
     } else {
         showNotification('Всички елементи са вече запазени!', 'info');
     }
@@ -2378,11 +2809,11 @@ async function loadDrawnItems() {
             }
         });
         
-        console.log(`📥 Successfully loaded ${loadedCount} drawn items from database`);
+        console.log(` Successfully loaded ${loadedCount} drawn items from database`);
         if (loadedCount > 0) {
-            showNotification(`Заредени са ${loadedCount} запазени елемента от базата данни! 🎨`, 'success');
+            showNotification(`Заредени са ${loadedCount} запазени елемента от базата данни! `, 'success');
         } else {
-            console.log('ℹ️ No items found in database');
+            console.log(' No items found in database');
         }
     } catch (error) {
         console.error('Error loading drawn items:', error);
@@ -2401,7 +2832,7 @@ async function deleteDrawnItem(layer) {
         
         const result = await response.json();
         if (result.status === 'success') {
-            console.log(`🗑️ Deleted item ${layer.databaseId} from database`);
+            console.log(`Deleted item ${layer.databaseId} from database`);
             return true;
         } else {
             console.error('Error deleting item:', result.message);
@@ -2521,7 +2952,7 @@ function toggleSofiaBoundaryCircle() {
     // Add popup with information
     sofiaBoundaryCircle.bindPopup(`
         <div style="text-align: center; min-width: 200px;">
-            <h4>🏙️ Граници на София</h4>
+            <h4>Граници на София</h4>
             <p>Компактна визуализация на столицата</p>
             <p><strong>Площ:</strong> ~492 км²</p>
             <p><strong>Радиус:</strong> ~${radiusKm.toFixed(1)} км</p>
@@ -2530,7 +2961,7 @@ function toggleSofiaBoundaryCircle() {
         </div>
     `, { autoPan: false });
     
-    showNotification(`Границите на София са показани! Радиус: ${radiusKm.toFixed(1)} км 🏙️`, 'success');
+    showNotification(`Границите на София са показани! Радиус: ${radiusKm.toFixed(1)} км `, 'success');
 }
 
 // Toggle both boundary circles (current + future development)
@@ -2629,7 +3060,7 @@ function toggleBothBoundaryCircles() {
         `, { autoPan: false });
     }
     
-    showNotification('Показани са настоящите и бъдещите граници на София! 🏙️🚀', 'success');
+    showNotification('Показани са настоящите и бъдещите граници на София! ', 'success');
 }
 
 // Toggle Sofia future development circle
@@ -2669,7 +3100,7 @@ function toggleSofiaFutureCircle() {
     // Add popup with future development information
     sofiaFutureCircle.bindPopup(`
         <div style="text-align: center; min-width: 250px;">
-            <h4>🚀 Бъдещо развитие на София</h4>
+            <h4>Бъдещо развитие на София</h4>
             <p>Планирано разширение до 2030-2040г.</p>
             <p><strong>Проектирана площ:</strong> ~800 км²</p>
             <p><strong>Радиус:</strong> ~${futureRadiusKm.toFixed(1)} км</p>
@@ -4051,3 +4482,1398 @@ if (!document.getElementById('pulse-animation')) {
 // Make functions globally available
 window.showBecomeSponsorModal = showBecomeSponsorModal;
 window.showContactModal = showContactModal;
+
+// ===============================================
+// LANGUAGE SWITCHING FUNCTIONALITY
+// ===============================================
+
+// Initialize language on page load
+function initializeLanguage() {
+    // Get saved language from localStorage or default to Bulgarian
+    const savedLanguage = localStorage.getItem('plantATreeLanguage') || 'bg';
+    
+    // Validate saved language
+    if (savedLanguage !== 'bg' && savedLanguage !== 'en') {
+        localStorage.setItem('plantATreeLanguage', 'bg');
+        currentLanguage = 'bg';
+    } else {
+        currentLanguage = savedLanguage;
+    }
+    
+    // Update language button text
+    updateLanguageButton();
+    
+    // Set page language attribute
+    document.documentElement.lang = currentLanguage;
+    
+    // Apply translations if not Bulgarian (default)
+    if (currentLanguage !== 'bg') {
+        setTimeout(() => {
+            translatePage(currentLanguage);
+        }, 100);
+    }
+    
+    // Update page title
+    updatePageTitle(currentLanguage);
+    
+    console.log('Language initialized:', currentLanguage);
+}
+
+// Detect if text is in Bulgarian
+function isBulgarianText(text) {
+    // Check for Bulgarian Cyrillic characters
+    const bulgarianPattern = /[а-яА-Я]/;
+    return bulgarianPattern.test(text);
+}
+
+// Smart language detection for mixed content
+function detectContentLanguage(text) {
+    if (!text || text.trim().length < 3) return 'unknown';
+    
+    const cleanText = text.trim();
+    
+    // Check for Cyrillic characters (Bulgarian)
+    if (/[а-яА-Я]/.test(cleanText)) {
+        return 'bg';
+    }
+    
+    // Check for English patterns
+    if (/^[a-zA-Z\s\d\.,!?'-]+$/.test(cleanText)) {
+        return 'en';
+    }
+    
+    return 'unknown';
+}
+
+// Update language preference and persist
+function updateLanguagePreference(lang) {
+    if (lang !== 'bg' && lang !== 'en') {
+        console.warn('Invalid language:', lang);
+        return false;
+    }
+    
+    localStorage.setItem('plantATreeLanguage', lang);
+    currentLanguage = lang;
+    
+    // Update page metadata
+    document.documentElement.lang = lang;
+    updatePageTitle(lang);
+    
+    return true;
+}
+
+// Get browser language preference as fallback
+function getBrowserLanguage() {
+    const browserLang = navigator.language || navigator.userLanguage;
+    
+    if (browserLang) {
+        const langCode = browserLang.substring(0, 2).toLowerCase();
+        if (langCode === 'bg' || langCode === 'en') {
+            return langCode;
+        }
+    }
+    
+    // Default to Bulgarian for Bulgarian users, English for others
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (timezone && timezone.includes('Sofia')) {
+        return 'bg';
+    }
+    
+    return 'bg'; // Default to Bulgarian
+}
+
+// Toggle between Bulgarian and English
+function toggleLanguage() {
+    const newLanguage = currentLanguage === 'bg' ? 'en' : 'bg';
+    switchLanguage(newLanguage);
+}
+
+// Switch to specific language
+async function switchLanguage(targetLang) {
+    if (targetLang === currentLanguage) return;
+    
+    console.log(`Switching language from ${currentLanguage} to ${targetLang}`);
+    
+    // Add loading class to language button
+    const languageButton = document.getElementById('language-toggle');
+    if (languageButton) {
+        languageButton.classList.add('loading');
+    }
+    
+    // Add translating class to body
+    document.body.classList.add('language-switching');
+    
+    // Show loading notification
+    const loadingMessage = targetLang === 'en' ? 
+        'Switching to English...' : 
+        'Превключване на български...';
+    showNotification(loadingMessage, 'info');
+    
+    try {
+        // Store language preference
+        localStorage.setItem('plantATreeLanguage', targetLang);
+        currentLanguage = targetLang;
+        
+        // Update language button
+        updateLanguageButton();
+        
+        // Apply translations
+        await translatePage(targetLang);
+        
+        // Remove loading states
+        if (languageButton) {
+            languageButton.classList.remove('loading');
+        }
+        document.body.classList.remove('language-switching');
+        
+        // Show success notification
+        const successMessage = targetLang === 'en' ? 
+            'Language switched to English! 🇺🇸' : 
+            'Езикът е сменен на български! 🇧🇬';
+        showNotification(successMessage, 'success');
+        
+        // Update page title based on language
+        updatePageTitle(targetLang);
+        
+        // Update any chat system language
+        updateChatLanguage(targetLang);
+        
+    } catch (error) {
+        console.error('Language switch error:', error);
+        
+        // Remove loading states
+        if (languageButton) {
+            languageButton.classList.remove('loading');
+        }
+        document.body.classList.remove('language-switching');
+        
+        // Revert language preference
+        currentLanguage = currentLanguage === 'bg' ? 'en' : 'bg';
+        localStorage.setItem('plantATreeLanguage', currentLanguage);
+        updateLanguageButton();
+        
+        showNotification('Error switching language', 'error');
+    }
+}
+
+// Update page title based on language
+function updatePageTitle(lang) {
+    const titles = {
+        'bg': 'PlantATree - Еко инициативи София | Засади дърво, опази природата',
+        'en': 'PlantATree - Eco Initiatives Sofia | Plant a Tree, Preserve Nature'
+    };
+    
+    if (titles[lang]) {
+        document.title = titles[lang];
+    }
+}
+
+// Update chat system language
+function updateChatLanguage(lang) {
+    const chatTitle = document.getElementById('chat-header');
+    const chatInput = document.getElementById('chat-input');
+    const chatSend = document.getElementById('chat-send');
+    
+    if (chatTitle) {
+        chatTitle.textContent = lang === 'en' ? 'Eco Assistant' : 'Еко Асистент';
+    }
+    
+    if (chatInput) {
+        chatInput.placeholder = lang === 'en' ? 
+            'Ask about eco initiatives...' : 
+            'Попитай за еко инициативи...';
+    }
+    
+    if (chatSend) {
+        chatSend.textContent = lang === 'en' ? 'Send' : 'Изпрати';
+    }
+}
+
+// Update language button appearance
+function updateLanguageButton() {
+    const languageText = document.getElementById('language-text');
+    const languageButton = document.getElementById('language-toggle');
+    
+    if (languageText) {
+        languageText.textContent = currentLanguage === 'bg' ? 'EN' : 'БГ';
+    }
+    
+    if (languageButton) {
+        languageButton.title = currentLanguage === 'bg' ? 
+            'Switch to English' : 
+            'Превключи на български';
+    }
+}
+
+// Apply translations to the page
+async function translatePage(targetLang) {
+    console.log('Translating page to:', targetLang);
+    
+    // If target language is Bulgarian, use built-in translations
+    if (targetLang === 'bg') {
+        applyStaticTranslations(targetLang);
+        return;
+    }
+    
+    const langData = translations[targetLang];
+    if (!langData) {
+        console.error('Language data not found for:', targetLang);
+        // Fallback to Google Translate API for unknown languages
+        await translateWithGoogleAPI(targetLang);
+        return;
+    }
+    
+    // Update page language attribute
+    document.documentElement.lang = targetLang;
+    
+    // Apply static translations first
+    applyStaticTranslations(targetLang);
+    
+    // For English, also use Google Translate API for dynamic content
+    if (targetLang === 'en') {
+        await translateDynamicContent(targetLang);
+    }
+    
+    console.log('Page translation completed for:', targetLang);
+}
+
+// Apply static translations from the translations object
+function applyStaticTranslations(targetLang) {
+    const langData = translations[targetLang];
+    if (!langData) return;
+    
+    // PHASE 1: Translate elements with data-translate attributes (the recipe approach)
+    const elementsToTranslate = document.querySelectorAll('[data-translate]');
+    elementsToTranslate.forEach(element => {
+        const key = element.getAttribute('data-translate');
+        if (langData[key]) {
+            // Handle different element types
+            if (element.tagName === 'INPUT' && element.type === 'submit') {
+                element.value = langData[key];
+            } else if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                element.placeholder = langData[key];
+            } else {
+                element.textContent = langData[key];
+            }
+        }
+    });
+    
+    // PHASE 2: For elements without data-translate, use more specific selectors
+    translateNavigationElements(langData);
+    translateSectionTitles(langData);
+    translateButtons(langData);
+    translateForms(langData);
+    translateStaticContent(langData);
+    
+    // PHASE 3: NUCLEAR OPTION - Universal text scanner (like Google Translate)
+    performUniversalTextScan(targetLang);
+}
+
+// Translate dynamic content using Google Translate API
+async function translateDynamicContent(targetLang) {
+    if (targetLang === 'bg') return; // No need for Bulgarian
+    
+    try {
+        // Collect dynamic content that might not be in static translations
+        const dynamicElements = collectDynamicContent();
+        
+        if (dynamicElements.length === 0) return;
+        
+        console.log('Translating dynamic content with Google Translate API...');
+        
+        // Extract texts to translate
+        const textsToTranslate = dynamicElements.map(item => item.text);
+        
+        // Call batch translation API
+        const response = await fetch('/api/translate/batch', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                texts: textsToTranslate,
+                target_lang: targetLang,
+                source_lang: 'bg'
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Translation API error: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success && result.translations) {
+            // Apply translations to elements
+            result.translations.forEach((translation, index) => {
+                if (translation.success && dynamicElements[index]) {
+                    const element = dynamicElements[index].element;
+                    const property = dynamicElements[index].property;
+                    
+                    if (property === 'textContent') {
+                        element.textContent = translation.translated;
+                    } else if (property === 'placeholder') {
+                        element.placeholder = translation.translated;
+                    } else if (property === 'innerHTML') {
+                        // Preserve HTML structure, only replace text
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = element.innerHTML;
+                        const textNodes = getTextNodes(tempDiv);
+                        if (textNodes.length === 1) {
+                            element.innerHTML = element.innerHTML.replace(
+                                textNodes[0].textContent, 
+                                translation.translated
+                            );
+                        }
+                    }
+                }
+            });
+            
+            console.log(`Dynamic content translated: ${result.successful_count}/${result.total_count} items`);
+        } else {
+            console.warn('Dynamic translation failed:', result.error);
+        }
+        
+    } catch (error) {
+        console.error('Dynamic translation error:', error);
+    }
+}
+
+// Collect dynamic content that needs translation
+function collectDynamicContent() {
+    const dynamicElements = [];
+    
+    // Eco actions feed content
+    const ecoPostTitles = document.querySelectorAll('.eco-post h3');
+    ecoPostTitles.forEach(title => {
+        if (title.textContent && title.textContent.trim()) {
+            dynamicElements.push({
+                element: title,
+                text: title.textContent.trim(),
+                property: 'textContent'
+            });
+        }
+    });
+    
+    // Eco actions descriptions
+    const ecoPostDescriptions = document.querySelectorAll('.eco-post .post-content p');
+    ecoPostDescriptions.forEach(desc => {
+        if (desc.textContent && desc.textContent.trim() && desc.textContent.length > 10) {
+            dynamicElements.push({
+                element: desc,
+                text: desc.textContent.trim(),
+                property: 'textContent'
+            });
+        }
+    });
+    
+    // Location names and descriptions from map markers
+    const mapPopups = document.querySelectorAll('.leaflet-popup-content h4, .leaflet-popup-content p');
+    mapPopups.forEach(popup => {
+        if (popup.textContent && popup.textContent.trim() && !popup.textContent.includes('км') && !popup.textContent.includes('хектар')) {
+            dynamicElements.push({
+                element: popup,
+                text: popup.textContent.trim(),
+                property: 'textContent'
+            });
+        }
+    });
+    
+    // Sponsor content
+    const sponsorDescriptions = document.querySelectorAll('.sponsor-description');
+    sponsorDescriptions.forEach(desc => {
+        if (desc.textContent && desc.textContent.trim()) {
+            dynamicElements.push({
+                element: desc,
+                text: desc.textContent.trim(),
+                property: 'textContent'
+            });
+        }
+    });
+    
+    // Leaderboard user names (only if they look like Bulgarian names)
+    const userNames = document.querySelectorAll('.podium-info h4, .ranking-info h5');
+    userNames.forEach(name => {
+        const nameText = name.textContent.trim();
+        if (nameText && nameText.includes('ова') || nameText.includes('ев') || nameText.includes('ски')) {
+            // Skip translating names - they should remain as is
+        }
+    });
+    
+    return dynamicElements;
+}
+
+// Get all text nodes from an element
+function getTextNodes(element) {
+    const textNodes = [];
+    const walker = document.createTreeWalker(
+        element,
+        NodeFilter.SHOW_TEXT,
+        null,
+        false
+    );
+    
+    let node;
+    while (node = walker.nextNode()) {
+        if (node.textContent.trim()) {
+            textNodes.push(node);
+        }
+    }
+    
+    return textNodes;
+}
+
+// Fallback translation using Google Translate API for any language
+async function translateWithGoogleAPI(targetLang) {
+    try {
+        console.log('Using Google Translate API for language:', targetLang);
+        
+        // Collect all translatable content
+        const pageContent = collectAllPageContent();
+        
+        if (pageContent.length === 0) return;
+        
+        // Show loading notification
+        showNotification('Translating page content...', 'info');
+        
+        // Call batch translation API
+        const response = await fetch('/api/translate/batch', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                texts: pageContent.map(item => item.text),
+                target_lang: targetLang,
+                source_lang: 'bg'
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Translation API error: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success && result.translations) {
+            // Apply translations
+            result.translations.forEach((translation, index) => {
+                if (translation.success && pageContent[index]) {
+                    const element = pageContent[index].element;
+                    const property = pageContent[index].property;
+                    
+                    if (property === 'textContent') {
+                        element.textContent = translation.translated;
+                    } else if (property === 'placeholder') {
+                        element.placeholder = translation.translated;
+                    }
+                }
+            });
+            
+            showNotification(`Page translated! ${result.successful_count}/${result.total_count} items`, 'success');
+        } else {
+            throw new Error(result.error || 'Translation failed');
+        }
+        
+    } catch (error) {
+        console.error('Google Translate API error:', error);
+        showNotification('Translation failed. Using fallback.', 'warning');
+    }
+}
+
+// Collect all page content for translation
+function collectAllPageContent() {
+    const content = [];
+    
+    // Collect various text elements
+    const selectors = [
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'p:not(.skip-translate)',
+        '.nav-link',
+        '.btn-login', '.btn-register',
+        '.stat-label',
+        'button:not(.skip-translate)',
+        'label',
+        '.section-header p',
+        '.hero-content p'
+    ];
+    
+    selectors.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(element => {
+            const text = element.textContent ? element.textContent.trim() : '';
+            if (text && text.length > 2 && !text.match(/^\d+$/) && !text.match(/^\d+[%км²]+$/)) {
+                content.push({
+                    element: element,
+                    text: text,
+                    property: 'textContent'
+                });
+            }
+        });
+    });
+    
+    // Collect placeholders
+    const inputs = document.querySelectorAll('input[placeholder], textarea[placeholder]');
+    inputs.forEach(input => {
+        if (input.placeholder && input.placeholder.trim()) {
+            content.push({
+                element: input,
+                text: input.placeholder.trim(),
+                property: 'placeholder'
+            });
+        }
+    });
+    
+    return content;
+}
+
+// Translate navigation elements
+function translateNavigationElements(langData) {
+    // Navigation links
+    const navLinks = document.querySelectorAll('.nav-link');
+    const navTranslations = [
+        'nav_home', 'nav_map', 'nav_feed', 'nav_air', 
+        'nav_leaderboard', 'nav_sponsors', 'nav_profile'
+    ];
+    
+    navLinks.forEach((link, index) => {
+        if (navTranslations[index] && langData[navTranslations[index]]) {
+            link.textContent = langData[navTranslations[index]];
+        }
+    });
+    
+    // Auth buttons
+    const loginBtn = document.querySelector('.btn-login');
+    const registerBtn = document.querySelector('.btn-register');
+    
+    if (loginBtn && langData.btn_login) {
+        loginBtn.textContent = langData.btn_login;
+    }
+    if (registerBtn && langData.btn_register) {
+        registerBtn.textContent = langData.btn_register;
+    }
+}
+
+// Translate section titles and subtitles
+function translateSectionTitles(langData) {
+    // Hero section
+    const heroTitle = document.querySelector('.hero-content h1');
+    const heroSubtitle = document.querySelector('.hero-content p');
+    
+    if (heroTitle && langData.hero_title) {
+        heroTitle.textContent = langData.hero_title;
+    }
+    if (heroSubtitle && langData.hero_subtitle) {
+        heroSubtitle.textContent = langData.hero_subtitle;
+    }
+    
+    // Section headers
+    const sectionHeaders = document.querySelectorAll('.section-header h2');
+    const sectionTitleKeys = [
+        'map_title', 'feed_title', 'air_title', 
+        'leaderboard_title', 'profile_title'
+    ];
+    
+    sectionHeaders.forEach((header, index) => {
+        const icon = header.querySelector('i');
+        const iconHTML = icon ? icon.outerHTML + ' ' : '';
+        const key = sectionTitleKeys[index];
+        
+        if (key && langData[key]) {
+            header.innerHTML = iconHTML + langData[key];
+        }
+    });
+    
+    // Section subtitles
+    const sectionSubtitles = document.querySelectorAll('.section-header p');
+    const subtitleKeys = [
+        'map_subtitle', 'feed_subtitle', 'air_subtitle', 'leaderboard_subtitle'
+    ];
+    
+    sectionSubtitles.forEach((subtitle, index) => {
+        const key = subtitleKeys[index];
+        if (key && langData[key]) {
+            subtitle.textContent = langData[key];
+        }
+    });
+}
+
+// Translate buttons
+function translateButtons(langData) {
+    // Hero buttons
+    const exploreMapBtn = document.querySelector('.hero-buttons .btn-primary:first-child');
+    const ecoActionsBtn = document.querySelector('.hero-buttons .btn-primary:last-child');
+    
+    if (exploreMapBtn && langData.btn_explore_map) {
+        const icon = exploreMapBtn.querySelector('i');
+        const iconHTML = icon ? icon.outerHTML + ' ' : '';
+        exploreMapBtn.innerHTML = iconHTML + langData.btn_explore_map;
+    }
+    
+    if (ecoActionsBtn && langData.btn_eco_actions) {
+        const icon = ecoActionsBtn.querySelector('i');
+        const iconHTML = icon ? icon.outerHTML + ' ' : '';
+        ecoActionsBtn.innerHTML = iconHTML + langData.btn_eco_actions;
+    }
+    
+    // Add Action button
+    const addActionBtn = document.querySelector('button[onclick*="showAddActionModal"]');
+    if (addActionBtn && langData.btn_add_action) {
+        const icon = addActionBtn.querySelector('i');
+        const iconHTML = icon ? icon.outerHTML + ' ' : '';
+        addActionBtn.innerHTML = iconHTML + langData.btn_add_action;
+    }
+    
+    // Chat button
+    const chatButton = document.getElementById('chat-button');
+    if (chatButton && langData.chat_button) {
+        chatButton.textContent = langData.chat_button;
+    }
+}
+
+// Translate forms
+function translateForms(langData) {
+    // Modal titles
+    const modalTitles = document.querySelectorAll('.modal-content h3');
+    modalTitles.forEach(title => {
+        const text = title.textContent.trim();
+        if (text.includes('Добави нова локация') && langData.modal_add_location) {
+            title.textContent = langData.modal_add_location;
+        } else if (text.includes('Добави еко действие') && langData.modal_add_action) {
+            title.textContent = langData.modal_add_action;
+        } else if (text.includes('Вход') && langData.login_title) {
+            title.textContent = langData.login_title;
+        } else if (text.includes('Регистрация') && langData.register_title) {
+            title.textContent = langData.register_title;
+        }
+    });
+    
+    // Form labels and placeholders
+    const labels = document.querySelectorAll('label');
+    labels.forEach(label => {
+        const text = label.textContent.trim();
+        if (text.includes('Имейл') && langData.email_label) {
+            label.textContent = langData.email_label;
+        } else if (text.includes('Парола') && !text.includes('Повтори') && langData.password_label) {
+            label.textContent = langData.password_label;
+        } else if (text.includes('Потребителско име') && langData.username_label) {
+            label.textContent = langData.username_label;
+        } else if (text.includes('Повтори парола') && langData.confirm_password_label) {
+            label.textContent = langData.confirm_password_label;
+        }
+    });
+    
+    // Placeholders
+    const placeholders = document.querySelectorAll('input[placeholder], textarea[placeholder]');
+    placeholders.forEach(input => {
+        const placeholder = input.placeholder;
+        if (placeholder.includes('локация') && langData.form_location_name) {
+            input.placeholder = langData.form_location_name;
+        } else if (placeholder.includes('Описание') && langData.form_description) {
+            input.placeholder = langData.form_description;
+        } else if (placeholder.includes('Заглавие') && langData.form_action_title) {
+            input.placeholder = langData.form_action_title;
+        } else if (placeholder.includes('Опиши') && langData.form_action_description) {
+            input.placeholder = langData.form_action_description;
+        } else if (placeholder.includes('Локация') && langData.form_location) {
+            input.placeholder = langData.form_location;
+        } else if (placeholder.includes('еко инициативи') && langData.chat_placeholder) {
+            input.placeholder = langData.chat_placeholder;
+        }
+    });
+    
+    // Translate select options
+    translateSelectOptions(langData);
+}
+
+// Translate select dropdown options
+function translateSelectOptions(langData) {
+    const selects = document.querySelectorAll('select');
+    
+    selects.forEach(select => {
+        const options = select.querySelectorAll('option');
+        
+        options.forEach(option => {
+            const text = option.textContent.trim();
+            
+            // Location type options
+            if (text === 'Избери тип' && langData.form_type) {
+                option.textContent = langData.form_type;
+            } else if (text === 'Парк') {
+                option.textContent = currentLanguage === 'en' ? 'Park' : 'Парк';
+            } else if (text === 'Еко пътека') {
+                option.textContent = currentLanguage === 'en' ? 'Eco Trail' : 'Еко пътека';
+            } else if (text === 'Велоалея') {
+                option.textContent = currentLanguage === 'en' ? 'Bike Lane' : 'Велоалея';
+            } else if (text === 'Място за засаждане') {
+                option.textContent = currentLanguage === 'en' ? 'Planting Area' : 'Място за засаждане';
+            }
+            
+            // Action type options
+            else if (text === 'Засаждане на дърво') {
+                option.textContent = currentLanguage === 'en' ? 'Tree Planting' : 'Засаждане на дърво';
+            } else if (text === 'Почистване') {
+                option.textContent = currentLanguage === 'en' ? 'Cleanup' : 'Почистване';
+            } else if (text === 'Каране на колело') {
+                option.textContent = currentLanguage === 'en' ? 'Cycling' : 'Каране на колело';
+            } else if (text === 'Рециклиране') {
+                option.textContent = currentLanguage === 'en' ? 'Recycling' : 'Рециклиране';
+            }
+            
+            // Location selector options
+            else if (text === 'София Център') {
+                option.textContent = currentLanguage === 'en' ? 'Sofia Center' : 'София Център';
+            } else if (text === 'София Лозенец') {
+                option.textContent = currentLanguage === 'en' ? 'Sofia Lozenets' : 'София Лозенец';
+            } else if (text === 'София Студентски град') {
+                option.textContent = currentLanguage === 'en' ? 'Sofia Studentski Grad' : 'София Студентски град';
+            } else if (text === 'София Дружба') {
+                option.textContent = currentLanguage === 'en' ? 'Sofia Druzhba' : 'София Дружба';
+            } else if (text === 'София Люлин') {
+                option.textContent = currentLanguage === 'en' ? 'Sofia Lyulin' : 'София Люлин';
+            }
+        });
+    });
+}
+
+// Translate static content
+function translateStaticContent(langData) {
+    // Stats labels
+    const statLabels = document.querySelectorAll('.stat-label');
+    const statKeys = ['stat_green_zones', 'stat_trees_planted', 'stat_active_users'];
+    
+    statLabels.forEach((label, index) => {
+        if (statKeys[index] && langData[statKeys[index]]) {
+            label.textContent = langData[statKeys[index]];
+        }
+    });
+    
+    // Sofia sidebar stats
+    const sidebarLabels = document.querySelectorAll('.sidebar-stat-item .stat-label');
+    const sidebarKeys = [
+        'sidebar_greenery', 'sidebar_parks', 'sidebar_population', 
+        'sidebar_area', 'sidebar_green_zones', 'sidebar_air_quality'
+    ];
+    
+    sidebarLabels.forEach((label, index) => {
+        if (sidebarKeys[index] && langData[sidebarKeys[index]]) {
+            label.textContent = langData[sidebarKeys[index]];
+        }
+    });
+    
+    // Charity section
+    const charityTitle = document.querySelector('.charity-content h4');
+    const charityText = document.querySelector('.charity-content p');
+    
+    if (charityTitle && langData.charity_title) {
+        charityTitle.textContent = langData.charity_title;
+    }
+    if (charityText && langData.charity_text) {
+        charityText.textContent = langData.charity_text;
+    }
+    
+    // Weather conditions
+    const weatherTitle = document.querySelector('.weather-card h3');
+    if (weatherTitle && langData.weather_conditions) {
+        const icon = weatherTitle.querySelector('i');
+        const iconHTML = icon ? icon.outerHTML + ' ' : '';
+        weatherTitle.innerHTML = iconHTML + langData.weather_conditions;
+    }
+    
+    // Health recommendations
+    const healthTitle = document.querySelector('.health-recommendations h3');
+    if (healthTitle && langData.health_recommendations) {
+        const icon = healthTitle.querySelector('i');
+        const iconHTML = icon ? icon.outerHTML + ' ' : '';
+        healthTitle.innerHTML = iconHTML + langData.health_recommendations;
+    }
+    
+    // Translate tool names in redesign panel
+    translateRedesignTools(langData);
+    
+    // Translate leaderboard content
+    translateLeaderboardContent(langData);
+    
+    // Update air quality status text
+    updateAirQualityTexts(langData);
+    
+    // Update leaderboard dynamic content
+    updateLeaderboardTexts(langData);
+    
+    // Update sponsors content
+    updateSponsorsTexts(langData);
+}
+
+// Translate redesign tools
+function translateRedesignTools(langData) {
+    const toolButtons = document.querySelectorAll('.redesign-tool');
+    
+    toolButtons.forEach(button => {
+        const text = button.textContent.trim();
+        
+        if (text.includes('Селектиране')) {
+            button.innerHTML = button.innerHTML.replace('Селектиране', langData.tool_selection || 'Selection');
+        } else if (text.includes('Парк')) {
+            button.innerHTML = button.innerHTML.replace('Парк', langData.tool_park || 'Park');
+        } else if (text.includes('Алея/Улица')) {
+            button.innerHTML = button.innerHTML.replace('Алея/Улица', langData.tool_alley || 'Street/Alley');
+        } else if (text.includes('Зелена зона')) {
+            button.innerHTML = button.innerHTML.replace('Зелена зона', langData.tool_green_zone || 'Green Zone');
+        } else if (text.includes('Велоалея')) {
+            button.innerHTML = button.innerHTML.replace('Велоалея', langData.tool_bike_lane || 'Bike Lane');
+        } else if (text.includes('Зони')) {
+            button.innerHTML = button.innerHTML.replace('Зони', langData.tool_zones || 'Zones');
+        } else if (text.includes('Граници')) {
+            button.innerHTML = button.innerHTML.replace('Граници', langData.tool_boundaries || 'Boundaries');
+        } else if (text.includes('Изчисти всичко')) {
+            button.innerHTML = button.innerHTML.replace('Изчисти всичко', langData.tool_clear || 'Clear All');
+        }
+    });
+    
+    // Translate zone dropdown options
+    const zoneOptions = document.querySelectorAll('.zone-option');
+    zoneOptions.forEach(option => {
+        const text = option.textContent.trim();
+        
+        if (text.includes('Жилищна зона')) {
+            option.innerHTML = option.innerHTML.replace('Жилищна зона', currentLanguage === 'en' ? 'Residential Zone' : 'Жилищна зона');
+        } else if (text.includes('Търговска зона')) {
+            option.innerHTML = option.innerHTML.replace('Търговска зона', currentLanguage === 'en' ? 'Commercial Zone' : 'Търговска зона');
+        } else if (text.includes('Индустриална зона')) {
+            option.innerHTML = option.innerHTML.replace('Индустриална зона', currentLanguage === 'en' ? 'Industrial Zone' : 'Индустриална зона');
+        } else if (text.includes('Офис зона')) {
+            option.innerHTML = option.innerHTML.replace('Офис зона', currentLanguage === 'en' ? 'Office Zone' : 'Офис зона');
+        } else if (text.includes('Смесена зона')) {
+            option.innerHTML = option.innerHTML.replace('Смесена зона', currentLanguage === 'en' ? 'Mixed Zone' : 'Смесена зона');
+        } else if (text.includes('Обществена зона')) {
+            option.innerHTML = option.innerHTML.replace('Обществена зона', currentLanguage === 'en' ? 'Public Zone' : 'Обществена зона');
+        }
+    });
+    
+    // Translate save controls
+    const saveControls = document.querySelectorAll('.save-controls button');
+    saveControls.forEach(button => {
+        const text = button.textContent.trim();
+        
+        if (text.includes('Запази')) {
+            button.innerHTML = button.innerHTML.replace('Запази', langData.btn_save || 'Save');
+        } else if (text.includes('Зареди')) {
+            button.innerHTML = button.innerHTML.replace('Зареди', langData.btn_load || 'Load');
+        } else if (text.includes('Изтрий запазеното')) {
+            button.innerHTML = button.innerHTML.replace('Изтрий запазеното', langData.btn_delete_saved || 'Delete Saved');
+        }
+    });
+}
+
+// Translate leaderboard content
+function translateLeaderboardContent(langData) {
+    // Translate filter buttons
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(button => {
+        const text = button.textContent.trim();
+        
+        if (text === 'Всички') {
+            button.textContent = langData.filter_all || 'All';
+        } else if (text === 'Този месец') {
+            button.textContent = langData.filter_this_month || 'This Month';
+        } else if (text === 'Дървета') {
+            button.innerHTML = (currentLanguage === 'en' ? '🌳 Trees' : '🌳 Дървета');
+        } else if (text === 'Почистване') {
+            button.innerHTML = (currentLanguage === 'en' ? '🧹 Cleanup' : '🧹 Почистване');
+        } else if (text === 'Велосипед') {
+            button.innerHTML = (currentLanguage === 'en' ? '🚴 Bicycle' : '🚴 Велосипед');
+        }
+    });
+    
+    // Translate stat labels in leaderboard
+    const statLabels = document.querySelectorAll('.stat-label');
+    statLabels.forEach(label => {
+        const text = label.textContent.trim();
+        
+        if (text === 'Активни потребители') {
+            label.textContent = langData.total_users || 'Active Users';
+        } else if (text === 'Общо действия') {
+            label.textContent = langData.total_actions || 'Total Actions';
+        } else if (text === 'Общо точки') {
+            label.textContent = langData.total_points || 'Total Points';
+        } else if (text === 'Точки') {
+            label.textContent = langData.profile_points || 'Points';
+        } else if (text === 'Действия') {
+            label.textContent = langData.profile_actions || 'Actions';
+        } else if (text === 'Баджове') {
+            label.textContent = langData.profile_badges || 'Badges';
+        }
+    });
+}
+
+// Translate error messages and validation
+function translateErrorMessages(langData) {
+    // Common error message translations
+    const errorMessages = {
+        'bg': {
+            'required_field': 'Това поле е задължително',
+            'invalid_email': 'Невалиден имейл адрес',
+            'password_mismatch': 'Паролите не съвпадат',
+            'connection_error': 'Грешка при връзката със сървъра',
+            'file_too_large': 'Файлът е твърде голям',
+            'invalid_file_type': 'Невалиден тип файл'
+        },
+        'en': {
+            'required_field': 'This field is required',
+            'invalid_email': 'Invalid email address',
+            'password_mismatch': 'Passwords do not match',
+            'connection_error': 'Server connection error',
+            'file_too_large': 'File is too large',
+            'invalid_file_type': 'Invalid file type'
+        }
+    };
+    
+    return errorMessages[currentLanguage] || errorMessages['bg'];
+}
+
+// Update air quality specific texts
+function updateAirQualityTexts(langData) {
+    // Update AQI status if it shows "Good"
+    const aqiStatus = document.getElementById('aqi-status');
+    if (aqiStatus && aqiStatus.textContent.includes('Добро')) {
+        aqiStatus.textContent = langData.air_quality_good || 'Good';
+    }
+    
+    // Update last updated time format
+    const lastUpdated = document.getElementById('last-updated');
+    if (lastUpdated && langData.last_updated) {
+        const timeMatch = lastUpdated.textContent.match(/(\d{2}:\d{2}:\d{2})/);
+        if (timeMatch) {
+            lastUpdated.innerHTML = `<span>${langData.last_updated}</span>: ${timeMatch[1]}`;
+        }
+    }
+    
+    // Update health recommendations content
+    const healthRec = document.getElementById('health-recommendations');
+    if (healthRec) {
+        const currentText = healthRec.textContent;
+        if (currentText.includes('Въздухът е чист')) {
+            healthRec.innerHTML = `
+                <p>${langData.air_clean_safe || 'The air is clean and safe for all activities.'}</p>
+                <p>${langData.perfect_outdoor || 'Perfect time for outdoor sports and walks.'}</p>
+            `;
+        }
+    }
+}
+
+// Update leaderboard specific texts
+function updateLeaderboardTexts(langData) {
+    // Update badge texts in leaderboard that don't have data-translate attributes
+    const badges = document.querySelectorAll('.badge:not([data-translate])');
+    badges.forEach(badge => {
+        const text = badge.textContent.trim();
+        switch(text) {
+            case 'Еко герой':
+                badge.textContent = langData.eco_hero_badge || 'Eco Hero';
+                break;
+            case 'Майстор дървета':
+                badge.textContent = langData.tree_master_badge || 'Tree Master';
+                break;
+            case 'Велосипедист':
+                badge.textContent = langData.cyclist_badge || 'Cyclist';
+                break;
+            case 'Почистител':
+                badge.textContent = langData.cleaner_badge || 'Cleaner';
+                break;
+            case 'Еко активист':
+                badge.textContent = langData.eco_activist_badge || 'Eco Activist';
+                break;
+            case 'Еко ентусиаст':
+                badge.textContent = langData.eco_enthusiast_badge || 'Eco Enthusiast';
+                break;
+            case 'Еко новак':
+                badge.textContent = langData.eco_newbie_badge || 'Eco Newbie';
+                break;
+        }
+    });
+}
+
+// Update sponsors specific texts
+function updateSponsorsTexts(langData) {
+    // Update sponsor type texts that don't have data-translate attributes
+    const sponsorTypes = document.querySelectorAll('.sponsor-type:not([data-translate])');
+    sponsorTypes.forEach(type => {
+        const text = type.textContent.trim();
+        switch(text) {
+            case 'Еко технологии':
+                type.textContent = langData.eco_technologies || 'Eco Technologies';
+                break;
+            case 'Соларни решения':
+                type.textContent = langData.solar_solutions || 'Solar Solutions';
+                break;
+            case 'Рециклиране':
+                type.textContent = langData.recycling || 'Recycling';
+                break;
+            case 'Градска мобилност':
+                type.textContent = langData.urban_mobility || 'Urban Mobility';
+                break;
+            case 'Пречистване на вода':
+                type.textContent = langData.water_purification || 'Water Purification';
+                break;
+            case 'Търговски център':
+                type.textContent = langData.shopping_center || 'Shopping Center';
+                break;
+            case 'Био храни':
+                type.textContent = langData.organic_food || 'Organic Food';
+                break;
+            case 'Електромобили':
+                type.textContent = langData.electric_vehicles || 'Electric Vehicles';
+                break;
+            case 'Еко строителство':
+                type.textContent = langData.eco_construction || 'Eco Construction';
+                break;
+        }
+    });
+    
+    // Update partnership badges that don't have data-translate attributes
+    const partnerBadges = document.querySelectorAll('.sponsor-badges .badge:not([data-translate])');
+    partnerBadges.forEach(badge => {
+        const text = badge.textContent.trim();
+        switch(text) {
+            case 'Премиум партньор':
+                badge.textContent = langData.premium_partner || 'Premium Partner';
+                break;
+            case 'Верифициран':
+                badge.textContent = langData.verified_badge || 'Verified';
+                break;
+            case 'Иновация':
+                badge.textContent = langData.innovation_badge || 'Innovation';
+                break;
+            case 'Стандартен партньор':
+                badge.textContent = langData.standard_partner || 'Standard Partner';
+                break;
+            case 'Бронзов партньор':
+                badge.textContent = langData.bronze_partner || 'Bronze Partner';
+                break;
+        }
+    });
+}
+
+// 🚀 UNIVERSAL TEXT SCANNER - The Google Translate Extension Approach
+// This function scans ALL text on the page like a browser extension would
+function performUniversalTextScan(targetLang) {
+    console.log('🔍 Starting Universal Text Scan - Finding ALL text like Google Translate...');
+    
+    // Create comprehensive Bulgarian -> English mapping
+    const universalTranslations = createUniversalTranslationMap();
+    
+    if (targetLang !== 'en') {
+        console.log('Universal scan only works for EN translation currently');
+        return;
+    }
+    
+    // Find ALL text nodes in the document (like Google Translate does)
+    const textNodes = getAllTextNodes(document.body);
+    
+    let translationsApplied = 0;
+    
+    textNodes.forEach(node => {
+        const originalText = node.textContent.trim();
+        
+        // Skip if:
+        // - Empty text
+        // - Already processed
+        // - Only numbers/symbols
+        // - Script or style tags
+        if (!originalText || 
+            originalText.length < 2 || 
+            /^[\d\s\.\,\-\+\%\(\)]*$/.test(originalText) ||
+            node.parentElement.tagName === 'SCRIPT' ||
+            node.parentElement.tagName === 'STYLE' ||
+            node.parentElement.classList.contains('skip-translate')) {
+            return;
+        }
+        
+        // Check if we have a translation for this text
+        const translation = universalTranslations[originalText];
+        if (translation) {
+            node.textContent = translation;
+            translationsApplied++;
+            console.log(`✅ Translated: "${originalText}" → "${translation}"`);
+        } else {
+            // Log untranslated text for debugging
+            console.log(`❌ Missing translation for: "${originalText}"`);
+        }
+    });
+    
+    console.log(`🎯 Universal scan complete! Applied ${translationsApplied} translations`);
+}
+
+// Get all text nodes in the document (like browser extensions do)
+function getAllTextNodes(element) {
+    const textNodes = [];
+    
+    // Use TreeWalker to efficiently traverse all text nodes
+    const walker = document.createTreeWalker(
+        element,
+        NodeFilter.SHOW_TEXT,
+        {
+            acceptNode: function(node) {
+                // Skip whitespace-only nodes
+                if (/^\s*$/.test(node.textContent)) {
+                    return NodeFilter.FILTER_REJECT;
+                }
+                return NodeFilter.FILTER_ACCEPT;
+            }
+        }
+    );
+    
+    let node;
+    while (node = walker.nextNode()) {
+        textNodes.push(node);
+    }
+    
+    return textNodes;
+}
+
+// Create comprehensive translation mapping for universal scanner
+function createUniversalTranslationMap() {
+    return {
+        // Navigation and main sections
+        'Начало': 'Home',
+        'Карта': 'Map',
+        'Еко действия': 'Eco Actions',
+        'Въздух': 'Air Quality',
+        'Класация': 'Leaderboard',
+        'Спонсори': 'Sponsors',
+        'Профил': 'Profile',
+        'Вход': 'Login',
+        'Регистрация': 'Register',
+        
+        // Hero section
+        'Помогни да направим София по-зелена': 'Help Make Sofia Greener',
+        'Платформа за картиране на зелени зони, еко пътеки и споделяне на еко инициативи в България': 'Platform for mapping green zones, eco trails and sharing eco initiatives in Bulgaria',
+        'Разгледай картата': 'Explore Map',
+        'Зелени зони': 'Green Zones',
+        'Засадени дървета': 'Trees Planted',
+        'Активни потребители': 'Active Users',
+        
+        // Map section
+        'Карта на зелените зони': 'Green Zones Map',
+        'Открий паркове, еко пътеки и велоалеи в София': 'Discover parks, eco trails and bike lanes in Sofia',
+        'Инструменти за преустройване на София': 'Sofia Redesign Tools',
+        'Промените се запазват автоматично в базата данни': 'Changes are automatically saved to the database',
+        'Селектиране': 'Selection',
+        'Парк': 'Park',
+        'Алея/Улица': 'Street/Alley',
+        'Зелена зона': 'Green Zone',
+        'Велоалея': 'Bike Lane',
+        'Зони': 'Zones',
+        'Граници': 'Boundaries',
+        'Изчисти всичко': 'Clear All',
+        'Запази': 'Save',
+        'Зареди': 'Load',
+        'Изтрий запазеното': 'Delete Saved',
+        'Избран инструмент: Селектиране област': 'Selected tool: Area Selection',
+        'Кликнете и влачете върху картата за да селектирате област за преустройство. Промените са временни.': 'Click and drag on the map to select area for redesign. Changes are temporary.',
+        'Кликнете "Покажи карта" за да заредите интерактивната карта': 'Click "Show Map" to load the interactive map',
+        'Покажи карта на София': 'Show Sofia Map',
+        
+        // Zone options
+        'Жилищна зона': 'Residential Zone',
+        'Търговска зона': 'Commercial Zone',
+        'Индустриална зона': 'Industrial Zone',
+        'Офис зона': 'Office Zone',
+        'Смесена зона': 'Mixed Zone',
+        'Обществена зона': 'Public Zone',
+        
+        // Filters and sidebar
+        'Филтри': 'Filters',
+        'Паркове': 'Parks',
+        'Еко пътеки': 'Eco Trails',
+        'Велоалеи': 'Bike Lanes',
+        'Места за засаждане': 'Planting Areas',
+        'София': 'Sofia',
+        'Зеленина': 'Greenery',
+        'Население': 'Population',
+        'Площ': 'Area',
+        'Качество въздух': 'Air Quality',
+        
+        // Facts panel
+        'Знаете ли, че...': 'Did you know...',
+        'нов факт': 'new fact',
+        'Зареждане на интересни факти за София...': 'Loading interesting facts about Sofia...',
+        'Градът има най-много минерални извори в Европа': 'The city has the most mineral springs in Europe',
+        
+        // Air Quality section
+        'Качество на въздуха': 'Air Quality',
+        'Данни в реално време за въздушното качество в София': 'Real-time air quality data for Sofia',
+        'София Център': 'Sofia Center',
+        'Последно обновяване': 'Last updated',
+        'Добро': 'Good',
+        'Метеорологични условия': 'Weather Conditions',
+        'Температура': 'Temperature',
+        'Влажност': 'Humidity',
+        'Вятър': 'Wind',
+        'Видимост': 'Visibility',
+        'Препоръки за здравето': 'Health Recommendations',
+        'Въздухът е чист и безопасен за всички дейности.': 'The air is clean and safe for all activities.',
+        'Идеално време за спорт на открито и разходки.': 'Perfect time for outdoor sports and walks.',
+        '24-часова тенденция': '24-hour Trend',
+        'Тенденция на AQI за последните 24 часа': 'AQI trend for the last 24 hours',
+        'Избери локация': 'Select Location',
+        'Моята локация': 'My Location',
+        
+        // Leaderboard
+        'Топ еко герои на София': 'Top eco heroes of Sofia',
+        'Общо действия': 'Total Actions',
+        'Общо точки': 'Total Points',
+        'Позиция': 'Position',
+        'Потребител': 'User',
+        'Точки': 'Points',
+        'Действия': 'Actions',
+        'Баджове': 'Badges',
+        'Еко герой': 'Eco Hero',
+        'Майстор дървета': 'Tree Master',
+        'Велосипедист': 'Cyclist',
+        'Почистител': 'Cleaner',
+        'Еко активист': 'Eco Activist',
+        'Еко ентусиаст': 'Eco Enthusiast',
+        'Еко новак': 'Eco Newbie',
+        'Всички': 'All',
+        'Този месец': 'This Month',
+        'Дървета': 'Trees',
+        'Почистване': 'Cleanup',
+        'Велосипед': 'Bicycle',
+        'Твоята позиция': 'Your Position',
+        
+        // Feed section
+        'Споделете вашите еко инициативи с общността': 'Share your eco initiatives with the community',
+        'Благотворителност': 'Charity',
+        'За всеки 500 събрани точки от общността дарявame 1 лв. за залесяване и опазване на природата!': 'For every 500 points collected by the community, we donate 1 BGN for tree planting and nature conservation!',
+        'Добави действие': 'Add Action',
+        
+        // Sponsors section
+        'Нашите спонсори': 'Our Sponsors',
+        'Компании, които подкрепят зелената мисия на София': 'Companies supporting Sofia\'s green mission',
+        'Златни партньори': 'Gold Partners',
+        'Сребърни партньори': 'Silver Partners',
+        'Корпоративни партньори': 'Corporate Partners',
+        'Еко технологии': 'Eco Technologies',
+        'Соларни решения': 'Solar Solutions',
+        'Рециклиране': 'Recycling',
+        'Градска мобилност': 'Urban Mobility',
+        'Пречистване на вода': 'Water Purification',
+        'Търговски център': 'Shopping Center',
+        'Био храни': 'Organic Food',
+        'Електромобили': 'Electric Vehicles',
+        'Еко строителство': 'Eco Construction',
+        'Премиум партньор': 'Premium Partner',
+        'Верифициран': 'Verified',
+        'Иновация': 'Innovation',
+        'Стандартен партньор': 'Standard Partner',
+        'Бронзов партньор': 'Bronze Partner',
+        'Станете наш партньор': 'Become Our Partner',
+        'Присъединете се към нашата мисия за по-зелена София': 'Join our mission for a greener Sofia',
+        'Видимост': 'Visibility',
+        'Вашият бранд ще бъде видян от хиляди екологично съзнателни граждани': 'Your brand will be seen by thousands of environmentally conscious citizens',
+        'Социална отговорност': 'Social Responsibility',
+        'Покажете своята ангажираност към устойчивото развитие на града': 'Show your commitment to sustainable city development',
+        'Общност': 'Community',
+        'Станете част от активна общност, която се грижи за околната среда': 'Become part of an active community that cares about the environment',
+        'Растеж': 'Growth',
+        'Достигнете до нови клиенти, които ценят екологичните инициативи': 'Reach new customers who value environmental initiatives',
+        'Готови ли сте да направите разликата?': 'Ready to make a difference?',
+        'Станете спонсор': 'Become Sponsor',
+        'Свържете се с нас': 'Contact Us',
+        'Въздействие на партньорствата': 'Partnership Impact',
+        'Лева инвестиции': 'BGN Investment',
+        '% по-чист въздух': '% Cleaner Air',
+        'Нови паркове': 'New Parks',
+        
+        // Profile section
+        'Потребителски профил': 'User Profile',
+        'История на действията': 'Actions History',
+        
+        // Forms and modals
+        'Добави нова локация': 'Add New Location',
+        'Добави еко действие': 'Add Eco Action',
+        'Име на локацията': 'Location Name',
+        'Описание': 'Description',
+        'Избери тип': 'Select Type',
+        'Заглавие на действието': 'Action Title',
+        'Опиши какво си направил...': 'Describe what you did...',
+        'Локация': 'Location',
+        'Добави локация': 'Add Location',
+        'Сподели действието': 'Share Action',
+        'Имейл': 'Email',
+        'Парола': 'Password',
+        'Потребителско име': 'Username',
+        'Повтори парола': 'Confirm Password',
+        'Нямате профил?': 'Don\'t have an account?',
+        'Регистрирайте се': 'Register',
+        'Вече имате профил?': 'Already have an account?',
+        'Влезте': 'Login',
+        
+        // Chat
+        'Чат': 'Chat',
+        'Еко Асистент': 'Eco Assistant',
+        'Попитай за еко инициативи...': 'Ask about eco initiatives...',
+        'Изпрати': 'Send',
+        
+        // Common states
+        'Зареждане...': 'Loading...',
+        'Грешка': 'Error',
+        'Успех': 'Success',
+        'Информация': 'Information',
+        'Внимание': 'Warning'
+    };
+}
+
+// Get localized date format
+function formatLocalizedDate(date) {
+    const options = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    };
+    
+    const locale = currentLanguage === 'bg' ? 'bg-BG' : 'en-US';
+    return new Intl.DateTimeFormat(locale, options).format(date);
+}
+
+// Get localized number format
+function formatLocalizedNumber(number) {
+    const locale = currentLanguage === 'bg' ? 'bg-BG' : 'en-US';
+    return new Intl.NumberFormat(locale).format(number);
+}
+
+// Add data-translate attributes to key elements for easier translation
+function addTranslationAttributes() {
+    // This function can be called to add data-translate attributes
+    // to elements that need dynamic translation
+    console.log('Adding translation attributes...');
+    
+    // Example: Navigation links
+    const navLinks = document.querySelectorAll('.nav-link');
+    const navKeys = ['nav_home', 'nav_map', 'nav_feed', 'nav_air', 'nav_leaderboard', 'nav_sponsors', 'nav_profile'];
+    
+    navLinks.forEach((link, index) => {
+        if (navKeys[index]) {
+            link.setAttribute('data-translate', navKeys[index]);
+        }
+    });
+}
+
+// Initialize language system when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize language system
+    initializeLanguage();
+    
+    // Add translation attributes
+    addTranslationAttributes();
+    
+    console.log('Language system initialized');
+});
+
+// Export language functions globally
+window.toggleLanguage = toggleLanguage;
+window.switchLanguage = switchLanguage;
+window.translatePage = translatePage;
