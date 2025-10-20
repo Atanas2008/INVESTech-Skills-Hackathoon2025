@@ -37,21 +37,21 @@
 <body>
     <!-- Navigation -->
     <nav class="navbar">
-        <div class="nav-container">
-            <div class="logo">
+        <div class="nav-container" style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+            <div class="logo" style="flex:0 0 auto;">
                 <i class="fas fa-tree"></i>
-                <span>PlantATree</span>
+                <span>EcoBuilders</span>
             </div>
-            <ul class="nav-menu">
+            <ul class="nav-menu" style="flex:1 1 0;justify-content:center;display:flex;gap:1.5rem;align-items:center;margin:0;">
                 <li><a href="#" onclick="showSection('home')" class="nav-link">Начало</a></li>
                 <li><a href="#" onclick="showSection('map')" class="nav-link">Карта</a></li>
                 <li><a href="#" onclick="showSection('feed')" class="nav-link">Еко действия</a></li>
                 <li><a href="#" onclick="showSection('air-quality')" class="nav-link">Въздух</a></li>
                 <li><a href="#" onclick="showSection('leaderboard')" class="nav-link">Класация</a></li>
                 <li><a href="#" onclick="showSection('sponsors')" class="nav-link">Спонсори</a></li>
-                <li><a href="#" onclick="showSection('profile')" class="nav-link">Профил</a></li>
             </ul>
-            <div class="nav-right">
+            <div class="nav-right" style="flex:0 0 auto;display:flex;align-items:center;gap:1.2rem;">
+                <a href="#" onclick="showSection('profile')" class="nav-link" style="font-weight:600;">Профил</a>
                 <div class="language-switch">
                     <button id="language-toggle" class="btn-language" onclick="toggleLanguage()" title="Switch Language">
                         <i class="fas fa-language"></i>
