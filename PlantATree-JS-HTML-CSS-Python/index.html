@@ -42,8 +42,8 @@
     <!-- Home Section -->
     <section id="home" class="hero">
         <div class="hero-video-container">
-            <video autoplay muted loop class="hero-video" id="hero-video">
-                <source src="video1.mp4" type="video/mp4">
+            <video autoplay muted loop class="hero-video" id="hero-video" preload="metadata">
+                <source src="/video/video1.mp4" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
             <!-- Fallback animated background using multiple nature images -->
@@ -93,9 +93,9 @@
         <!-- Sofia Redesign Tools Panel -->
         <div class="sofia-tools-panel">
             <h3><i class="fas fa-hammer"></i> Инструменти за преустройване на София</h3>
-            <div class="temporary-notice">
-                <i class="fas fa-info-circle"></i>
-                <span>Всички промени са временни и ще се загубят при презареждане на страницата</span>
+            <div class="save-notice">
+                <i class="fas fa-database"></i>
+                <span>Промените се запазват автоматично в базата данни</span>
             </div>
             <div class="redesign-tools">
                 <button class="redesign-tool active" id="select-tool" onclick="setRedesignTool('select')">
@@ -118,9 +118,60 @@
                     <i class="fas fa-bicycle"></i>
                     Велоалея
                 </button>
+                <div class="zone-dropdown-container">
+                    <button class="redesign-tool dropdown-toggle" id="zone-tool" onclick="toggleZoneDropdown()">
+                        <i class="fas fa-city"></i>
+                        Зони
+                        <i class="fas fa-chevron-down dropdown-arrow"></i>
+                    </button>
+                    <div class="zone-dropdown" id="zone-dropdown">
+                        <button class="zone-option" onclick="setRedesignTool('residential')">
+                            <i class="fas fa-home"></i>
+                            Жилищна зона
+                        </button>
+                        <button class="zone-option" onclick="setRedesignTool('commercial')">
+                            <i class="fas fa-store"></i>
+                            Търговска зона
+                        </button>
+                        <button class="zone-option" onclick="setRedesignTool('industrial')">
+                            <i class="fas fa-industry"></i>
+                            Индустриална зона
+                        </button>
+                        <button class="zone-option" onclick="setRedesignTool('office')">
+                            <i class="fas fa-building"></i>
+                            Офис зона
+                        </button>
+                        <button class="zone-option" onclick="setRedesignTool('mixed')">
+                            <i class="fas fa-puzzle-piece"></i>
+                            Смесена зона
+                        </button>
+                        <button class="zone-option" onclick="setRedesignTool('public')">
+                            <i class="fas fa-landmark"></i>
+                            Обществена зона
+                        </button>
+                    </div>
+                </div>
+                <button class="redesign-tool" id="boundary-tool" onclick="setRedesignTool('boundary')">
+                    <i class="fas fa-circle"></i>
+                    Граници
+                </button>
                 <button class="redesign-tool" id="clear-tool" onclick="clearAllRedesigns()">
                     <i class="fas fa-eraser"></i>
                     Изчисти всичко
+                </button>
+            </div>
+            <div class="save-controls">
+                <button class="save-btn" onclick="saveDrawnItems()" title="Запази текущите промени">
+                    <i class="fas fa-save"></i>
+                    Запази
+                </button>
+                <button class="load-btn" onclick="loadDrawnItems()" title="Зареди запазените промени">
+                    <i class="fas fa-download"></i>
+                    Зареди
+                </button>
+                <button class="clear-saved-btn" onclick="clearSavedItems()" title="Изтрий запазените данни">
+                    <i class="fas fa-trash"></i>
+                    Изтрий запазеното
                 </button>
             </div>
             <div class="current-tool-info">
@@ -132,35 +183,11 @@
         <div class="map-container">
             <div id="map-canvas" class="map-canvas">
                 <div class="map-placeholder" id="map-placeholder">
-                    <div class="map-intro">
-                        <i class="fas fa-map"></i>
-                        <h3>Интерактивна карта на София</h3>
-                        <p>Разгледайте зелените зони, паркове и еко пътеки в града. Използвайте инструментите за преустройване за да визуализирате бъдещето на София.</p>
-                        <div class="map-features">
-                            <div class="feature-item">
-                                <i class="fas fa-tree"></i>
-                                <span>126 Паркове</span>
-                            </div>
-                            <div class="feature-item">
-                                <i class="fas fa-bicycle"></i>
-                                <span>45 км Велоалеи</span>
-                            </div>
-                            <div class="feature-item">
-                                <i class="fas fa-leaf"></i>
-                                <span>30% Зеленина</span>
-                            </div>
-                        </div>
-                    </div>
-                    <button onclick="loadMapWithRedesign()" class="load-map-btn" id="load-map-btn">
-                        <i class="fas fa-map-marked-alt"></i>
-                        <span>Заредете картата</span>
-                        <div class="btn-shimmer"></div>
+                    <i class="fas fa-map"></i>
+                    <p>Кликнете "Покажи карта" за да заредите интерактивната карта</p>
+                    <button onclick="loadMapWithRedesign()" style="background: #7bc142; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
+                        🗺️ Покажи карта на София
                     </button>
-                </div>
-                <div class="map-loading" id="map-loading" style="display: none;">
-                    <div class="loading-spinner"></div>
-                    <h4>Зареждане на картата...</h4>
-                    <p>Моля изчакайте докато се заредят данните за София</p>
                 </div>
             </div>
             <div class="map-sidebar">
@@ -215,74 +242,14 @@
 
                 <h3>Филтри</h3>
                 <div class="filter-group">
-                    <div class="filter-header">
-                        <span>Показвай на картата:</span>
-                        <button class="filter-toggle-all" onclick="toggleAllFilters()">
-                            <i class="fas fa-eye"></i> Всички
-                        </button>
-                    </div>
-                    <label class="filter-item">
-                        <input type="checkbox" checked onchange="filterLocationsByType()"> 
-                        <div class="custom-checkbox"></div>
-                        <i class="fas fa-tree filter-icon"></i>
-                        <span>Паркове</span>
-                        <span class="filter-count">(126)</span>
-                    </label>
-                    <label class="filter-item">
-                        <input type="checkbox" checked onchange="filterLocationsByType()"> 
-                        <div class="custom-checkbox"></div>
-                        <i class="fas fa-route filter-icon"></i>
-                        <span>Еко пътеки</span>
-                        <span class="filter-count">(34)</span>
-                    </label>
-                    <label class="filter-item">
-                        <input type="checkbox" checked onchange="filterLocationsByType()"> 
-                        <div class="custom-checkbox"></div>
-                        <i class="fas fa-bicycle filter-icon"></i>
-                        <span>Велоалеи</span>
-                        <span class="filter-count">(28)</span>
-                    </label>
-                    <label class="filter-item">
-                        <input type="checkbox" checked onchange="filterLocationsByType()"> 
-                        <div class="custom-checkbox"></div>
-                        <i class="fas fa-seedling filter-icon"></i>
-                        <span>Места за засаждане</span>
-                        <span class="filter-count">(67)</span>
-                    </label>
+                    <label><input type="checkbox" checked onchange="filterLocationsByType()"> Паркове</label>
+                    <label><input type="checkbox" checked onchange="filterLocationsByType()"> Еко пътеки</label>
+                    <label><input type="checkbox" checked onchange="filterLocationsByType()"> Велоалеи</label>
+                    <label><input type="checkbox" checked onchange="filterLocationsByType()"> Места за засаждане</label>
                 </div>
-                
-                <div class="map-actions">
-                    <button class="btn-primary map-action-btn" onclick="showAddLocationModal()">
-                        <i class="fas fa-plus"></i> 
-                        <span>Добави локация</span>
-                    </button>
-                    <button class="btn-secondary map-action-btn" onclick="getCurrentLocation()">
-                        <i class="fas fa-crosshairs"></i> 
-                        <span>Моята позиция</span>
-                    </button>
-                    <button class="btn-secondary map-action-btn" onclick="shareMapView()">
-                        <i class="fas fa-share-alt"></i> 
-                        <span>Сподели</span>
-                    </button>
-                </div>
-                
-                <div class="map-legend">
-                    <h4><i class="fas fa-info-circle"></i> Легенда</h4>
-                    <div class="legend-items">
-                        <div class="legend-item">
-                            <div class="legend-color" style="background: #7bc142;"></div>
-                            <span>Паркове и градини</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color" style="background: #4a7c59;"></div>
-                            <span>Гори и природа</span>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-color" style="background: #2d5a27;"></div>
-                            <span>Защитени зони</span>
-                        </div>
-                    </div>
-                </div>
+                <button class="btn-primary" onclick="showAddLocationModal()">
+                    <i class="fas fa-plus"></i> Добави локация
+                </button>
             </div>
         </div>
         
@@ -1105,6 +1072,77 @@
             </form>
         </div>
     </div>
+
+    <!-- Floating Chat Button -->
+    <button id="chat-button">🌱</button>
+
+    <!-- Chat Pop-up Modal -->
+    <div id="chat-modal">
+        <div id="chat-header">Еко Асистент</div>
+        <div id="chat-body">
+            <!-- Messages will appear here -->
+        </div>
+        <div id="chat-footer">
+            <input type="text" id="chat-input" placeholder="Попитай за еко инициативи...">
+            <button id="chat-send">Изпрати</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatButton = document.getElementById('chat-button');
+            const chatModal = document.getElementById('chat-modal');
+            const chatInput = document.getElementById('chat-input');
+            const chatSend = document.getElementById('chat-send');
+            const chatBody = document.getElementById('chat-body');
+
+            // Toggle chat modal
+            chatButton.addEventListener('click', () => {
+                chatModal.style.display = chatModal.style.display === 'none' ? 'block' : 'none';
+            });
+
+            // Send message on button click or Enter key
+            chatSend.addEventListener('click', sendMessage);
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+
+            function sendMessage() {
+                const message = chatInput.value.trim();
+                if (!message) return;
+
+                // Add user message to chat body
+                addMessage('user-message', message);
+                chatInput.value = '';
+
+                // Send to backend
+                fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.reply) {
+                        addMessage('ai-message', data.reply);
+                    } else {
+                        addMessage('ai-message', 'Грешка: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    addMessage('ai-message', 'Грешка: ' + error.message);
+                });
+            }
+
+            function addMessage(className, text) {
+                const div = document.createElement('div');
+                div.classList.add('message', className);
+                div.textContent = text;
+                chatBody.appendChild(div);
+                chatBody.scrollTop = chatBody.scrollHeight; // Scroll to bottom
+            }
+        });
+    </script>
 
     <script src="script.js"></script>
 </body>

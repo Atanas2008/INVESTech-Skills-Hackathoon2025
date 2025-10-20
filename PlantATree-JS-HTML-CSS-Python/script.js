@@ -12,6 +12,21 @@ let mapInstance = null;
 let ecoActions = [];
 let locations = [];
 
+// Initialize the application
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing app...');
+    console.log('Leaflet available:', typeof L !== 'undefined');
+    
+    initializeApp();
+    loadSampleData();
+    
+    // Initialize video background
+    initializeVideoBackground();
+    
+    // Animate numbers when page loads
+    setTimeout(animateNumbers, 1000);
+});
+
 // Video Background Handler
 function initializeVideoBackground() {
     const video = document.getElementById('hero-video');
@@ -20,26 +35,67 @@ function initializeVideoBackground() {
     
     if (video) {
         let videoLoaded = false;
+        let canPlayFired = false;
         video.classList.add('loading');
+        
+        // Error handling for video loading
+        video.addEventListener('error', function(e) {
+            console.error('Video loading error:', e);
+            fallbackToSlideshow();
+        });
+        
+        // Network state monitoring
+        video.addEventListener('stalled', function() {
+            console.warn('Video stalled, network issues detected');
+        });
         
         // Preload and prepare video
         video.addEventListener('loadstart', function() {
             console.log('Video loading started...');
         });
         
+        video.addEventListener('loadedmetadata', function() {
+            console.log('Video metadata loaded');
+        });
+        
+        video.addEventListener('loadeddata', function() {
+            console.log('Video first frame loaded');
+        });
+        
         video.addEventListener('progress', function() {
-            console.log('Video loading progress...');
+            // Calculate loading progress
+            if (video.buffered.length > 0) {
+                const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+                const duration = video.duration;
+                const progress = (bufferedEnd / duration) * 100;
+                console.log(`Video buffered: ${progress.toFixed(1)}%`);
+            }
         });
         
         video.addEventListener('canplay', function() {
-            console.log('Video can start playing');
-            smoothVideoTransition();
+            if (!canPlayFired) {
+                console.log('Video can start playing');
+                canPlayFired = true;
+                smoothVideoTransition();
+            }
         });
         
         video.addEventListener('canplaythrough', function() {
             console.log('Video fully buffered and ready');
-            smoothVideoTransition();
+            if (!videoLoaded) {
+                smoothVideoTransition();
+            }
         });
+        
+        // Fallback function
+        function fallbackToSlideshow() {
+            if (slideshow) {
+                slideshow.style.display = 'block';
+                slideshow.style.opacity = '1';
+                video.style.display = 'none';
+                console.log('Fallback to slideshow activated');
+            }
+        }
         
         function smoothVideoTransition() {
             if (videoLoaded) return;
@@ -48,10 +104,19 @@ function initializeVideoBackground() {
             // Add loading complete class to hero
             heroSection.classList.add('video-loaded');
             
+            // Ensure video is ready to play
+            video.currentTime = 0;
+            
             // Smooth transition to video
             setTimeout(() => {
                 video.classList.remove('loading');
                 video.classList.add('loaded');
+                
+                // Play video if not already playing
+                video.play().catch(function(error) {
+                    console.warn('Video autoplay failed:', error);
+                    fallbackToSlideshow();
+                });
                 
                 // Hide slideshow smoothly
                 if (slideshow) {
@@ -65,46 +130,18 @@ function initializeVideoBackground() {
             }, 300);
         }
         
-        video.addEventListener('error', function(e) {
-            console.log('Video error occurred:', e);
-            handleVideoError();
-        });
-        
-        function handleVideoError() {
-            video.style.display = 'none';
-            heroSection.classList.remove('video-loaded');
-            initializeFallbackSlideshow();
-        }
-        
-        // Force load and play
-        video.load();
-        
-        // Gentle timeout with retry
+        // Timeout fallback - if video doesn't load within reasonable time
         setTimeout(() => {
             if (!videoLoaded) {
-                console.log('Attempting to force video play...');
-                video.play().then(() => {
-                    console.log('Video play successful');
-                    smoothVideoTransition();
-                }).catch((error) => {
-                    console.log('Video play failed:', error);
-                    handleVideoError();
-                });
+                console.log('Video loading timeout, falling back to slideshow');
+                fallbackToSlideshow();
             }
-        }, 1500);
+        }, 8000); // 8 second timeout
         
-        // Video restart every 10 seconds with smooth transition
-        video.addEventListener('timeupdate', function() {
-            if (video.currentTime >= 10) {
-                video.style.opacity = '0.8';
-                setTimeout(() => {
-                    video.currentTime = 0;
-                    video.style.opacity = '1';
-                }, 200);
-            }
-        });
-        
+        // Start loading the video
+        video.load();
     } else {
+        // No video element, initialize slideshow
         console.log('Video element not found');
         initializeFallbackSlideshow();
     }
@@ -186,86 +223,6 @@ function animateNumbers() {
     });
 }
 
-// Fallback Slideshow Handler
-function initializeFallbackSlideshow() {
-    const slideshow = document.getElementById('fallback-slideshow');
-    if (!slideshow) return;
-    
-    const slides = slideshow.querySelectorAll('.slide');
-    let currentSlide = 0;
-    
-    function nextSlide() {
-        slides[currentSlide].classList.remove('active');
-        currentSlide = (currentSlide + 1) % slides.length;
-        slides[currentSlide].classList.add('active');
-    }
-    
-    // Change slide every 2.5 seconds to create video-like movement
-    setInterval(nextSlide, 2500);
-    console.log('Fallback slideshow initialized with', slides.length, 'slides');
-}
-
-// Initialize the application
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing app...');
-    console.log('Leaflet available:', typeof L !== 'undefined');
-    
-    initializeVideoBackground();
-    initializeNavbarEffects();
-    initializeApp();
-    loadSampleData();
-    
-    // Start number animations after a delay to let content fade in
-    setTimeout(() => {
-        animateNumbers();
-    }, 1500);
-});
-
-// Enhanced Navbar Effects
-function initializeNavbarEffects() {
-    const navbar = document.querySelector('.navbar');
-    let lastScrollY = window.scrollY;
-    
-    // Scroll effect for navbar transparency and blur
-    window.addEventListener('scroll', () => {
-        const scrollY = window.scrollY;
-        const scrolled = scrollY > 50;
-        
-        if (scrolled) {
-            navbar.style.background = 'rgba(255, 255, 255, 0.98)';
-            navbar.style.backdropFilter = 'blur(20px)';
-            navbar.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.15)';
-        } else {
-            navbar.style.background = 'rgba(255, 255, 255, 0.95)';
-            navbar.style.backdropFilter = 'blur(15px)';
-            navbar.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.1)';
-        }
-        
-        // Hide/show navbar on scroll direction (optional)
-        if (scrollY > lastScrollY && scrollY > 100) {
-            navbar.style.transform = 'translateY(-100%)';
-        } else {
-            navbar.style.transform = 'translateY(0)';
-        }
-        
-        lastScrollY = scrollY;
-    });
-    
-    // Smooth navbar item animations on hover
-    const navLinks = document.querySelectorAll('.nav-link');
-    navLinks.forEach(link => {
-        link.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-2px)';
-        });
-        
-        link.addEventListener('mouseleave', function() {
-            if (!this.classList.contains('active')) {
-                this.style.transform = 'translateY(0)';
-            }
-        });
-    });
-}
-
 // App Initialization
 function initializeApp() {
     // Show home section by default
@@ -292,16 +249,6 @@ function showSection(sectionName) {
             console.log(`Section ${index}: ${section.id || section.className}`);
             section.classList.add('hidden');
         });
-        
-        // Update navbar active states
-        const allNavLinks = document.querySelectorAll('.nav-link');
-        allNavLinks.forEach(link => link.classList.remove('active'));
-        
-        // Find and activate the current nav link
-        const activeNavLink = document.querySelector(`[onclick="showSection('${sectionName}')"]`);
-        if (activeNavLink) {
-            activeNavLink.classList.add('active');
-        }
         
         // Show target section
         if (sectionName === 'home') {
@@ -339,8 +286,6 @@ function showSection(sectionName) {
             setTimeout(loadLeaderboard, 100);
         } else if (sectionName === 'air-quality') {
             setTimeout(initializeAirQualitySection, 100);
-        } else if (sectionName === 'sponsors') {
-            setTimeout(initializeSponsorsPage, 100);
         }
         
         // Show success notification (except for home)
@@ -350,7 +295,6 @@ function showSection(sectionName) {
                 'feed': 'Еко действия',
                 'leaderboard': 'Класация',
                 'air-quality': 'Въздушно качество',
-                'sponsors': 'Спонсори',
                 'profile': 'Профил'
             };
             
@@ -374,6 +318,8 @@ let drawnItems = null;
 let drawControl = null;
 let currentRedesignTool = 'select';
 let sofiaData = null;
+let sofiaBoundaryCircle = null;
+let sofiaFutureCircle = null;
 
 const SOFIA_CENTER = [42.6977, 23.3219]; // Sofia center coordinates
 
@@ -479,13 +425,20 @@ function initLeafletMap() {
         
         console.log('Creating map with coordinates:', sofiaLat, sofiaLng);
         
-        // Create map with more explicit options
-        const map = L.map('geoapify-map', {
+        // Create map with more explicit options and assign to global variable
+        map = L.map('geoapify-map', {
             center: [sofiaLat, sofiaLng],
             zoom: 12,
             zoomControl: true,
             attributionControl: true
         });
+        
+        // Create custom panes for proper layering
+        map.createPane('boundaryPane');
+        map.getPane('boundaryPane').style.zIndex = 400; // Below overlay pane (500) but above tile pane (200)
+        
+        map.createPane('designPane');
+        map.getPane('designPane').style.zIndex = 600; // Above overlay pane (500) and marker pane (600)
         
         console.log('Map created, adding Geoapify tile layer...');
         
@@ -1726,6 +1679,34 @@ window.selectTool = selectTool;
 window.initializeCityBuilder = initializeCityBuilder;
 
 // Sofia Redesign Map Functions
+
+// Toggle zone dropdown
+function toggleZoneDropdown() {
+    const dropdown = document.getElementById('zone-dropdown');
+    const toggleBtn = document.getElementById('zone-tool');
+    
+    if (dropdown.classList.contains('show')) {
+        dropdown.classList.remove('show');
+        toggleBtn.classList.remove('active');
+    } else {
+        dropdown.classList.add('show');
+        toggleBtn.classList.add('active');
+    }
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const dropdown = document.getElementById('zone-dropdown');
+    const toggleBtn = document.getElementById('zone-tool');
+    
+    if (dropdown && toggleBtn && 
+        !dropdown.contains(event.target) && 
+        !toggleBtn.contains(event.target)) {
+        dropdown.classList.remove('show');
+        toggleBtn.classList.remove('active');
+    }
+});
+
 function setRedesignTool(toolType) {
     console.log('Setting redesign tool:', toolType);
     
@@ -1736,7 +1717,23 @@ function setRedesignTool(toolType) {
     document.querySelectorAll('.redesign-tool').forEach(btn => {
         btn.classList.remove('active');
     });
-    document.getElementById(`${toolType}-tool`).classList.add('active');
+    
+    // Special handling for zone tools
+    if (toolType.startsWith('zone-')) {
+        document.getElementById('zone-tool').classList.add('active');
+        // Close dropdown after selection
+        document.getElementById('zone-dropdown').classList.remove('show');
+        
+        // Hide boundary circle popups when zone tool is selected
+        if (sofiaBoundaryCircle) {
+            sofiaBoundaryCircle.closePopup();
+        }
+        if (sofiaFutureCircle) {
+            sofiaFutureCircle.closePopup();
+        }
+    } else {
+        document.getElementById(`${toolType}-tool`).classList.add('active');
+    }
     
     // Update tool info
     const toolNames = {
@@ -1744,11 +1741,24 @@ function setRedesignTool(toolType) {
         'park': 'Парк 🌳',
         'alley': 'Алея/Улица 🛣️', 
         'greenzone': 'Зелена зона 🌿',
-        'bikelane': 'Велоалея 🚴'
+        'bikelane': 'Велоалея 🚴',
+        'boundary': 'Граници (сега + бъдеще) 🏙️',
+        'zone-residential': 'Жилищна зона 🏠',
+        'zone-commercial': 'Търговска зона 🏪',
+        'zone-industrial': 'Индустриална зона 🏭',
+        'zone-office': 'Офис зона 🏢',
+        'zone-mixed': 'Смесена зона 🏘️',
+        'zone-public': 'Обществена зона 🏛️'
     };
     
     document.getElementById('current-redesign-tool').textContent = 
         `Избран инструмент: ${toolNames[toolType]}`;
+    
+    // Handle special tools
+    if (toolType === 'boundary') {
+        toggleBothBoundaryCircles();
+        return;
+    }
     
     // Update drawing controls if map is loaded
     if (map && drawControl) {
@@ -1775,7 +1785,8 @@ function getDrawOptions() {
                     shapeOptions: {
                         color: '#4CAF50',
                         fillColor: '#4CAF50',
-                        fillOpacity: 0.6
+                        fillOpacity: 0.6,
+                        pane: 'designPane'
                     }
                 }
             };
@@ -1787,7 +1798,80 @@ function getDrawOptions() {
                     shapeOptions: {
                         color: currentRedesignTool === 'bikelane' ? '#FF9800' : '#2196F3',
                         weight: 6,
-                        opacity: 0.8
+                        opacity: 0.8,
+                        pane: 'designPane'
+                    }
+                }
+            };
+        case 'zone-residential':
+            return {
+                ...baseOptions,
+                polygon: {
+                    shapeOptions: {
+                        color: '#FF6B35',
+                        fillColor: '#FF6B35',
+                        fillOpacity: 0.6,
+                        pane: 'designPane'
+                    }
+                }
+            };
+        case 'zone-commercial':
+            return {
+                ...baseOptions,
+                polygon: {
+                    shapeOptions: {
+                        color: '#1E88E5',
+                        fillColor: '#1E88E5',
+                        fillOpacity: 0.6,
+                        pane: 'designPane'
+                    }
+                }
+            };
+        case 'zone-industrial':
+            return {
+                ...baseOptions,
+                polygon: {
+                    shapeOptions: {
+                        color: '#D32F2F',
+                        fillColor: '#D32F2F',
+                        fillOpacity: 0.6,
+                        pane: 'designPane'
+                    }
+                }
+            };
+        case 'zone-office':
+            return {
+                ...baseOptions,
+                polygon: {
+                    shapeOptions: {
+                        color: '#8E24AA',
+                        fillColor: '#8E24AA',
+                        fillOpacity: 0.6,
+                        pane: 'designPane'
+                    }
+                }
+            };
+        case 'zone-mixed':
+            return {
+                ...baseOptions,
+                polygon: {
+                    shapeOptions: {
+                        color: '#00ACC1',
+                        fillColor: '#00ACC1',
+                        fillOpacity: 0.6,
+                        pane: 'designPane'
+                    }
+                }
+            };
+        case 'zone-public':
+            return {
+                ...baseOptions,
+                polygon: {
+                    shapeOptions: {
+                        color: '#43A047',
+                        fillColor: '#43A047',
+                        fillOpacity: 0.6,
+                        pane: 'designPane'
                     }
                 }
             };
@@ -1809,23 +1893,43 @@ function onAreaDrawn(e) {
     const layer = e.layer;
     const type = e.layerType;
     
-    console.log('Area drawn:', type, 'Tool:', currentRedesignTool);
+    console.log('🎨 Area drawn:', type, 'Tool:', currentRedesignTool);
+    console.log('🎨 Layer object:', layer);
+    
+    // Explicitly set layer pane BEFORE adding to map
+    if (layer.options) {
+        layer.options.pane = 'designPane';
+    }
     
     // Add the layer to the map
     drawnItems.addLayer(layer);
+    console.log('✅ Layer added to drawnItems');
     
     // Style the layer based on tool type
     styleRedesignLayer(layer, currentRedesignTool);
     
+    // Store tool type for future reference
+    layer.toolType = currentRedesignTool;
+    
     // Add popup with redesign info
     addRedesignPopup(layer, currentRedesignTool);
     
-    // If this is a park, calculate area and update Sofia stats
+    // Save to database automatically
+    saveDrawnItem(layer);
+    
+    // If this is a park, calculate area and check if within Sofia bounds
     if (currentRedesignTool === 'park') {
         const parkAreaKm2 = calculateLayerAreaKm2(layer);
         if (parkAreaKm2 > 0) {
             console.log(`New park area: ${parkAreaKm2.toFixed(6)} km² (${(parkAreaKm2 * 100).toFixed(2)} hectares)`);
-            updateSofiaStatsWithNewPark(parkAreaKm2);
+            
+            // Only update Sofia stats if park is within current Sofia boundaries (blue circle)
+            if (isWithinSofiaBounds(layer)) {
+                updateSofiaStatsWithNewPark(parkAreaKm2);
+                showNotification(`🏞️ Парк добавен в границите на София! Статистиките са актуализирани.`, 'success');
+            } else {
+                showNotification(`🏞️ Парк добавен извън София. Статистиките остават непроменени.`, 'info');
+            }
         }
     } else {
         // Don't save to backend - keep only in memory for this session
@@ -1835,17 +1939,46 @@ function onAreaDrawn(e) {
 
 function onAreaEdited(e) {
     console.log('Areas edited - changes are temporary for this session');
-    showNotification('Промените са направени временно за тази сесия', 'info');
+    // Save changes to localStorage
+    saveDrawnItems();
+    showNotification('Промените са направени и запазени! ✏️', 'info');
 }
 
 function onAreaDeleted(e) {
-    console.log('Areas deleted - changes are temporary for this session');
-    showNotification('Обектите са изтрити временно за тази сесия', 'info');
+    console.log('Areas deleted - removing from database');
+    
+    // Delete each removed layer from database
+    e.layers.eachLayer(async (layer) => {
+        if (layer.databaseId) {
+            await deleteDrawnItem(layer);
+        }
+    });
+    
+    showNotification('Обектите са изтрити от базата данни! 🗑️', 'info');
 }
 
 function isWithinSofiaBounds(layer) {
-    // Allow drawing anywhere on the map
-    return true;
+    // Check if the layer (park) is within current Sofia boundaries (blue circle)
+    if (!layer.getLatLngs) {
+        return false; // Not a polygon
+    }
+    
+    // Get the center point of the drawn layer
+    const bounds = layer.getBounds();
+    const center = bounds.getCenter();
+    
+    // Calculate distance from Sofia center to layer center
+    const sofiaCenter = L.latLng(SOFIA_CENTER[0], SOFIA_CENTER[1]);
+    const distance = sofiaCenter.distanceTo(center); // Distance in meters
+    
+    // Sofia current boundary radius (same as blue circle)
+    const sofiaAreaKm2 = 492;
+    const sofiaRadiusKm = Math.sqrt(sofiaAreaKm2 / Math.PI) * 0.75;
+    const sofiaRadiusMeters = sofiaRadiusKm * 1000;
+    
+    console.log(`🔍 Park center distance from Sofia: ${(distance/1000).toFixed(2)}km, Sofia radius: ${sofiaRadiusKm.toFixed(2)}km`);
+    
+    return distance <= sofiaRadiusMeters;
 }
 
 // Add existing parks and green zones to the map
@@ -2032,11 +2165,29 @@ function styleRedesignLayer(layer, toolType) {
         'park': { color: '#4CAF50', fillColor: '#4CAF50', fillOpacity: 0.6 },
         'greenzone': { color: '#8BC34A', fillColor: '#8BC34A', fillOpacity: 0.5 },
         'alley': { color: '#2196F3', weight: 6, opacity: 0.8 },
-        'bikelane': { color: '#FF9800', weight: 6, opacity: 0.8 }
+        'bikelane': { color: '#FF9800', weight: 6, opacity: 0.8 },
+        'zone-residential': { color: '#FF6B35', fillColor: '#FF6B35', fillOpacity: 0.6 },
+        'zone-commercial': { color: '#1E88E5', fillColor: '#1E88E5', fillOpacity: 0.6 },
+        'zone-industrial': { color: '#D32F2F', fillColor: '#D32F2F', fillOpacity: 0.6 },
+        'zone-office': { color: '#8E24AA', fillColor: '#8E24AA', fillOpacity: 0.6 },
+        'zone-mixed': { color: '#00ACC1', fillColor: '#00ACC1', fillOpacity: 0.6 },
+        'zone-public': { color: '#43A047', fillColor: '#43A047', fillOpacity: 0.6 }
     };
     
     if (styles[toolType]) {
         layer.setStyle(styles[toolType]);
+        
+        // Explicitly set layer to design pane after creation
+        if (layer.options) {
+            layer.options.pane = 'designPane';
+        }
+        
+        // Force layer to be visible and on top
+        if (layer._path) {
+            layer._path.style.zIndex = 1000;
+        }
+        
+        console.log('Styled layer:', toolType, 'Layer visible:', layer._path ? 'Yes' : 'No');
     }
 }
 
@@ -2069,17 +2220,230 @@ function getToolDisplayName(toolType) {
         'park': 'Парк 🌳',
         'alley': 'Алея 🛣️',
         'greenzone': 'Зелена зона 🌿',
-        'bikelane': 'Велоалея 🚴'
+        'bikelane': 'Велоалея 🚴',
+        'boundary': 'Граници (сега + бъдеще) 🏙️',
+        'zone-residential': 'Жилищна зона 🏠',
+        'zone-commercial': 'Търговска зона 🏪',
+        'zone-industrial': 'Индустриална зона 🏭',
+        'zone-office': 'Офис зона 🏢',
+        'zone-mixed': 'Смесена зона 🏘️',
+        'zone-public': 'Обществена зона 🏛️'
     };
     return names[toolType] || toolType;
+}
+
+// Select zone from dropdown
+function selectZone(zoneType) {
+    console.log('Selecting zone:', zoneType);
+    setRedesignTool('zone-' + zoneType);
 }
 
 // Store original Sofia data for restoration
 let originalSofiaData = null;
 
+// =================== PERSISTENT STORAGE FUNCTIONS ===================
+
+// Save single drawn item to database
+async function saveDrawnItem(layer) {
+    console.log('💾 Attempting to save item to database:', layer.toolType);
+    if (!layer || !layer.toolType) {
+        console.warn('❌ Cannot save: missing layer or toolType');
+        return;
+    }
+    
+    try {
+        const geoJson = layer.toGeoJSON();
+        const coordinates = geoJson.geometry.coordinates;
+        
+        const response = await fetch('/api/redesigns', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                type: layer.toolType,
+                geometry: geoJson.geometry,
+                coordinates: coordinates,
+                description: `${getToolDisplayName(layer.toolType)} създаден на ${new Date().toLocaleString('bg-BG')}`
+            })
+        });
+        
+        const result = await response.json();
+        if (result.status === 'success') {
+            layer.databaseId = result.id; // Store database ID on layer
+            console.log(`💾 Saved ${layer.toolType} to database with ID: ${result.id}`);
+            return result.id;
+        } else {
+            console.error('Error saving item:', result.message);
+            showNotification('Грешка при запазване!', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving drawn item:', error);
+        showNotification('Грешка при запазване в базата данни!', 'error');
+    }
+}
+
+// Save all drawn items to database (for manual save button)
+async function saveDrawnItems() {
+    if (!drawnItems) return;
+    
+    let savedCount = 0;
+    const promises = [];
+    
+    drawnItems.eachLayer((layer) => {
+        if (!layer.databaseId && layer.toolType) { // Only save unsaved items
+            promises.push(saveDrawnItem(layer));
+            savedCount++;
+        }
+    });
+    
+    if (promises.length > 0) {
+        await Promise.all(promises);
+        console.log(`💾 Saved ${savedCount} new items to database`);
+        showNotification(`Запазени са ${savedCount} нови елемента в базата данни! 💾`, 'success');
+    } else {
+        showNotification('Всички елементи са вече запазени! ✅', 'info');
+    }
+}
+
+// Load drawn items from database
+async function loadDrawnItems() {
+    console.log('🔄 Loading items from database...');
+    if (!drawnItems) {
+        console.error('❌ drawnItems not initialized');
+        return;
+    }
+    
+    try {
+        console.log('📡 Fetching from /api/redesigns...');
+        const response = await fetch('/api/redesigns');
+        console.log('📡 Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const savedItems = await response.json();
+        console.log('📥 Received items:', savedItems);
+        
+        if (!Array.isArray(savedItems)) {
+            console.log('No saved items found in database');
+            return;
+        }
+        
+        let loadedCount = 0;
+        
+        // Clear existing items first
+        drawnItems.clearLayers();
+        
+        savedItems.forEach(item => {
+            try {
+                // Create layer from GeoJSON geometry
+                const geoJson = {
+                    type: 'Feature',
+                    geometry: item.geometry,
+                    properties: {}
+                };
+                
+                const layer = L.geoJSON(geoJson, {
+                    pane: 'designPane'
+                }).getLayers()[0];
+                
+                if (layer) {
+                    // Store the tool type and database ID for future reference
+                    layer.toolType = item.type;
+                    layer.databaseId = item.id;
+                    
+                    // Add to drawn items
+                    drawnItems.addLayer(layer);
+                    
+                    // Apply correct styling
+                    styleRedesignLayer(layer, item.type);
+                    addRedesignPopup(layer, item.type);
+                    
+                    loadedCount++;
+                }
+            } catch (itemError) {
+                console.error('Error loading individual item:', itemError, item);
+            }
+        });
+        
+        console.log(`📥 Successfully loaded ${loadedCount} drawn items from database`);
+        if (loadedCount > 0) {
+            showNotification(`Заредени са ${loadedCount} запазени елемента от базата данни! 🎨`, 'success');
+        } else {
+            console.log('ℹ️ No items found in database');
+        }
+    } catch (error) {
+        console.error('❌ Error loading drawn items:', error);
+        showNotification('Грешка при зареждане от базата данни!', 'error');
+    }
+}
+
+// Delete single item from database
+async function deleteDrawnItem(layer) {
+    if (!layer.databaseId) return;
+    
+    try {
+        const response = await fetch(`/api/redesigns/${layer.databaseId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        if (result.status === 'success') {
+            console.log(`🗑️ Deleted item ${layer.databaseId} from database`);
+            return true;
+        } else {
+            console.error('Error deleting item:', result.message);
+            return false;
+        }
+    } catch (error) {
+        console.error('Error deleting item:', error);
+        return false;
+    }
+}
+
+// Clear all saved items from database
+async function clearSavedItems() {
+    try {
+        const response = await fetch('/api/redesigns', {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        if (result.status === 'success') {
+            console.log('🗑️ Cleared all saved items from database');
+            showNotification('Всички запазени елементи са изтрити от базата данни! 🗑️', 'success');
+            
+            // Clear from map as well
+            if (drawnItems) {
+                drawnItems.clearLayers();
+            }
+        } else {
+            console.error('Error clearing items:', result.message);
+            showNotification('Грешка при изтриване!', 'error');
+        }
+    } catch (error) {
+        console.error('Error clearing saved items:', error);
+        showNotification('Грешка при изтриване от базата данни!', 'error');
+    }
+}
+
 function clearAllRedesigns() {
     if (drawnItems) {
         drawnItems.clearLayers();
+        
+        // Also remove boundary circle if it exists
+        if (sofiaBoundaryCircle) {
+            map.removeLayer(sofiaBoundaryCircle);
+            sofiaBoundaryCircle = null;
+        }
+        
+        // Also remove future development circle if it exists
+        if (sofiaFutureCircle) {
+            map.removeLayer(sofiaFutureCircle);
+            sofiaFutureCircle = null;
+        }
         
         // Restore original Sofia data
         if (originalSofiaData && sofiaData) {
@@ -2093,8 +2457,8 @@ function clearAllRedesigns() {
             console.log('Sofia stats restored to original values including air quality');
         }
         
-        showNotification('Всички преустройства са изчистени и статистиките са възстановени', 'info');
-        console.log('All redesigns cleared from current session');
+        showNotification('Всички слоеве са изчистени от картата. За изтриване от базата данни използвайте "Изтрий запазеното"', 'info');
+        console.log('All redesigns and boundary circle cleared from current session');
     }
 }
 
@@ -2108,6 +2472,210 @@ function clearAllRedesignsOnLoad() {
         .catch(error => {
             console.log('Note: Could not clear previous redesigns, but starting with clean map anyway');
         });
+}
+
+// Toggle Sofia boundary circle
+function toggleSofiaBoundaryCircle() {
+    if (!map) {
+        showNotification('Картата не е заредена', 'error');
+        return;
+    }
+    
+    if (sofiaBoundaryCircle) {
+        // Remove existing boundary circle
+        map.removeLayer(sofiaBoundaryCircle);
+        sofiaBoundaryCircle = null;
+        showNotification('Границите на София са скрити', 'info');
+        return;
+    }
+    
+    // Calculate approximate radius for Sofia (smaller visualization)
+    // Using a reduced radius for better visual representation
+    const sofiaAreaKm2 = 492;
+    const radiusKm = Math.sqrt(sofiaAreaKm2 / Math.PI) * 0.75; // 25% smaller
+    const radiusMeters = radiusKm * 1000;
+    
+    console.log(`Sofia boundary circle: radius = ${radiusKm.toFixed(1)} km (reduced for better visualization)`);
+    
+    // Create boundary circle
+    sofiaBoundaryCircle = L.circle(SOFIA_CENTER, {
+        radius: radiusMeters,
+        color: '#e74c3c',
+        weight: 3,
+        opacity: 0.8,
+        fillColor: '#e74c3c',
+        fillOpacity: 0.1,
+        dashArray: '15, 10'
+    }).addTo(map);
+    
+    // Add popup with information
+    sofiaBoundaryCircle.bindPopup(`
+        <div style="text-align: center; min-width: 200px;">
+            <h4>🏙️ Граници на София</h4>
+            <p>Компактна визуализация на столицата</p>
+            <p><strong>Площ:</strong> ~492 км²</p>
+            <p><strong>Радиус:</strong> ~${radiusKm.toFixed(1)} км</p>
+            <p><strong>Население:</strong> 1.4М жители</p>
+            <small>Намален размер за по-добра видимост</small>
+        </div>
+    `, { autoPan: false });
+    
+    showNotification(`Границите на София са показани! Радиус: ${radiusKm.toFixed(1)} км 🏙️`, 'success');
+}
+
+// Toggle both boundary circles (current + future development)
+function toggleBothBoundaryCircles() {
+    if (!map) {
+        showNotification('Картата не е заредена', 'error');
+        return;
+    }
+    
+    // Check if both circles exist
+    const bothExist = sofiaBoundaryCircle && sofiaFutureCircle;
+    
+    if (bothExist) {
+        // Remove both circles
+        if (sofiaBoundaryCircle) {
+            map.removeLayer(sofiaBoundaryCircle);
+            sofiaBoundaryCircle = null;
+        }
+        if (sofiaFutureCircle) {
+            map.removeLayer(sofiaFutureCircle);
+            sofiaFutureCircle = null;
+        }
+        showNotification('Границите на София са скрити', 'info');
+        return;
+    }
+    
+    // Show both circles
+    
+    // 1. Create future development circle FIRST (lowest layer - RED)
+    if (!sofiaFutureCircle) {
+        const futureAreaKm2 = 800;
+        const futureRadiusKm = Math.sqrt(futureAreaKm2 / Math.PI) * 0.85;
+        const futureRadiusMeters = futureRadiusKm * 1000;
+        
+        sofiaFutureCircle = L.circle(SOFIA_CENTER, {
+            radius: futureRadiusMeters,
+            color: '#e74c3c',
+            weight: 3,
+            opacity: 0.7,
+            fillColor: '#e74c3c',
+            fillOpacity: 0.08,
+            dashArray: '20, 15',
+            pane: 'boundaryPane'
+        }).addTo(map);
+        
+        sofiaFutureCircle.bindPopup(`
+            <div style="text-align: center; min-width: 250px;">
+                <h4>🚀 Бъдещо развитие на София</h4>
+                <p>Планирано разширение до 2030-2040г.</p>
+                <p><strong>Проектирана площ:</strong> ~800 км²</p>
+                <p><strong>Радиус:</strong> ~${futureRadiusKm.toFixed(1)} км</p>
+                <p><strong>Очаквано население:</strong> 1.8М жители</p>
+                <div style="margin: 10px 0; padding: 10px; background: #ffeaea; border-radius: 5px; font-size: 0.9em;">
+                    <strong>Включва:</strong><br>
+                    • Нови жилищни комплекси<br>
+                    • Разширени зелени зони<br>
+                    • Подобрена инфраструктура<br>
+                    • Интеграция със съседни градове
+                </div>
+                <small>Червен кръг - проектна визия</small>
+            </div>
+        `, { autoPan: false });
+    }
+    
+    // 2. Create current boundary circle SECOND (higher layer - BLUE)
+    if (!sofiaBoundaryCircle) {
+        const sofiaAreaKm2 = 492;
+        const radiusKm = Math.sqrt(sofiaAreaKm2 / Math.PI) * 0.75;
+        const radiusMeters = radiusKm * 1000;
+        
+        sofiaBoundaryCircle = L.circle(SOFIA_CENTER, {
+            radius: radiusMeters,
+            color: '#3498db',
+            weight: 3,
+            opacity: 0.8,
+            fillColor: '#3498db',
+            fillOpacity: 0.1,
+            dashArray: '15, 10',
+            pane: 'boundaryPane'
+        }).addTo(map);
+        
+        sofiaBoundaryCircle.bindPopup(`
+            <div style="text-align: center; min-width: 250px;">
+                <h4>🏙️ Настоящи граници на София</h4>
+                <p>Текущата административна зона</p>
+                <p><strong>Площ:</strong> ~492 км²</p>
+                <p><strong>Радиус:</strong> ~${radiusKm.toFixed(1)} км</p>
+                <p><strong>Население:</strong> 1.4М жители</p>
+                <div style="margin: 10px 0; padding: 10px; background: #e3f2fd; border-radius: 5px; font-size: 0.9em; border-left: 4px solid #2196F3;">
+                    <strong>📊 Важно за статистики:</strong><br>
+                    Само паркове добавени в този син кръг ще променят<br>
+                    процентите зеленина и качеството на въздуха!
+                </div>
+                <small>Син кръг - настоящо състояние</small>
+            </div>
+        `, { autoPan: false });
+    }
+    
+    showNotification('Показани са настоящите и бъдещите граници на София! 🏙️🚀', 'success');
+}
+
+// Toggle Sofia future development circle
+function toggleSofiaFutureCircle() {
+    if (!map) {
+        showNotification('Картата не е заредена', 'error');
+        return;
+    }
+    
+    if (sofiaFutureCircle) {
+        // Remove existing future circle
+        map.removeLayer(sofiaFutureCircle);
+        sofiaFutureCircle = null;
+        showNotification('Бъдещото развитие на София е скрито', 'info');
+        return;
+    }
+    
+    // Calculate larger radius for future development (projected growth to 2030-2040)
+    // Estimated future area ~800 km² (expansion towards suburbs and satellite towns)
+    const futureAreaKm2 = 800;
+    const futureRadiusKm = Math.sqrt(futureAreaKm2 / Math.PI) * 0.85; // Slightly reduced for visualization
+    const futureRadiusMeters = futureRadiusKm * 1000;
+    
+    console.log(`Sofia future development circle: radius = ${futureRadiusKm.toFixed(1)} km`);
+    
+    // Create future development circle
+    sofiaFutureCircle = L.circle(SOFIA_CENTER, {
+        radius: futureRadiusMeters,
+        color: '#3498db',
+        weight: 3,
+        opacity: 0.7,
+        fillColor: '#3498db',
+        fillOpacity: 0.08,
+        dashArray: '20, 15'
+    }).addTo(map);
+    
+    // Add popup with future development information
+    sofiaFutureCircle.bindPopup(`
+        <div style="text-align: center; min-width: 250px;">
+            <h4>🚀 Бъдещо развитие на София</h4>
+            <p>Планирано разширение до 2030-2040г.</p>
+            <p><strong>Проектирана площ:</strong> ~800 км²</p>
+            <p><strong>Радиус:</strong> ~${futureRadiusKm.toFixed(1)} км</p>
+            <p><strong>Очаквано население:</strong> 1.8М жители</p>
+            <div style="margin: 10px 0; padding: 10px; background: #f0f8ff; border-radius: 5px; font-size: 0.9em;">
+                <strong>Включва:</strong><br>
+                • Нови жилищни комплекси<br>
+                • Разширени зелени зони<br>
+                • Подобрена инфраструктура<br>
+                • Интеграция със съседни градове
+            </div>
+            <small>Проектна визия за развитие</small>
+        </div>
+    `, { autoPan: false });
+    
+    showNotification(`Бъдещото развитие на София е показано! Радиус: ${futureRadiusKm.toFixed(1)} км 🚀`, 'success');
 }
 
 function saveRedesignToBackend(layer, toolType) {
@@ -2129,453 +2697,6 @@ function saveRedesignToBackend(layer, toolType) {
         layer._redesignId = data.id; // Store ID for updates/deletes
     })
     .catch(error => console.error('Error saving redesign:', error));
-}
-
-// Enhanced Map UX Functions for карта page
-function loadMapWithRedesign() {
-    const placeholder = document.getElementById('map-placeholder');
-    const loading = document.getElementById('map-loading');
-    const btn = document.getElementById('load-map-btn');
-    
-    // Show loading state
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Зареждане...';
-    
-    setTimeout(() => {
-        placeholder.style.opacity = '0';
-        setTimeout(() => {
-            placeholder.style.display = 'none';
-            loading.style.display = 'flex';
-            loading.style.opacity = '0';
-            
-            setTimeout(() => {
-                loading.style.opacity = '1';
-            }, 100);
-            
-            // Simulate map loading
-            setTimeout(() => {
-                loading.style.opacity = '0';
-                setTimeout(() => {
-                    loading.style.display = 'none';
-                    showNotification('Картата е заредена успешно!', 'success');
-                    // Here you would initialize the actual map
-                    initializeInteractiveMap();
-                }, 500);
-            }, 2500);
-        }, 300);
-    }, 500);
-}
-
-function initializeInteractiveMap() {
-    const mapCanvas = document.getElementById('map-canvas');
-    mapCanvas.innerHTML = `
-        <div class="interactive-map-placeholder">
-            <div class="map-success">
-                <i class="fas fa-check-circle"></i>
-                <h3>Картата е готова!</h3>
-                <p>Използвайте инструментите за преустройване за да редактирате София</p>
-            </div>
-        </div>
-    `;
-    
-    // Add success styling
-    mapCanvas.style.background = 'linear-gradient(135deg, #e8f5e8 0%, #f0f9f0 100%)';
-    mapCanvas.style.border = '2px solid #7bc142';
-}
-
-function toggleAllFilters() {
-    const checkboxes = document.querySelectorAll('.filter-item input[type="checkbox"]');
-    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-    
-    checkboxes.forEach(cb => {
-        cb.checked = !allChecked;
-        // Trigger change event for each
-        cb.dispatchEvent(new Event('change'));
-    });
-    
-    const btn = document.querySelector('.filter-toggle-all');
-    btn.innerHTML = allChecked ? 
-        '<i class="fas fa-eye"></i> Всички' : 
-        '<i class="fas fa-eye-slash"></i> Скрий всички';
-    
-    showNotification(
-        allChecked ? 'Всички филтри са изключени' : 'Всички филтри са включени', 
-        'info'
-    );
-}
-
-function getCurrentLocation() {
-    const btn = event.target.closest('.map-action-btn');
-    const originalHTML = btn.innerHTML;
-    
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Намиране...</span>';
-    btn.disabled = true;
-    
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const { latitude, longitude } = position.coords;
-                showNotification(`Вашата позиция: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`, 'success');
-                btn.innerHTML = originalHTML;
-                btn.disabled = false;
-                
-                // Animate button success
-                btn.style.background = '#28a745';
-                setTimeout(() => {
-                    btn.style.background = '';
-                }, 1000);
-            },
-            (error) => {
-                showNotification('Не може да се определи позицията', 'error');
-                btn.innerHTML = originalHTML;
-                btn.disabled = false;
-            }
-        );
-    } else {
-        showNotification('Геолокацията не се поддържа', 'error');
-        btn.innerHTML = originalHTML;
-        btn.disabled = false;
-    }
-}
-
-function shareMapView() {
-    const btn = event.target.closest('.map-action-btn');
-    const originalHTML = btn.innerHTML;
-    
-    // Copy to clipboard simulation
-    const shareURL = window.location.href + '?view=sofia-map';
-    
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(shareURL).then(() => {
-            btn.innerHTML = '<i class="fas fa-check"></i> <span>Копирано!</span>';
-            btn.style.background = '#28a745';
-            
-            setTimeout(() => {
-                btn.innerHTML = originalHTML;
-                btn.style.background = '';
-            }, 2000);
-            
-            showNotification('Връзката е копирана в клипборда', 'success');
-        });
-    } else {
-        showNotification('Споделянето не се поддържа от браузъра', 'error');
-    }
-}
-
-// Enhanced redesign tool selection with better feedback
-function setRedesignTool(toolType) {
-    // Remove active from all tools
-    document.querySelectorAll('.redesign-tool').forEach(tool => {
-        tool.classList.remove('active');
-    });
-    
-    // Add active to selected tool
-    const selectedTool = document.getElementById(`${toolType}-tool`);
-    if (selectedTool) {
-        selectedTool.classList.add('active');
-        
-        // Add animation effect
-        selectedTool.style.transform = 'scale(1.1)';
-        setTimeout(() => {
-            selectedTool.style.transform = '';
-        }, 200);
-    }
-    
-    // Update tool info with more detailed descriptions
-    const toolDescriptions = {
-        'select': 'Селектиране област - Кликнете и влачете за избор на район',
-        'park': 'Създаване на парк - Кликнете за добавяне на зелена зона',
-        'alley': 'Планиране на алея - Начертайте нови улици и пътища',
-        'greenzone': 'Зелена зона - Добавете дървета и растителност',
-        'bikelane': 'Велоалея - Създайте велосипедни пътеки',
-        'clear': 'Изчистване - Премахнете всички промени'
-    };
-    
-    const toolInfo = document.getElementById('current-redesign-tool');
-    if (toolInfo) {
-        toolInfo.textContent = `Избран инструмент: ${toolDescriptions[toolType] || 'Неизвестен инструмент'}`;
-    }
-    
-    showNotification(`Избран инструмент: ${toolType}`, 'info');
-}
-
-// Add enhanced filter interaction
-function filterLocationsByType() {
-    const checkedFilters = Array.from(document.querySelectorAll('.filter-item input[type="checkbox"]:checked'));
-    const filterTypes = checkedFilters.map(cb => cb.closest('.filter-item').querySelector('span').textContent);
-    
-    showNotification(`Показват се: ${filterTypes.join(', ')}`, 'info');
-    
-    // Add visual feedback to map canvas
-    const mapCanvas = document.getElementById('map-canvas');
-    mapCanvas.style.borderColor = checkedFilters.length > 0 ? '#7bc142' : '#ccc';
-}
-
-// Sponsors page functions
-function showBecomeSponsorModal() {
-    // Create modal if it doesn't exist
-    if (!document.getElementById('becomeSponsorModal')) {
-        const modal = document.createElement('div');
-        modal.id = 'becomeSponsorModal';
-        modal.className = 'modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <span class="close" onclick="closeModal('becomeSponsorModal')">&times;</span>
-                <h3><i class="fas fa-handshake"></i> Станете наш спонсор</h3>
-                <form id="sponsorForm">
-                    <div class="form-group">
-                        <label>Име на компанията</label>
-                        <input type="text" name="company" placeholder="Вашата компания" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Контактен имейл</label>
-                        <input type="email" name="email" placeholder="company@example.com" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Тип на бизнеса</label>
-                        <select name="businessType" required>
-                            <option value="">Изберете тип</option>
-                            <option value="technology">Технологии</option>
-                            <option value="energy">Енергия</option>
-                            <option value="construction">Строителство</option>
-                            <option value="transport">Транспорт</option>
-                            <option value="food">Храни и напитки</option>
-                            <option value="other">Друго</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Желан тип партньорство</label>
-                        <select name="sponsorshipType" required>
-                            <option value="">Изберете тип</option>
-                            <option value="gold">Златно партньорство (50,000+ лв)</option>
-                            <option value="silver">Сребърно партньорство (25,000+ лв)</option>
-                            <option value="bronze">Бронзово партньорство (10,000+ лв)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Съобщение</label>
-                        <textarea name="message" placeholder="Разкажете ни повече за вашите цели и как можем да работим заедно..." rows="4"></textarea>
-                    </div>
-                    <button type="submit" class="btn-primary">
-                        <i class="fas fa-paper-plane"></i>
-                        Изпратете заявката
-                    </button>
-                </form>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        
-        // Add form handler
-        document.getElementById('sponsorForm').addEventListener('submit', handleSponsorApplication);
-    }
-    
-    document.getElementById('becomeSponsorModal').classList.remove('hidden');
-    document.getElementById('becomeSponsorModal').style.display = 'flex';
-}
-
-function showContactModal() {
-    // Create modal if it doesn't exist
-    if (!document.getElementById('contactModal')) {
-        const modal = document.createElement('div');
-        modal.id = 'contactModal';
-        modal.className = 'modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <span class="close" onclick="closeModal('contactModal')">&times;</span>
-                <h3><i class="fas fa-envelope"></i> Свържете се с нас</h3>
-                <form id="contactForm">
-                    <div class="form-group">
-                        <label>Вашето име</label>
-                        <input type="text" name="name" placeholder="Име и фамилия" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Имейл адрес</label>
-                        <input type="email" name="email" placeholder="your@email.com" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Тема</label>
-                        <select name="subject" required>
-                            <option value="">Изберете тема</option>
-                            <option value="sponsorship">Спонсорство</option>
-                            <option value="partnership">Партньорство</option>
-                            <option value="collaboration">Сътрудничество</option>
-                            <option value="media">Медии</option>
-                            <option value="general">Общи въпроси</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Съобщение</label>
-                        <textarea name="message" placeholder="Вашето съобщение..." rows="5" required></textarea>
-                    </div>
-                    <button type="submit" class="btn-primary">
-                        <i class="fas fa-paper-plane"></i>
-                        Изпратете съобщението
-                    </button>
-                </form>
-                
-                <div class="contact-info">
-                    <h4>Други начини за контакт:</h4>
-                    <div class="contact-methods">
-                        <div class="contact-method">
-                            <i class="fas fa-envelope"></i>
-                            <span>info@plantatree.bg</span>
-                        </div>
-                        <div class="contact-method">
-                            <i class="fas fa-phone"></i>
-                            <span>+359 888 123 456</span>
-                        </div>
-                        <div class="contact-method">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>бул. Витоша 1, София 1000</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        
-        // Add form handler
-        document.getElementById('contactForm').addEventListener('submit', handleContactForm);
-    }
-    
-    document.getElementById('contactModal').classList.remove('hidden');
-    document.getElementById('contactModal').style.display = 'flex';
-}
-
-function handleSponsorApplication(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(e.target);
-    const sponsorData = {
-        company: formData.get('company'),
-        email: formData.get('email'),
-        businessType: formData.get('businessType'),
-        sponsorshipType: formData.get('sponsorshipType'),
-        message: formData.get('message'),
-        timestamp: new Date().toISOString()
-    };
-    
-    console.log('Sponsor application:', sponsorData);
-    
-    // Simulate sending to backend
-    showNotification('Заявката за спонсорство е изпратена успешно! Ще се свържем с вас скоро. 🤝', 'success');
-    
-    closeModal('becomeSponsorModal');
-    e.target.reset();
-    
-    // Add sparkle animation effect
-    createSparkleEffect();
-}
-
-function handleContactForm(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(e.target);
-    const contactData = {
-        name: formData.get('name'),
-        email: formData.get('email'),
-        subject: formData.get('subject'),
-        message: formData.get('message'),
-        timestamp: new Date().toISOString()
-    };
-    
-    console.log('Contact form:', contactData);
-    
-    // Simulate sending to backend
-    showNotification('Съобщението е изпратено успешно! Очаквайте отговор в рамките на 24 часа. 📧', 'success');
-    
-    closeModal('contactModal');
-    e.target.reset();
-}
-
-function createSparkleEffect() {
-    // Create sparkle animation for sponsor application success
-    for (let i = 0; i < 20; i++) {
-        setTimeout(() => {
-            const sparkle = document.createElement('div');
-            sparkle.style.cssText = `
-                position: fixed;
-                top: ${Math.random() * window.innerHeight}px;
-                left: ${Math.random() * window.innerWidth}px;
-                width: 10px;
-                height: 10px;
-                background: #7bc142;
-                border-radius: 50%;
-                pointer-events: none;
-                z-index: 9999;
-                animation: sparkle 1s ease-out forwards;
-            `;
-            
-            document.body.appendChild(sparkle);
-            
-            setTimeout(() => sparkle.remove(), 1000);
-        }, i * 50);
-    }
-}
-
-// Add sparkle animation CSS
-const sparkleStyle = document.createElement('style');
-sparkleStyle.textContent = `
-    @keyframes sparkle {
-        0% {
-            transform: scale(0) rotate(0deg);
-            opacity: 1;
-        }
-        50% {
-            transform: scale(1) rotate(180deg);
-            opacity: 0.8;
-        }
-        100% {
-            transform: scale(0) rotate(360deg);
-            opacity: 0;
-        }
-    }
-`;
-document.head.appendChild(sparkleStyle);
-
-// Initialize sponsors page when loaded
-function initializeSponsorsPage() {
-    // Animate statistics when sponsors page is viewed
-    const sponsorStats = document.querySelectorAll('#sponsors .stat-number[data-target]');
-    
-    if (sponsorStats.length > 0) {
-        sponsorStats.forEach((element, index) => {
-            const target = parseInt(element.getAttribute('data-target'));
-            const duration = 2000;
-            const increment = target / (duration / 16);
-            let current = 0;
-            
-            const delay = index * 200;
-            
-            setTimeout(() => {
-                const timer = setInterval(() => {
-                    current += increment;
-                    
-                    if (current >= target) {
-                        current = target;
-                        clearInterval(timer);
-                    }
-                    
-                    // Update display
-                    if (target > 1000) {
-                        element.textContent = Math.floor(current).toLocaleString();
-                    } else {
-                        element.textContent = Math.floor(current);
-                    }
-                    
-                    // Add completion effect
-                    if (current >= target) {
-                        element.style.color = '#7bc142';
-                        setTimeout(() => {
-                            element.style.color = '';
-                        }, 500);
-                    }
-                }, 16);
-            }, delay);
-        });
-    }
-    
-    console.log('Sponsors page initialized with animated statistics');
 }
 
 function updateRedesignInBackend(layer) {
@@ -2660,8 +2781,34 @@ async function loadMapWithRedesign() {
         
         mapCanvas.innerHTML = '';
         
-        // Create map focused on Sofia with wider view
-        map = L.map('map-canvas').setView(SOFIA_CENTER, 11);
+        // Create map focused on Sofia with proper zoom and bounds
+        map = L.map('map-canvas', {
+            center: SOFIA_CENTER,
+            zoom: 11,
+            minZoom: 9,
+            maxZoom: 15,
+            zoomControl: true,
+            scrollWheelZoom: true,
+            doubleClickZoom: true,
+            boxZoom: true,
+            keyboard: true,
+            dragging: true
+        });
+        
+        // Create custom panes for proper layering
+        map.createPane('boundaryPane');
+        map.getPane('boundaryPane').style.zIndex = 400; // Below overlay pane (500) but above tile pane (200)
+        
+        map.createPane('designPane');
+        map.getPane('designPane').style.zIndex = 600; // Above overlay pane (500) and marker pane (600)
+        
+        // Set maximum bounds to restrict panning
+        const sofiaRegionBounds = [
+            [42.4, 22.8], // Southwest corner
+            [42.9, 23.8]  // Northeast corner
+        ];
+        map.setMaxBounds(sofiaRegionBounds);
+        map.fitBounds(sofiaRegionBounds);
         
         // Add tile layer (using Geoapify)
         const geoapifyKey = 'd67057512d7a41409604421a2e3e3411';
@@ -2672,6 +2819,11 @@ async function loadMapWithRedesign() {
         
         // Initialize drawing functionality for Sofia redesign
         await initializeSofiaRedesign();
+        
+        // Automatically show boundary circles when map loads
+        setTimeout(() => {
+            toggleBothBoundaryCircles();
+        }, 1000);
         
         // Update Sofia sidebar stats
         updateSofiaSidebarStats();
@@ -2702,18 +2854,23 @@ async function initializeSofiaRedesign() {
     
     console.log('Initializing Sofia redesign tools...');
     
-    // Clear all existing redesigns when map loads
-    clearAllRedesignsOnLoad();
-    
-    // Create layer group for drawn items
+    // Create layer group for drawn items in design pane
     drawnItems = new L.FeatureGroup();
+    drawnItems.options = { pane: 'designPane' };
     map.addLayer(drawnItems);
+    
+    console.log('✅ DrawnItems initialized for design pane');
     
     // Add existing parks and green zones
     addExistingGreenZones();
     
     // Setup drawing controls
     setupDrawingControls();
+    
+    // Load previously saved items from localStorage
+    setTimeout(() => {
+        loadDrawnItems();
+    }, 500); // Wait a bit for everything to initialize
     
     console.log('Sofia redesign tools initialized');
 }
@@ -2741,6 +2898,18 @@ function setupDrawingControls() {
     map.on('draw:created', onAreaDrawn);
     map.on('draw:edited', onAreaEdited);
     map.on('draw:deleted', onAreaDeleted);
+    
+    // Hide boundary circle popups when drawing zones
+    map.on('draw:drawstart', function() {
+        if (currentRedesignTool && currentRedesignTool.startsWith('zone-')) {
+            if (sofiaBoundaryCircle) {
+                sofiaBoundaryCircle.closePopup();
+            }
+            if (sofiaFutureCircle) {
+                sofiaFutureCircle.closePopup();
+            }
+        }
+    });
 }
 
 // Export new functions
@@ -2748,6 +2917,14 @@ window.setRedesignTool = setRedesignTool;
 window.clearAllRedesigns = clearAllRedesigns;
 window.loadMapWithRedesign = loadMapWithRedesign;
 window.showRandomFact = showRandomFact;
+window.toggleSofiaBoundaryCircle = toggleSofiaBoundaryCircle;
+window.toggleSofiaFutureCircle = toggleSofiaFutureCircle;
+window.toggleBothBoundaryCircles = toggleBothBoundaryCircles;
+window.saveDrawnItems = saveDrawnItems;
+window.loadDrawnItems = loadDrawnItems;
+window.clearSavedItems = clearSavedItems;
+window.selectZone = selectZone;
+window.toggleZoneDropdown = toggleZoneDropdown;
 
 // =================== LEADERBOARD FUNCTIONALITY ===================
 
