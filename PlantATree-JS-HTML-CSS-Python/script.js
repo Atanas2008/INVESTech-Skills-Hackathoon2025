@@ -116,6 +116,8 @@ let drawnItems = null;
 let drawControl = null;
 let currentRedesignTool = 'select';
 let sofiaData = null;
+let sofiaBoundaryCircle = null;
+let sofiaFutureCircle = null;
 
 const SOFIA_CENTER = [42.6977, 23.3219]; // Sofia center coordinates
 
@@ -221,13 +223,20 @@ function initLeafletMap() {
         
         console.log('Creating map with coordinates:', sofiaLat, sofiaLng);
         
-        // Create map with more explicit options
-        const map = L.map('geoapify-map', {
+        // Create map with more explicit options and assign to global variable
+        map = L.map('geoapify-map', {
             center: [sofiaLat, sofiaLng],
             zoom: 12,
             zoomControl: true,
             attributionControl: true
         });
+        
+        // Create custom panes for proper layering
+        map.createPane('boundaryPane');
+        map.getPane('boundaryPane').style.zIndex = 400; // Below overlay pane (500) but above tile pane (200)
+        
+        map.createPane('designPane');
+        map.getPane('designPane').style.zIndex = 600; // Above overlay pane (500) and marker pane (600)
         
         console.log('Map created, adding Geoapify tile layer...');
         
@@ -1468,6 +1477,34 @@ window.selectTool = selectTool;
 window.initializeCityBuilder = initializeCityBuilder;
 
 // Sofia Redesign Map Functions
+
+// Toggle zone dropdown
+function toggleZoneDropdown() {
+    const dropdown = document.getElementById('zone-dropdown');
+    const toggleBtn = document.getElementById('zone-tool');
+    
+    if (dropdown.classList.contains('show')) {
+        dropdown.classList.remove('show');
+        toggleBtn.classList.remove('active');
+    } else {
+        dropdown.classList.add('show');
+        toggleBtn.classList.add('active');
+    }
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const dropdown = document.getElementById('zone-dropdown');
+    const toggleBtn = document.getElementById('zone-tool');
+    
+    if (dropdown && toggleBtn && 
+        !dropdown.contains(event.target) && 
+        !toggleBtn.contains(event.target)) {
+        dropdown.classList.remove('show');
+        toggleBtn.classList.remove('active');
+    }
+});
+
 function setRedesignTool(toolType) {
     console.log('Setting redesign tool:', toolType);
     
@@ -1478,7 +1515,23 @@ function setRedesignTool(toolType) {
     document.querySelectorAll('.redesign-tool').forEach(btn => {
         btn.classList.remove('active');
     });
-    document.getElementById(`${toolType}-tool`).classList.add('active');
+    
+    // Special handling for zone tools
+    if (toolType.startsWith('zone-')) {
+        document.getElementById('zone-tool').classList.add('active');
+        // Close dropdown after selection
+        document.getElementById('zone-dropdown').classList.remove('show');
+        
+        // Hide boundary circle popups when zone tool is selected
+        if (sofiaBoundaryCircle) {
+            sofiaBoundaryCircle.closePopup();
+        }
+        if (sofiaFutureCircle) {
+            sofiaFutureCircle.closePopup();
+        }
+    } else {
+        document.getElementById(`${toolType}-tool`).classList.add('active');
+    }
     
     // Update tool info
     const toolNames = {
@@ -1486,11 +1539,24 @@ function setRedesignTool(toolType) {
         'park': 'Парк 🌳',
         'alley': 'Алея/Улица 🛣️', 
         'greenzone': 'Зелена зона 🌿',
-        'bikelane': 'Велоалея 🚴'
+        'bikelane': 'Велоалея 🚴',
+        'boundary': 'Граници (сега + бъдеще) 🏙️',
+        'zone-residential': 'Жилищна зона 🏠',
+        'zone-commercial': 'Търговска зона 🏪',
+        'zone-industrial': 'Индустриална зона 🏭',
+        'zone-office': 'Офис зона 🏢',
+        'zone-mixed': 'Смесена зона 🏘️',
+        'zone-public': 'Обществена зона 🏛️'
     };
     
     document.getElementById('current-redesign-tool').textContent = 
         `Избран инструмент: ${toolNames[toolType]}`;
+    
+    // Handle special tools
+    if (toolType === 'boundary') {
+        toggleBothBoundaryCircles();
+        return;
+    }
     
     // Update drawing controls if map is loaded
     if (map && drawControl) {
@@ -1517,7 +1583,8 @@ function getDrawOptions() {
                     shapeOptions: {
                         color: '#4CAF50',
                         fillColor: '#4CAF50',
-                        fillOpacity: 0.6
+                        fillOpacity: 0.6,
+                        pane: 'designPane'
                     }
                 }
             };
@@ -1529,7 +1596,80 @@ function getDrawOptions() {
                     shapeOptions: {
                         color: currentRedesignTool === 'bikelane' ? '#FF9800' : '#2196F3',
                         weight: 6,
-                        opacity: 0.8
+                        opacity: 0.8,
+                        pane: 'designPane'
+                    }
+                }
+            };
+        case 'zone-residential':
+            return {
+                ...baseOptions,
+                polygon: {
+                    shapeOptions: {
+                        color: '#FF6B35',
+                        fillColor: '#FF6B35',
+                        fillOpacity: 0.6,
+                        pane: 'designPane'
+                    }
+                }
+            };
+        case 'zone-commercial':
+            return {
+                ...baseOptions,
+                polygon: {
+                    shapeOptions: {
+                        color: '#1E88E5',
+                        fillColor: '#1E88E5',
+                        fillOpacity: 0.6,
+                        pane: 'designPane'
+                    }
+                }
+            };
+        case 'zone-industrial':
+            return {
+                ...baseOptions,
+                polygon: {
+                    shapeOptions: {
+                        color: '#D32F2F',
+                        fillColor: '#D32F2F',
+                        fillOpacity: 0.6,
+                        pane: 'designPane'
+                    }
+                }
+            };
+        case 'zone-office':
+            return {
+                ...baseOptions,
+                polygon: {
+                    shapeOptions: {
+                        color: '#8E24AA',
+                        fillColor: '#8E24AA',
+                        fillOpacity: 0.6,
+                        pane: 'designPane'
+                    }
+                }
+            };
+        case 'zone-mixed':
+            return {
+                ...baseOptions,
+                polygon: {
+                    shapeOptions: {
+                        color: '#00ACC1',
+                        fillColor: '#00ACC1',
+                        fillOpacity: 0.6,
+                        pane: 'designPane'
+                    }
+                }
+            };
+        case 'zone-public':
+            return {
+                ...baseOptions,
+                polygon: {
+                    shapeOptions: {
+                        color: '#43A047',
+                        fillColor: '#43A047',
+                        fillOpacity: 0.6,
+                        pane: 'designPane'
                     }
                 }
             };
@@ -1551,23 +1691,43 @@ function onAreaDrawn(e) {
     const layer = e.layer;
     const type = e.layerType;
     
-    console.log('Area drawn:', type, 'Tool:', currentRedesignTool);
+    console.log('🎨 Area drawn:', type, 'Tool:', currentRedesignTool);
+    console.log('🎨 Layer object:', layer);
+    
+    // Explicitly set layer pane BEFORE adding to map
+    if (layer.options) {
+        layer.options.pane = 'designPane';
+    }
     
     // Add the layer to the map
     drawnItems.addLayer(layer);
+    console.log('✅ Layer added to drawnItems');
     
     // Style the layer based on tool type
     styleRedesignLayer(layer, currentRedesignTool);
     
+    // Store tool type for future reference
+    layer.toolType = currentRedesignTool;
+    
     // Add popup with redesign info
     addRedesignPopup(layer, currentRedesignTool);
     
-    // If this is a park, calculate area and update Sofia stats
+    // Save to database automatically
+    saveDrawnItem(layer);
+    
+    // If this is a park, calculate area and check if within Sofia bounds
     if (currentRedesignTool === 'park') {
         const parkAreaKm2 = calculateLayerAreaKm2(layer);
         if (parkAreaKm2 > 0) {
             console.log(`New park area: ${parkAreaKm2.toFixed(6)} km² (${(parkAreaKm2 * 100).toFixed(2)} hectares)`);
-            updateSofiaStatsWithNewPark(parkAreaKm2);
+            
+            // Only update Sofia stats if park is within current Sofia boundaries (blue circle)
+            if (isWithinSofiaBounds(layer)) {
+                updateSofiaStatsWithNewPark(parkAreaKm2);
+                showNotification(`🏞️ Парк добавен в границите на София! Статистиките са актуализирани.`, 'success');
+            } else {
+                showNotification(`🏞️ Парк добавен извън София. Статистиките остават непроменени.`, 'info');
+            }
         }
     } else {
         // Don't save to backend - keep only in memory for this session
@@ -1577,17 +1737,46 @@ function onAreaDrawn(e) {
 
 function onAreaEdited(e) {
     console.log('Areas edited - changes are temporary for this session');
-    showNotification('Промените са направени временно за тази сесия', 'info');
+    // Save changes to localStorage
+    saveDrawnItems();
+    showNotification('Промените са направени и запазени! ✏️', 'info');
 }
 
 function onAreaDeleted(e) {
-    console.log('Areas deleted - changes are temporary for this session');
-    showNotification('Обектите са изтрити временно за тази сесия', 'info');
+    console.log('Areas deleted - removing from database');
+    
+    // Delete each removed layer from database
+    e.layers.eachLayer(async (layer) => {
+        if (layer.databaseId) {
+            await deleteDrawnItem(layer);
+        }
+    });
+    
+    showNotification('Обектите са изтрити от базата данни! 🗑️', 'info');
 }
 
 function isWithinSofiaBounds(layer) {
-    // Allow drawing anywhere on the map
-    return true;
+    // Check if the layer (park) is within current Sofia boundaries (blue circle)
+    if (!layer.getLatLngs) {
+        return false; // Not a polygon
+    }
+    
+    // Get the center point of the drawn layer
+    const bounds = layer.getBounds();
+    const center = bounds.getCenter();
+    
+    // Calculate distance from Sofia center to layer center
+    const sofiaCenter = L.latLng(SOFIA_CENTER[0], SOFIA_CENTER[1]);
+    const distance = sofiaCenter.distanceTo(center); // Distance in meters
+    
+    // Sofia current boundary radius (same as blue circle)
+    const sofiaAreaKm2 = 492;
+    const sofiaRadiusKm = Math.sqrt(sofiaAreaKm2 / Math.PI) * 0.75;
+    const sofiaRadiusMeters = sofiaRadiusKm * 1000;
+    
+    console.log(`🔍 Park center distance from Sofia: ${(distance/1000).toFixed(2)}km, Sofia radius: ${sofiaRadiusKm.toFixed(2)}km`);
+    
+    return distance <= sofiaRadiusMeters;
 }
 
 // Add existing parks and green zones to the map
@@ -1774,11 +1963,29 @@ function styleRedesignLayer(layer, toolType) {
         'park': { color: '#4CAF50', fillColor: '#4CAF50', fillOpacity: 0.6 },
         'greenzone': { color: '#8BC34A', fillColor: '#8BC34A', fillOpacity: 0.5 },
         'alley': { color: '#2196F3', weight: 6, opacity: 0.8 },
-        'bikelane': { color: '#FF9800', weight: 6, opacity: 0.8 }
+        'bikelane': { color: '#FF9800', weight: 6, opacity: 0.8 },
+        'zone-residential': { color: '#FF6B35', fillColor: '#FF6B35', fillOpacity: 0.6 },
+        'zone-commercial': { color: '#1E88E5', fillColor: '#1E88E5', fillOpacity: 0.6 },
+        'zone-industrial': { color: '#D32F2F', fillColor: '#D32F2F', fillOpacity: 0.6 },
+        'zone-office': { color: '#8E24AA', fillColor: '#8E24AA', fillOpacity: 0.6 },
+        'zone-mixed': { color: '#00ACC1', fillColor: '#00ACC1', fillOpacity: 0.6 },
+        'zone-public': { color: '#43A047', fillColor: '#43A047', fillOpacity: 0.6 }
     };
     
     if (styles[toolType]) {
         layer.setStyle(styles[toolType]);
+        
+        // Explicitly set layer to design pane after creation
+        if (layer.options) {
+            layer.options.pane = 'designPane';
+        }
+        
+        // Force layer to be visible and on top
+        if (layer._path) {
+            layer._path.style.zIndex = 1000;
+        }
+        
+        console.log('Styled layer:', toolType, 'Layer visible:', layer._path ? 'Yes' : 'No');
     }
 }
 
@@ -1811,17 +2018,230 @@ function getToolDisplayName(toolType) {
         'park': 'Парк 🌳',
         'alley': 'Алея 🛣️',
         'greenzone': 'Зелена зона 🌿',
-        'bikelane': 'Велоалея 🚴'
+        'bikelane': 'Велоалея 🚴',
+        'boundary': 'Граници (сега + бъдеще) 🏙️',
+        'zone-residential': 'Жилищна зона 🏠',
+        'zone-commercial': 'Търговска зона 🏪',
+        'zone-industrial': 'Индустриална зона 🏭',
+        'zone-office': 'Офис зона 🏢',
+        'zone-mixed': 'Смесена зона 🏘️',
+        'zone-public': 'Обществена зона 🏛️'
     };
     return names[toolType] || toolType;
+}
+
+// Select zone from dropdown
+function selectZone(zoneType) {
+    console.log('Selecting zone:', zoneType);
+    setRedesignTool('zone-' + zoneType);
 }
 
 // Store original Sofia data for restoration
 let originalSofiaData = null;
 
+// =================== PERSISTENT STORAGE FUNCTIONS ===================
+
+// Save single drawn item to database
+async function saveDrawnItem(layer) {
+    console.log('💾 Attempting to save item to database:', layer.toolType);
+    if (!layer || !layer.toolType) {
+        console.warn('❌ Cannot save: missing layer or toolType');
+        return;
+    }
+    
+    try {
+        const geoJson = layer.toGeoJSON();
+        const coordinates = geoJson.geometry.coordinates;
+        
+        const response = await fetch('/api/redesigns', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                type: layer.toolType,
+                geometry: geoJson.geometry,
+                coordinates: coordinates,
+                description: `${getToolDisplayName(layer.toolType)} създаден на ${new Date().toLocaleString('bg-BG')}`
+            })
+        });
+        
+        const result = await response.json();
+        if (result.status === 'success') {
+            layer.databaseId = result.id; // Store database ID on layer
+            console.log(`💾 Saved ${layer.toolType} to database with ID: ${result.id}`);
+            return result.id;
+        } else {
+            console.error('Error saving item:', result.message);
+            showNotification('Грешка при запазване!', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving drawn item:', error);
+        showNotification('Грешка при запазване в базата данни!', 'error');
+    }
+}
+
+// Save all drawn items to database (for manual save button)
+async function saveDrawnItems() {
+    if (!drawnItems) return;
+    
+    let savedCount = 0;
+    const promises = [];
+    
+    drawnItems.eachLayer((layer) => {
+        if (!layer.databaseId && layer.toolType) { // Only save unsaved items
+            promises.push(saveDrawnItem(layer));
+            savedCount++;
+        }
+    });
+    
+    if (promises.length > 0) {
+        await Promise.all(promises);
+        console.log(`💾 Saved ${savedCount} new items to database`);
+        showNotification(`Запазени са ${savedCount} нови елемента в базата данни! 💾`, 'success');
+    } else {
+        showNotification('Всички елементи са вече запазени! ✅', 'info');
+    }
+}
+
+// Load drawn items from database
+async function loadDrawnItems() {
+    console.log('🔄 Loading items from database...');
+    if (!drawnItems) {
+        console.error('❌ drawnItems not initialized');
+        return;
+    }
+    
+    try {
+        console.log('📡 Fetching from /api/redesigns...');
+        const response = await fetch('/api/redesigns');
+        console.log('📡 Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const savedItems = await response.json();
+        console.log('📥 Received items:', savedItems);
+        
+        if (!Array.isArray(savedItems)) {
+            console.log('No saved items found in database');
+            return;
+        }
+        
+        let loadedCount = 0;
+        
+        // Clear existing items first
+        drawnItems.clearLayers();
+        
+        savedItems.forEach(item => {
+            try {
+                // Create layer from GeoJSON geometry
+                const geoJson = {
+                    type: 'Feature',
+                    geometry: item.geometry,
+                    properties: {}
+                };
+                
+                const layer = L.geoJSON(geoJson, {
+                    pane: 'designPane'
+                }).getLayers()[0];
+                
+                if (layer) {
+                    // Store the tool type and database ID for future reference
+                    layer.toolType = item.type;
+                    layer.databaseId = item.id;
+                    
+                    // Add to drawn items
+                    drawnItems.addLayer(layer);
+                    
+                    // Apply correct styling
+                    styleRedesignLayer(layer, item.type);
+                    addRedesignPopup(layer, item.type);
+                    
+                    loadedCount++;
+                }
+            } catch (itemError) {
+                console.error('Error loading individual item:', itemError, item);
+            }
+        });
+        
+        console.log(`📥 Successfully loaded ${loadedCount} drawn items from database`);
+        if (loadedCount > 0) {
+            showNotification(`Заредени са ${loadedCount} запазени елемента от базата данни! 🎨`, 'success');
+        } else {
+            console.log('ℹ️ No items found in database');
+        }
+    } catch (error) {
+        console.error('❌ Error loading drawn items:', error);
+        showNotification('Грешка при зареждане от базата данни!', 'error');
+    }
+}
+
+// Delete single item from database
+async function deleteDrawnItem(layer) {
+    if (!layer.databaseId) return;
+    
+    try {
+        const response = await fetch(`/api/redesigns/${layer.databaseId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        if (result.status === 'success') {
+            console.log(`🗑️ Deleted item ${layer.databaseId} from database`);
+            return true;
+        } else {
+            console.error('Error deleting item:', result.message);
+            return false;
+        }
+    } catch (error) {
+        console.error('Error deleting item:', error);
+        return false;
+    }
+}
+
+// Clear all saved items from database
+async function clearSavedItems() {
+    try {
+        const response = await fetch('/api/redesigns', {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        if (result.status === 'success') {
+            console.log('🗑️ Cleared all saved items from database');
+            showNotification('Всички запазени елементи са изтрити от базата данни! 🗑️', 'success');
+            
+            // Clear from map as well
+            if (drawnItems) {
+                drawnItems.clearLayers();
+            }
+        } else {
+            console.error('Error clearing items:', result.message);
+            showNotification('Грешка при изтриване!', 'error');
+        }
+    } catch (error) {
+        console.error('Error clearing saved items:', error);
+        showNotification('Грешка при изтриване от базата данни!', 'error');
+    }
+}
+
 function clearAllRedesigns() {
     if (drawnItems) {
         drawnItems.clearLayers();
+        
+        // Also remove boundary circle if it exists
+        if (sofiaBoundaryCircle) {
+            map.removeLayer(sofiaBoundaryCircle);
+            sofiaBoundaryCircle = null;
+        }
+        
+        // Also remove future development circle if it exists
+        if (sofiaFutureCircle) {
+            map.removeLayer(sofiaFutureCircle);
+            sofiaFutureCircle = null;
+        }
         
         // Restore original Sofia data
         if (originalSofiaData && sofiaData) {
@@ -1835,8 +2255,8 @@ function clearAllRedesigns() {
             console.log('Sofia stats restored to original values including air quality');
         }
         
-        showNotification('Всички преустройства са изчистени и статистиките са възстановени', 'info');
-        console.log('All redesigns cleared from current session');
+        showNotification('Всички слоеве са изчистени от картата. За изтриване от базата данни използвайте "Изтрий запазеното"', 'info');
+        console.log('All redesigns and boundary circle cleared from current session');
     }
 }
 
@@ -1850,6 +2270,210 @@ function clearAllRedesignsOnLoad() {
         .catch(error => {
             console.log('Note: Could not clear previous redesigns, but starting with clean map anyway');
         });
+}
+
+// Toggle Sofia boundary circle
+function toggleSofiaBoundaryCircle() {
+    if (!map) {
+        showNotification('Картата не е заредена', 'error');
+        return;
+    }
+    
+    if (sofiaBoundaryCircle) {
+        // Remove existing boundary circle
+        map.removeLayer(sofiaBoundaryCircle);
+        sofiaBoundaryCircle = null;
+        showNotification('Границите на София са скрити', 'info');
+        return;
+    }
+    
+    // Calculate approximate radius for Sofia (smaller visualization)
+    // Using a reduced radius for better visual representation
+    const sofiaAreaKm2 = 492;
+    const radiusKm = Math.sqrt(sofiaAreaKm2 / Math.PI) * 0.75; // 25% smaller
+    const radiusMeters = radiusKm * 1000;
+    
+    console.log(`Sofia boundary circle: radius = ${radiusKm.toFixed(1)} km (reduced for better visualization)`);
+    
+    // Create boundary circle
+    sofiaBoundaryCircle = L.circle(SOFIA_CENTER, {
+        radius: radiusMeters,
+        color: '#e74c3c',
+        weight: 3,
+        opacity: 0.8,
+        fillColor: '#e74c3c',
+        fillOpacity: 0.1,
+        dashArray: '15, 10'
+    }).addTo(map);
+    
+    // Add popup with information
+    sofiaBoundaryCircle.bindPopup(`
+        <div style="text-align: center; min-width: 200px;">
+            <h4>🏙️ Граници на София</h4>
+            <p>Компактна визуализация на столицата</p>
+            <p><strong>Площ:</strong> ~492 км²</p>
+            <p><strong>Радиус:</strong> ~${radiusKm.toFixed(1)} км</p>
+            <p><strong>Население:</strong> 1.4М жители</p>
+            <small>Намален размер за по-добра видимост</small>
+        </div>
+    `, { autoPan: false });
+    
+    showNotification(`Границите на София са показани! Радиус: ${radiusKm.toFixed(1)} км 🏙️`, 'success');
+}
+
+// Toggle both boundary circles (current + future development)
+function toggleBothBoundaryCircles() {
+    if (!map) {
+        showNotification('Картата не е заредена', 'error');
+        return;
+    }
+    
+    // Check if both circles exist
+    const bothExist = sofiaBoundaryCircle && sofiaFutureCircle;
+    
+    if (bothExist) {
+        // Remove both circles
+        if (sofiaBoundaryCircle) {
+            map.removeLayer(sofiaBoundaryCircle);
+            sofiaBoundaryCircle = null;
+        }
+        if (sofiaFutureCircle) {
+            map.removeLayer(sofiaFutureCircle);
+            sofiaFutureCircle = null;
+        }
+        showNotification('Границите на София са скрити', 'info');
+        return;
+    }
+    
+    // Show both circles
+    
+    // 1. Create future development circle FIRST (lowest layer - RED)
+    if (!sofiaFutureCircle) {
+        const futureAreaKm2 = 800;
+        const futureRadiusKm = Math.sqrt(futureAreaKm2 / Math.PI) * 0.85;
+        const futureRadiusMeters = futureRadiusKm * 1000;
+        
+        sofiaFutureCircle = L.circle(SOFIA_CENTER, {
+            radius: futureRadiusMeters,
+            color: '#e74c3c',
+            weight: 3,
+            opacity: 0.7,
+            fillColor: '#e74c3c',
+            fillOpacity: 0.08,
+            dashArray: '20, 15',
+            pane: 'boundaryPane'
+        }).addTo(map);
+        
+        sofiaFutureCircle.bindPopup(`
+            <div style="text-align: center; min-width: 250px;">
+                <h4>🚀 Бъдещо развитие на София</h4>
+                <p>Планирано разширение до 2030-2040г.</p>
+                <p><strong>Проектирана площ:</strong> ~800 км²</p>
+                <p><strong>Радиус:</strong> ~${futureRadiusKm.toFixed(1)} км</p>
+                <p><strong>Очаквано население:</strong> 1.8М жители</p>
+                <div style="margin: 10px 0; padding: 10px; background: #ffeaea; border-radius: 5px; font-size: 0.9em;">
+                    <strong>Включва:</strong><br>
+                    • Нови жилищни комплекси<br>
+                    • Разширени зелени зони<br>
+                    • Подобрена инфраструктура<br>
+                    • Интеграция със съседни градове
+                </div>
+                <small>Червен кръг - проектна визия</small>
+            </div>
+        `, { autoPan: false });
+    }
+    
+    // 2. Create current boundary circle SECOND (higher layer - BLUE)
+    if (!sofiaBoundaryCircle) {
+        const sofiaAreaKm2 = 492;
+        const radiusKm = Math.sqrt(sofiaAreaKm2 / Math.PI) * 0.75;
+        const radiusMeters = radiusKm * 1000;
+        
+        sofiaBoundaryCircle = L.circle(SOFIA_CENTER, {
+            radius: radiusMeters,
+            color: '#3498db',
+            weight: 3,
+            opacity: 0.8,
+            fillColor: '#3498db',
+            fillOpacity: 0.1,
+            dashArray: '15, 10',
+            pane: 'boundaryPane'
+        }).addTo(map);
+        
+        sofiaBoundaryCircle.bindPopup(`
+            <div style="text-align: center; min-width: 250px;">
+                <h4>🏙️ Настоящи граници на София</h4>
+                <p>Текущата административна зона</p>
+                <p><strong>Площ:</strong> ~492 км²</p>
+                <p><strong>Радиус:</strong> ~${radiusKm.toFixed(1)} км</p>
+                <p><strong>Население:</strong> 1.4М жители</p>
+                <div style="margin: 10px 0; padding: 10px; background: #e3f2fd; border-radius: 5px; font-size: 0.9em; border-left: 4px solid #2196F3;">
+                    <strong>📊 Важно за статистики:</strong><br>
+                    Само паркове добавени в този син кръг ще променят<br>
+                    процентите зеленина и качеството на въздуха!
+                </div>
+                <small>Син кръг - настоящо състояние</small>
+            </div>
+        `, { autoPan: false });
+    }
+    
+    showNotification('Показани са настоящите и бъдещите граници на София! 🏙️🚀', 'success');
+}
+
+// Toggle Sofia future development circle
+function toggleSofiaFutureCircle() {
+    if (!map) {
+        showNotification('Картата не е заредена', 'error');
+        return;
+    }
+    
+    if (sofiaFutureCircle) {
+        // Remove existing future circle
+        map.removeLayer(sofiaFutureCircle);
+        sofiaFutureCircle = null;
+        showNotification('Бъдещото развитие на София е скрито', 'info');
+        return;
+    }
+    
+    // Calculate larger radius for future development (projected growth to 2030-2040)
+    // Estimated future area ~800 km² (expansion towards suburbs and satellite towns)
+    const futureAreaKm2 = 800;
+    const futureRadiusKm = Math.sqrt(futureAreaKm2 / Math.PI) * 0.85; // Slightly reduced for visualization
+    const futureRadiusMeters = futureRadiusKm * 1000;
+    
+    console.log(`Sofia future development circle: radius = ${futureRadiusKm.toFixed(1)} km`);
+    
+    // Create future development circle
+    sofiaFutureCircle = L.circle(SOFIA_CENTER, {
+        radius: futureRadiusMeters,
+        color: '#3498db',
+        weight: 3,
+        opacity: 0.7,
+        fillColor: '#3498db',
+        fillOpacity: 0.08,
+        dashArray: '20, 15'
+    }).addTo(map);
+    
+    // Add popup with future development information
+    sofiaFutureCircle.bindPopup(`
+        <div style="text-align: center; min-width: 250px;">
+            <h4>🚀 Бъдещо развитие на София</h4>
+            <p>Планирано разширение до 2030-2040г.</p>
+            <p><strong>Проектирана площ:</strong> ~800 км²</p>
+            <p><strong>Радиус:</strong> ~${futureRadiusKm.toFixed(1)} км</p>
+            <p><strong>Очаквано население:</strong> 1.8М жители</p>
+            <div style="margin: 10px 0; padding: 10px; background: #f0f8ff; border-radius: 5px; font-size: 0.9em;">
+                <strong>Включва:</strong><br>
+                • Нови жилищни комплекси<br>
+                • Разширени зелени зони<br>
+                • Подобрена инфраструктура<br>
+                • Интеграция със съседни градове
+            </div>
+            <small>Проектна визия за развитие</small>
+        </div>
+    `, { autoPan: false });
+    
+    showNotification(`Бъдещото развитие на София е показано! Радиус: ${futureRadiusKm.toFixed(1)} км 🚀`, 'success');
 }
 
 function saveRedesignToBackend(layer, toolType) {
@@ -1955,8 +2579,34 @@ async function loadMapWithRedesign() {
         
         mapCanvas.innerHTML = '';
         
-        // Create map focused on Sofia with wider view
-        map = L.map('map-canvas').setView(SOFIA_CENTER, 11);
+        // Create map focused on Sofia with proper zoom and bounds
+        map = L.map('map-canvas', {
+            center: SOFIA_CENTER,
+            zoom: 11,
+            minZoom: 9,
+            maxZoom: 15,
+            zoomControl: true,
+            scrollWheelZoom: true,
+            doubleClickZoom: true,
+            boxZoom: true,
+            keyboard: true,
+            dragging: true
+        });
+        
+        // Create custom panes for proper layering
+        map.createPane('boundaryPane');
+        map.getPane('boundaryPane').style.zIndex = 400; // Below overlay pane (500) but above tile pane (200)
+        
+        map.createPane('designPane');
+        map.getPane('designPane').style.zIndex = 600; // Above overlay pane (500) and marker pane (600)
+        
+        // Set maximum bounds to restrict panning
+        const sofiaRegionBounds = [
+            [42.4, 22.8], // Southwest corner
+            [42.9, 23.8]  // Northeast corner
+        ];
+        map.setMaxBounds(sofiaRegionBounds);
+        map.fitBounds(sofiaRegionBounds);
         
         // Add tile layer (using Geoapify)
         const geoapifyKey = 'd67057512d7a41409604421a2e3e3411';
@@ -1967,6 +2617,11 @@ async function loadMapWithRedesign() {
         
         // Initialize drawing functionality for Sofia redesign
         await initializeSofiaRedesign();
+        
+        // Automatically show boundary circles when map loads
+        setTimeout(() => {
+            toggleBothBoundaryCircles();
+        }, 1000);
         
         // Update Sofia sidebar stats
         updateSofiaSidebarStats();
@@ -1997,18 +2652,23 @@ async function initializeSofiaRedesign() {
     
     console.log('Initializing Sofia redesign tools...');
     
-    // Clear all existing redesigns when map loads
-    clearAllRedesignsOnLoad();
-    
-    // Create layer group for drawn items
+    // Create layer group for drawn items in design pane
     drawnItems = new L.FeatureGroup();
+    drawnItems.options = { pane: 'designPane' };
     map.addLayer(drawnItems);
+    
+    console.log('✅ DrawnItems initialized for design pane');
     
     // Add existing parks and green zones
     addExistingGreenZones();
     
     // Setup drawing controls
     setupDrawingControls();
+    
+    // Load previously saved items from localStorage
+    setTimeout(() => {
+        loadDrawnItems();
+    }, 500); // Wait a bit for everything to initialize
     
     console.log('Sofia redesign tools initialized');
 }
@@ -2036,6 +2696,18 @@ function setupDrawingControls() {
     map.on('draw:created', onAreaDrawn);
     map.on('draw:edited', onAreaEdited);
     map.on('draw:deleted', onAreaDeleted);
+    
+    // Hide boundary circle popups when drawing zones
+    map.on('draw:drawstart', function() {
+        if (currentRedesignTool && currentRedesignTool.startsWith('zone-')) {
+            if (sofiaBoundaryCircle) {
+                sofiaBoundaryCircle.closePopup();
+            }
+            if (sofiaFutureCircle) {
+                sofiaFutureCircle.closePopup();
+            }
+        }
+    });
 }
 
 // Export new functions
@@ -2043,6 +2715,14 @@ window.setRedesignTool = setRedesignTool;
 window.clearAllRedesigns = clearAllRedesigns;
 window.loadMapWithRedesign = loadMapWithRedesign;
 window.showRandomFact = showRandomFact;
+window.toggleSofiaBoundaryCircle = toggleSofiaBoundaryCircle;
+window.toggleSofiaFutureCircle = toggleSofiaFutureCircle;
+window.toggleBothBoundaryCircles = toggleBothBoundaryCircles;
+window.saveDrawnItems = saveDrawnItems;
+window.loadDrawnItems = loadDrawnItems;
+window.clearSavedItems = clearSavedItems;
+window.selectZone = selectZone;
+window.toggleZoneDropdown = toggleZoneDropdown;
 
 // =================== LEADERBOARD FUNCTIONALITY ===================
 
