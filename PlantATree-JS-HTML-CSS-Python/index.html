@@ -777,37 +777,30 @@
         </div>
         <div class="profile-container">
             <div class="profile-card">
-                <img src="https://via.placeholder.com/100" alt="profile" class="profile-avatar">
-                <h3>Иван Петров</h3>
+                <img id="profile-avatar" src="https://via.placeholder.com/100x100/7bc142/white?text=U" alt="profile" class="profile-avatar">
+                <h3 id="profile-name">Зареждане...</h3>
                 <div class="profile-stats">
                     <div class="profile-stat">
-                        <span class="stat-number">250</span>
+                        <span id="profile-points" class="stat-number">-</span>
                         <span class="stat-label">Точки</span>
                     </div>
                     <div class="profile-stat">
-                        <span class="stat-number">12</span>
+                        <span id="profile-actions" class="stat-number">-</span>
                         <span class="stat-label">Действия</span>
                     </div>
                     <div class="profile-stat">
-                        <span class="stat-number">5</span>
+                        <span id="profile-badges" class="stat-number">-</span>
                         <span class="stat-label">Баджове</span>
                     </div>
                 </div>
-                <div class="user-badges">
-                    <span class="badge"><i class="fas fa-seedling"></i> Tree Planter</span>
-                    <span class="badge"><i class="fas fa-recycle"></i> Eco Hero</span>
-                    <span class="badge"><i class="fas fa-bicycle"></i> Bike Rider</span>
+                <div id="profile-badges-list" class="user-badges">
+                    <!-- Badges will be loaded dynamically -->
                 </div>
             </div>
             <div class="profile-history">
                 <h4>История на действията</h4>
-                <div class="history-item">
-                    <div class="history-icon"><i class="fas fa-tree"></i></div>
-                    <div class="history-content">
-                        <h5>Засадих дърво</h5>
-                        <p>Парк "Витоша" - преди 3 дни</p>
-                    </div>
-                    <div class="history-points">+15 точки</div>
+                <div id="profile-history-list">
+                    <!-- History will be loaded dynamically -->
                 </div>
             </div>
         </div>

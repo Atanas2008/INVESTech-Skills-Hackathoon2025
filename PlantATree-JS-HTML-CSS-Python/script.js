@@ -691,6 +691,11 @@ function showSection(sectionName) {
             if (targetSection) {
                 targetSection.classList.remove('hidden');
                 console.log(`Section ${sectionName} shown`);
+                
+                // Load profile data when profile section is shown
+                if (sectionName === 'profile') {
+                    loadUserProfile();
+                }
             } else {
                 console.error(`Section ${sectionName} not found`);
             }
@@ -1390,16 +1395,19 @@ async function handleActionSubmit(form) {
             // Get current user info
             const currentUser = getCurrentUser();
             const username = currentUser ? currentUser.username : 'Вие';
+            const userProfilePicture = currentUser ? currentUser.profile_picture : null;
             
             // Add to feed display
             const actionData = {
                 title: title,
                 description: description,
                 type: type,
-                location: location,
+                location_name: location,
                 points: result.points,
-                timestamp: new Date().toISOString(),
-                username: username
+                created_at: new Date().toISOString(),
+                username: username,
+                user_profile_picture: userProfilePicture,
+                image_path: result.image_path || null
             };
             addActionToFeed(actionData);
             
@@ -1467,11 +1475,14 @@ function calculatePoints(actionType) {
 
 // Add action to feed
 function addActionToFeed(actionData) {
-    const feedContainer = document.querySelector('.feed-container');
-    if (!feedContainer) return;
+    const grid = document.getElementById('ecoActionsGrid');
+    if (!grid) return;
     
-    const actionElement = createActionElement(actionData);
-    feedContainer.insertBefore(actionElement, feedContainer.firstChild);
+    // Create new action card using the same function as loadEcoActions
+    const actionCard = createEcoActionCard(actionData);
+    
+    // Add to the beginning of the grid
+    grid.insertBefore(actionCard, grid.firstChild);
 }
 
 // Create action element
@@ -2217,13 +2228,27 @@ function createEcoActionCard(action) {
     const date = new Date(action.created_at);
     const timeAgo = getTimeAgo(date);
     
-    // Default image if none provided
-    const imageUrl = action.image_path ? `/static/${action.image_path}` : 'https://via.placeholder.com/400x200?text=Еко+Действие';
+    // User profile picture or placeholder - handle both field names
+    const profilePicture = action.user_profile_picture || action.profile_picture;
+    const userAvatar = profilePicture 
+        ? `/static/${profilePicture}` 
+        : `https://via.placeholder.com/50x50/7bc142/white?text=${action.username[0].toUpperCase()}`;
+    
+    // Action image - fix the path issue
+    let imageUrl = 'https://via.placeholder.com/400x200/f0f8f4/7bc142?text=Еко+Действие';
+    if (action.image_path) {
+        // Remove 'static/' prefix if it exists in the image_path
+        const cleanPath = action.image_path.startsWith('static/') 
+            ? action.image_path.substring(7) 
+            : action.image_path;
+        imageUrl = `/static/${cleanPath}`;
+    }
     
     card.innerHTML = `
         <div class="eco-card-header">
             <div class="eco-user-info">
-                <img src="https://via.placeholder.com/50?text=${action.username[0]}" alt="user" class="eco-user-avatar">
+                <img src="${userAvatar}" alt="user" class="eco-user-avatar"
+                     onerror="this.src='https://via.placeholder.com/50x50/7bc142/white?text=${action.username[0].toUpperCase()}'">
                 <div class="eco-user-details">
                     <h4 class="eco-username">${action.username}</h4>
                     <span class="eco-post-date">${timeAgo}</span>
@@ -2234,7 +2259,7 @@ function createEcoActionCard(action) {
         
         <div class="eco-card-content">
             <img src="${imageUrl}" alt="eco action" class="eco-action-image" 
-                 onerror="this.src='https://via.placeholder.com/400x200?text=Еко+Действие'">
+                 onerror="this.src='https://via.placeholder.com/400x200/f0f8f4/7bc142?text=Еко+Действие'">
             <div class="eco-card-body">
                 <h3 class="eco-action-title">${action.title}</h3>
                 <p class="eco-action-description">${action.description}</p>
@@ -6078,4 +6103,193 @@ document.addEventListener('DOMContentLoaded', function() {
 // Export language functions globally
 window.toggleLanguage = toggleLanguage;
 window.switchLanguage = switchLanguage;
+
+// Profile management functions
+async function loadUserProfile() {
+    try {
+        const token = localStorage.getItem('token'); // Use 'token' not 'auth_token'
+        if (!token) {
+            console.log('No token found in localStorage');
+            showProfileNotLoggedIn();
+            return;
+        }
+
+        console.log('Loading profile with token:', token.substring(0, 20) + '...');
+
+        const response = await fetch('/api/auth/profile', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        console.log('Profile API response status:', response.status);
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Profile API response:', data);
+            if (data.success) {
+                displayUserProfile(data.user);
+            } else {
+                console.error('Failed to load profile:', data.message);
+                showProfileNotLoggedIn();
+            }
+        } else {
+            console.error('Failed to fetch profile:', response.status);
+            const errorText = await response.text();
+            console.error('Error response:', errorText);
+            showProfileNotLoggedIn();
+        }
+    } catch (error) {
+        console.error('Error loading profile:', error);
+        showProfileNotLoggedIn();
+    }
+}
+
+function displayUserProfile(user) {
+    console.log('Displaying user profile:', user);
+    
+    // Update profile avatar
+    const avatarElement = document.getElementById('profile-avatar');
+    const username = user.username || 'User';
+    const firstLetter = username.charAt(0).toUpperCase();
+    
+    if (user.profile_picture && user.profile_picture.trim() !== '') {
+        console.log('User has profile picture:', user.profile_picture);
+        avatarElement.src = `/static/${user.profile_picture}`;
+        avatarElement.onerror = function() {
+            console.log('Profile picture failed to load, using fallback avatar');
+            this.src = createFallbackAvatar(firstLetter);
+            this.onerror = null; // Prevent infinite loop
+        };
+    } else {
+        console.log('No profile picture, using fallback avatar for:', firstLetter);
+        avatarElement.src = createFallbackAvatar(firstLetter);
+        avatarElement.onerror = null; // This shouldn't fail but just in case
+    }
+
+    // Update profile name
+    document.getElementById('profile-name').textContent = username;
+
+    // Update profile stats
+    document.getElementById('profile-points').textContent = user.points || 0;
+    document.getElementById('profile-actions').textContent = user.actions_count || 0;
+    document.getElementById('profile-badges').textContent = user.badges ? user.badges.length : 0;
+
+    // Update badges
+    const badgesContainer = document.getElementById('profile-badges-list');
+    badgesContainer.innerHTML = '';
+    
+    if (user.badges && user.badges.length > 0) {
+        user.badges.forEach(badge => {
+            const badgeElement = document.createElement('span');
+            badgeElement.className = 'badge';
+            badgeElement.innerHTML = `<i class="${badge.icon || 'fas fa-award'}"></i> ${badge.name}`;
+            badgesContainer.appendChild(badgeElement);
+        });
+    } else {
+        // Show default badges or message
+        badgesContainer.innerHTML = '<span class="no-badges">Няма спечелени баджове</span>';
+    }
+
+    // Update recent actions history
+    const historyContainer = document.getElementById('profile-history-list');
+    historyContainer.innerHTML = '';
+    
+    if (user.recent_actions && user.recent_actions.length > 0) {
+        user.recent_actions.forEach(action => {
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            
+            const timeAgo = getTimeAgo(new Date(action.created_at));
+            const actionIcon = getActionIcon(action.type);
+            
+            historyItem.innerHTML = `
+                <div class="history-icon"><i class="${actionIcon}"></i></div>
+                <div class="history-content">
+                    <h5>${action.title}</h5>
+                    <p>${action.location_name} - ${timeAgo}</p>
+                </div>
+                <div class="history-points">+${action.points} точки</div>
+            `;
+            
+            historyContainer.appendChild(historyItem);
+        });
+    } else {
+        historyContainer.innerHTML = '<div class="no-history">Няма записани действия</div>';
+    }
+}
+
+function showProfileNotLoggedIn() {
+    // Check if user data exists in localStorage as fallback
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    
+    if (user) {
+        // User is logged in but API failed, show basic info
+        console.log('API failed but user exists in localStorage:', user);
+        
+        const avatarElement = document.getElementById('profile-avatar');
+        const username = user.username || 'User';
+        const firstLetter = username.charAt(0).toUpperCase();
+        
+        if (user.profile_picture && user.profile_picture.trim() !== '') {
+            avatarElement.src = `/static/${user.profile_picture}`;
+            avatarElement.onerror = function() {
+                this.src = createFallbackAvatar(firstLetter);
+                this.onerror = null;
+            };
+        } else {
+            avatarElement.src = createFallbackAvatar(firstLetter);
+            avatarElement.onerror = null;
+        }
+        
+        document.getElementById('profile-name').textContent = username;
+        document.getElementById('profile-points').textContent = user.points || 0;
+        document.getElementById('profile-actions').textContent = '?';
+        document.getElementById('profile-badges').textContent = '?';
+        
+        document.getElementById('profile-badges-list').innerHTML = '<span class="no-badges">Зареждане на баджове...</span>';
+        document.getElementById('profile-history-list').innerHTML = '<div class="no-history">Зареждане на история...</div>';
+    } else {
+        // Actually not logged in
+        document.getElementById('profile-name').textContent = 'Не сте влезли в профила си';
+        document.getElementById('profile-points').textContent = '-';
+        document.getElementById('profile-actions').textContent = '-';
+        document.getElementById('profile-badges').textContent = '-';
+        
+        document.getElementById('profile-badges-list').innerHTML = '<span class="login-message">Влезте в профила си, за да видите баджовете си</span>';
+        document.getElementById('profile-history-list').innerHTML = '<div class="login-message">Влезте в профила си, за да видите историята си</div>';
+    }
+}
+
+function getActionIcon(actionType) {
+    const iconMap = {
+        'tree_planting': 'fas fa-tree',
+        'recycling': 'fas fa-recycle',
+        'bike_riding': 'fas fa-bicycle',
+        'cleanup': 'fas fa-broom',
+        'energy_saving': 'fas fa-lightbulb',
+        'water_saving': 'fas fa-tint',
+        'composting': 'fas fa-leaf',
+        'default': 'fas fa-seedling'
+    };
+    
+    return iconMap[actionType] || iconMap.default;
+}
+
+// Export profile functions
+window.loadUserProfile = loadUserProfile;
+
+// Helper function to create fallback avatar
+function createFallbackAvatar(letter) {
+    // Create a simple SVG avatar with the user's first letter
+    const svg = `
+    <svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" fill="#7bc142"/>
+        <text x="50" y="50" dominant-baseline="middle" text-anchor="middle" fill="white" font-size="40" font-family="Arial, sans-serif">${letter}</text>
+    </svg>`;
+    
+    return 'data:image/svg+xml;base64,' + btoa(svg);
+}
 window.translatePage = translatePage;

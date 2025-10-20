@@ -540,7 +540,7 @@ def get_eco_actions():
     
     cursor.execute('''
         SELECT ea.id, ea.title, ea.description, ea.type, ea.location_name, 
-               ea.image_path, ea.points, ea.created_at, u.username
+               ea.image_path, ea.points, ea.created_at, u.username, u.profile_picture
         FROM eco_actions ea
         LEFT JOIN users u ON ea.user_id = u.id
         WHERE ea.approved = TRUE
@@ -559,7 +559,8 @@ def get_eco_actions():
             'image_path': row[5],
             'points': row[6],
             'created_at': row[7],
-            'username': row[8] or 'Анонимен потребител'
+            'username': row[8] or 'Анонимен потребител',
+            'user_profile_picture': row[9] if len(row) > 9 else None
         })
     
     conn.close()
@@ -624,7 +625,8 @@ def add_eco_action():
             'success': True,
             'message': f'Еко действието е добавено! Получихте {points} точки!',
             'action_id': action_id,
-            'points': points
+            'points': points,
+            'image_path': image_path
         })
         
     except Exception as e:
@@ -1139,34 +1141,38 @@ def get_profile():
     try:
         auth_header = request.headers.get('Authorization')
         if not auth_header:
+            print("No authorization header")
             return jsonify({'success': False, 'message': 'No authorization header'}), 401
         
         token = auth_header.replace('Bearer ', '')
+        print(f"Token received: {token[:20]}...")
         
         # Verify token
         try:
             payload = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
             user_id = payload['user_id']
+            print(f"JWT decoded successfully, user_id: {user_id}")
         except jwt.ExpiredSignatureError:
+            print("Token expired")
             return jsonify({'success': False, 'message': 'Token expired'}), 401
-        except jwt.InvalidTokenError:
+        except jwt.InvalidTokenError as e:
+            print(f"Invalid token: {e}")
             return jsonify({'success': False, 'message': 'Invalid token'}), 401
         
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Check if session exists
+        # Get user information directly using the JWT user_id
         cursor.execute('''
-            SELECT u.id, u.username, u.email, u.role, u.profile_picture, u.points, u.created_at
-            FROM users u
-            JOIN user_sessions s ON u.id = s.user_id
-            WHERE s.session_token = ? AND s.expires_at > CURRENT_TIMESTAMP
-        ''', (token,))
+            SELECT id, username, email, role, profile_picture, points, created_at
+            FROM users 
+            WHERE id = ?
+        ''', (user_id,))
         
         user = cursor.fetchone()
         if not user:
             conn.close()
-            return jsonify({'success': False, 'message': 'Invalid session'}), 401
+            return jsonify({'success': False, 'message': 'User not found'}), 401
         
         # Get user's eco actions count
         cursor.execute('SELECT COUNT(*) FROM eco_actions WHERE user_id = ? AND approved = TRUE', (user_id,))
@@ -1178,8 +1184,9 @@ def get_profile():
             FROM badges b
             JOIN user_badges ub ON b.id = ub.badge_id
             WHERE ub.user_id = ?
+            ORDER BY ub.earned_at DESC
         ''', (user_id,))
-        
+
         badges = []
         for row in cursor.fetchall():
             badges.append({
@@ -1189,8 +1196,28 @@ def get_profile():
                 'earned_at': row[3]
             })
         
-        conn.close()
+        # Get user's recent eco actions history
+        cursor.execute('''
+            SELECT title, description, type, location_name, points, created_at
+            FROM eco_actions 
+            WHERE user_id = ? AND approved = TRUE
+            ORDER BY created_at DESC
+            LIMIT 10
+        ''', (user_id,))
         
+        recent_actions = []
+        for row in cursor.fetchall():
+            recent_actions.append({
+                'title': row[0],
+                'description': row[1],
+                'type': row[2],
+                'location_name': row[3],
+                'points': row[4],
+                'created_at': row[5]
+            })
+
+        conn.close()
+
         return jsonify({
             'success': True,
             'user': {
@@ -1202,7 +1229,8 @@ def get_profile():
                 'points': user[5],
                 'created_at': user[6],
                 'actions_count': actions_count,
-                'badges': badges
+                'badges': badges,
+                'recent_actions': recent_actions
             }
         }), 200
         

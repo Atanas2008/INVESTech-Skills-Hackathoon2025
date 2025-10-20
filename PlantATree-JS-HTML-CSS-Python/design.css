@@ -1259,6 +1259,32 @@ body {
     font-weight: bold;
 }
 
+/* Profile message styles */
+.no-badges, .login-message, .no-history {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    color: #666;
+    font-style: italic;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 2px dashed #ddd;
+    text-align: center;
+    min-height: 80px;
+}
+
+.login-message {
+    background: linear-gradient(135deg, #f0f8f4 0%, #e8f5e8 100%);
+    border-color: #7bc142;
+    color: #2d5a27;
+    font-weight: 500;
+}
+
+.no-history {
+    margin-top: 1rem;
+}
+
 /* Modal Styles */
 .modal {
     position: fixed;
@@ -3932,7 +3958,10 @@ body {
 
 .charity-content {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
     gap: 1.5rem;
 }
 
@@ -3948,6 +3977,12 @@ body {
     font-size: 1.5rem;
     box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
     flex-shrink: 0;
+    margin: 0 auto;
+}
+
+.charity-text {
+    width: 100%;
+    text-align: center;
 }
 
 .charity-text h3 {
@@ -3955,35 +3990,49 @@ body {
     color: #2d5a27;
     margin-bottom: 0.8rem;
     font-weight: 700;
+    text-align: center;
 }
 
 .charity-text p {
     color: #4a7c59;
     margin-bottom: 1.2rem;
     line-height: 1.5;
+    text-align: center;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .charity-progress {
     width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: center;
 }
 
 .progress-info {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     margin-bottom: 0.8rem;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .progress-text {
     font-size: 1rem;
     color: #4a7c59;
     font-weight: 600;
+    text-align: center;
 }
 
 .progress-percentage {
     font-size: 1rem;
     color: #7bc142;
     font-weight: 700;
+    background: rgba(123, 193, 66, 0.1);
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
 }
 
 .progress-bar {
