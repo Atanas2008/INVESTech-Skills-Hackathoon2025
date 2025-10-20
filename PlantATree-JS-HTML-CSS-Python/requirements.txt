@@ -1,6 +1,22 @@
-Flask==2.3.3
-Flask-CORS==4.0.0
-Werkzeug==2.3.7
-psycopg2-binary==2.9.7
-python-decouple==3.8
-gunicorn==21.2.0
+# Core Flask dependencies
+Flask>=3.0.0
+Flask-CORS>=4.0.0
+Werkzeug>=3.0.0
+
+# Database support
+psycopg2-binary>=2.9.0
+
+# Environment configuration
+python-dotenv>=1.0.0
+
+# AI Integration
+google-generativeai>=0.1.0
+
+# HTTP requests
+requests>=2.31.0
+
+# Image processing
+Pillow>=10.0.0
+
+# Production server (optional)
+gunicorn>=21.0.0
