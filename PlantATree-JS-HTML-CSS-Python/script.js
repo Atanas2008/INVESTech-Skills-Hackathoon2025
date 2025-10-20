@@ -255,17 +255,17 @@ function showSection(sectionName) {
             const heroSection = document.querySelector('.hero');
             if (heroSection) {
                 heroSection.classList.remove('hidden');
-                console.log('✅ Home section shown');
+                console.log('Home section shown');
             } else {
-                console.error('❌ Hero section not found');
+                console.error('Hero section not found');
             }
         } else {
             const targetSection = document.getElementById(sectionName);
             if (targetSection) {
                 targetSection.classList.remove('hidden');
-                console.log(`✅ Section ${sectionName} shown`);
+                console.log(`Section ${sectionName} shown`);
             } else {
-                console.error(`❌ Section ${sectionName} not found`);
+                console.error(`Section ${sectionName} not found`);
             }
         }
         
@@ -308,7 +308,7 @@ function showSection(sectionName) {
         console.log('=== showSection completed ===');
         
     } catch (error) {
-        console.error('❌ Error in showSection:', error);
+        console.error('Error in showSection:', error);
     }
 }
 
@@ -495,7 +495,7 @@ function initLeafletMap() {
         
         // Show success notification after map renders
         setTimeout(() => {
-            showNotification('Geoapify картата е заредена успешно! 🗺️', 'success');
+            showNotification('Geoapify картата е заредена успешно!', 'success');
         }, 1500);
         
         // Event listener for map ready
@@ -590,7 +590,7 @@ function showFallbackMap() {
         </div>
     `;
     
-    showNotification('Картата е в демо режим 🗺️', 'info');
+    showNotification('Картата е в демо режим', 'info');
 }
 
 // Add markers to map
@@ -753,7 +753,7 @@ function getCurrentLocationOnMap() {
 
 // Visit location function
 function visitLocation(locationId) {
-    showNotification('Благодарим за посещението! Получихте 5 точки! 🎉', 'success');
+    showNotification('Благодарим за посещението! Получихте 5 точки!', 'success');
     console.log(`Visiting location ${locationId}`);
 }
 
@@ -771,12 +771,12 @@ function getLocationColor(type) {
 // Get location icon based on type
 function getLocationIcon(type) {
     const icons = {
-        'park': '🏞️',
-        'trail': '🥾',
-        'bike': '🚴',
-        'plant': '🌱'
+        'park': 'Park',
+        'trail': 'Trail',
+        'bike': 'Bike',
+        'plant': 'Plant'
     };
-    return icons[type] || '📍';
+    return icons[type] || 'Location';
 }
 
 // Sample data
@@ -857,7 +857,7 @@ function handleLocationSubmit(form) {
     console.log('New location:', locationData);
     
     // Show success message
-    showNotification('Локацията е добавена успешно! 🌱', 'success');
+    showNotification('Локацията е добавена успешно!', 'success');
     
     // Close modal and reset form
     closeModal('addLocationModal');
@@ -1193,9 +1193,9 @@ async function visitLocation(locationId) {
     
     try {
         await getRouteTo(coords.lat, coords.lng);
-        showNotification('Благодарим за интереса! Получихте 5 точки! 🎉', 'success');
+        showNotification('Благодарим за интереса! Получихте 5 точки!', 'success');
     } catch (error) {
-        showNotification('Получихте 5 точки за интереса! 🎉', 'success');
+        showNotification('Получихте 5 точки за интереса!', 'success');
     }
     
     console.log(`Visiting location ${locationId}:`, location.name);
@@ -1447,15 +1447,15 @@ function selectTool(toolType) {
 
 function getToolDisplayName(toolType) {
     const names = {
-        park: 'Парк 🌳',
-        forest: 'Гора 🌲',
-        garden: 'Градина 🌸',
-        residential: 'Жилищна сграда 🏠',
-        commercial: 'Търговска сграда 🏢',
-        industrial: 'Индустриална сграда 🏭',
-        road: 'Път 🛣️',
-        'bike-path': 'Велоалея 🚴',
-        solar: 'Соларни панели ☀️',
+        park: 'Парк',
+        forest: 'Гора',
+        garden: 'Градина',
+        residential: 'Жилищна сграда',
+        commercial: 'Търговска сграда',
+        industrial: 'Индустриална сграда',
+        road: 'Път',
+        'bike-path': 'Велоалея',
+        solar: 'Соларни панели',
         demolish: 'Съборяване 🗑️',
         info: 'Информация ℹ️'
     };
@@ -1738,16 +1738,16 @@ function setRedesignTool(toolType) {
     // Update tool info
     const toolNames = {
         'select': 'Селектиране област',
-        'park': 'Парк 🌳',
-        'alley': 'Алея/Улица 🛣️', 
-        'greenzone': 'Зелена зона 🌿',
-        'bikelane': 'Велоалея 🚴',
-        'boundary': 'Граници (сега + бъдеще) 🏙️',
-        'zone-residential': 'Жилищна зона 🏠',
-        'zone-commercial': 'Търговска зона 🏪',
-        'zone-industrial': 'Индустриална зона 🏭',
-        'zone-office': 'Офис зона 🏢',
-        'zone-mixed': 'Смесена зона 🏘️',
+        'park': 'Парк',
+        'alley': 'Алея/Улица', 
+        'greenzone': 'Зелена зона',
+        'bikelane': 'Велоалея',
+        'boundary': 'Граници (сега + бъдеще)',
+        'zone-residential': 'Жилищна зона',
+        'zone-commercial': 'Търговска зона',
+        'zone-industrial': 'Индустриална зона',
+        'zone-office': 'Офис зона',
+        'zone-mixed': 'Смесена зона',
         'zone-public': 'Обществена зона 🏛️'
     };
     
@@ -1903,7 +1903,7 @@ function onAreaDrawn(e) {
     
     // Add the layer to the map
     drawnItems.addLayer(layer);
-    console.log('✅ Layer added to drawnItems');
+    console.log('Layer added to drawnItems');
     
     // Style the layer based on tool type
     styleRedesignLayer(layer, currentRedesignTool);
@@ -2002,7 +2002,7 @@ function addExistingGreenZones() {
         
         marker.bindPopup(`
             <div style="text-align: center;">
-                <h4>🌳 ${park.name}</h4>
+                <h4>${park.name}</h4>
                 <p><strong>Площ:</strong> ${park.area_hectares} хектара</p>
                 <p>${park.description}</p>
                 <small>Съществуващ парк</small>
@@ -2217,15 +2217,15 @@ function addRedesignPopup(layer, toolType) {
 
 function getToolDisplayName(toolType) {
     const names = {
-        'park': 'Парк 🌳',
-        'alley': 'Алея 🛣️',
-        'greenzone': 'Зелена зона 🌿',
-        'bikelane': 'Велоалея 🚴',
-        'boundary': 'Граници (сега + бъдеще) 🏙️',
-        'zone-residential': 'Жилищна зона 🏠',
-        'zone-commercial': 'Търговска зона 🏪',
-        'zone-industrial': 'Индустриална зона 🏭',
-        'zone-office': 'Офис зона 🏢',
+        'park': 'Парк',
+        'alley': 'Алея',
+        'greenzone': 'Зелена зона',
+        'bikelane': 'Велоалея',
+        'boundary': 'Граници (сега + бъдеще)',
+        'zone-residential': 'Жилищна зона',
+        'zone-commercial': 'Търговска зона',
+        'zone-industrial': 'Индустриална зона',
+        'zone-office': 'Офис зона',
         'zone-mixed': 'Смесена зона 🏘️',
         'zone-public': 'Обществена зона 🏛️'
     };
@@ -2247,7 +2247,7 @@ let originalSofiaData = null;
 async function saveDrawnItem(layer) {
     console.log('💾 Attempting to save item to database:', layer.toolType);
     if (!layer || !layer.toolType) {
-        console.warn('❌ Cannot save: missing layer or toolType');
+        console.warn('Cannot save: missing layer or toolType');
         return;
     }
     
@@ -2302,7 +2302,7 @@ async function saveDrawnItems() {
         console.log(`💾 Saved ${savedCount} new items to database`);
         showNotification(`Запазени са ${savedCount} нови елемента в базата данни! 💾`, 'success');
     } else {
-        showNotification('Всички елементи са вече запазени! ✅', 'info');
+        showNotification('Всички елементи са вече запазени!', 'info');
     }
 }
 
@@ -2310,7 +2310,7 @@ async function saveDrawnItems() {
 async function loadDrawnItems() {
     console.log('🔄 Loading items from database...');
     if (!drawnItems) {
-        console.error('❌ drawnItems not initialized');
+        console.error('drawnItems not initialized');
         return;
     }
     
@@ -2375,7 +2375,7 @@ async function loadDrawnItems() {
             console.log('ℹ️ No items found in database');
         }
     } catch (error) {
-        console.error('❌ Error loading drawn items:', error);
+        console.error('Error loading drawn items:', error);
         showNotification('Грешка при зареждане от базата данни!', 'error');
     }
 }
@@ -2610,7 +2610,7 @@ function toggleBothBoundaryCircles() {
                 <p><strong>Радиус:</strong> ~${radiusKm.toFixed(1)} км</p>
                 <p><strong>Население:</strong> 1.4М жители</p>
                 <div style="margin: 10px 0; padding: 10px; background: #e3f2fd; border-radius: 5px; font-size: 0.9em; border-left: 4px solid #2196F3;">
-                    <strong>📊 Важно за статистики:</strong><br>
+                    <strong>Важно за статистики:</strong><br>
                     Само паркове добавени в този син кръг ще променят<br>
                     процентите зеленина и качеството на въздуха!
                 </div>
@@ -2836,8 +2836,8 @@ async function loadMapWithRedesign() {
             placeholder.style.display = 'none';
         }
         
-        console.log('✅ Sofia redesign map loaded successfully');
-        showNotification('Картата на София е заредена с реални данни! 🗺️', 'success');
+        console.log('Sofia redesign map loaded successfully');
+        showNotification('Картата на София е заредена с реални данни!', 'success');
         
     } catch (error) {
         console.error('Map loading error:', error);
@@ -2859,7 +2859,7 @@ async function initializeSofiaRedesign() {
     drawnItems.options = { pane: 'designPane' };
     map.addLayer(drawnItems);
     
-    console.log('✅ DrawnItems initialized for design pane');
+    console.log('DrawnItems initialized for design pane');
     
     // Add existing parks and green zones
     addExistingGreenZones();
@@ -2968,7 +2968,7 @@ const leaderboardData = [
         name: "Георги Димитров",
         points: 840,
         actions: 56,
-        badges: ["🌳 Залесител"],
+        badges: ["Залесител"],
         level: "Еко активист",
         avatar: "https://via.placeholder.com/80",
         online: false,
@@ -2990,7 +2990,7 @@ const leaderboardData = [
         name: "Иван Стоянов",
         points: 720,
         actions: 48,
-        badges: ["🚴 Велосипедист"],
+        badges: ["Велосипедист"],
         level: "Еко активист",
         avatar: "https://via.placeholder.com/80",
         online: false,
@@ -3012,7 +3012,7 @@ const leaderboardData = [
         name: "Димитър Петков",
         points: 620,
         actions: 41,
-        badges: ["🌳 Залесител"],
+        badges: ["Залесител"],
         level: "Еко ентусиаст",
         avatar: "https://via.placeholder.com/80",
         online: false,
@@ -3023,7 +3023,7 @@ const leaderboardData = [
         name: "Стефка Атанасова",
         points: 580,
         actions: 38,
-        badges: ["♻️ Рециклиращ"],
+        badges: ["Рециклиращ"],
         level: "Еко ентусиаст",
         avatar: "https://via.placeholder.com/80",
         online: true,
@@ -3056,7 +3056,7 @@ const leaderboardData = [
         name: "Иван Петров",
         points: 420,
         actions: 28,
-        badges: ["🌳 Залесител"],
+        badges: ["Залесител"],
         level: "Еко новак",
         avatar: "https://via.placeholder.com/80",
         online: true,
@@ -3080,7 +3080,7 @@ function loadLeaderboard() {
     // Update your position
     updateYourPosition();
     
-    showNotification('Класацията е заредена! 🏆', 'success');
+    showNotification('Класацията е заредена!', 'success');
 }
 
 // Update leaderboard statistics

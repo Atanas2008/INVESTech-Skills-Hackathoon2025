@@ -28,15 +28,15 @@ def validate_environment():
             missing_vars.append(f"  • {var}: {description}")
     
     if missing_vars:
-        print("❌ Missing required environment variables:")
+        print("Missing required environment variables:")
         print("\n".join(missing_vars))
-        print("📝 Please update your .env file with the required values.")
+        print("Please update your .env file with the required values.")
         return False
     return True
 
 # Validate environment on startup
 if not validate_environment():
-    print("🛑 Server cannot start due to missing configuration.")
+    print("Server cannot start due to missing configuration.")
     exit(1)
 
 # Import Express.js-style enhancements (with error handling)
@@ -47,14 +47,14 @@ try:
     )
     MIDDLEWARE_AVAILABLE = True
 except ImportError as e:
-    print(f"⚠️ Middleware not available: {e}")
+    print(f"Middleware not available: {e}")
     MIDDLEWARE_AVAILABLE = False
 
 try:
     from routes_v1 import api_v1, admin_routes
     ROUTES_V1_AVAILABLE = True
 except ImportError as e:
-    print(f"⚠️ Routes V1 not available: {e}")
+    print(f"Routes V1 not available: {e}")
     ROUTES_V1_AVAILABLE = False
 
 app = Flask(__name__)
@@ -90,9 +90,9 @@ def after_request(response):
 if ROUTES_V1_AVAILABLE:
     app.register_blueprint(api_v1)
     app.register_blueprint(admin_routes)
-    print("✅ V1 API Routes registered")
+    print("V1 API Routes registered")
 else:
-    print("⚠️ V1 API Routes not available - using legacy routes")
+    print("V1 API Routes not available - using legacy routes")
 
 # Ambee API Configuration from environment
 AMBEE_API_KEY = os.getenv('AMBEE_API_KEY')
@@ -124,10 +124,10 @@ def get_db_connection():
             import psycopg2
             return psycopg2.connect(CLOUD_DB_URL)
         except ImportError:
-            print("⚠️ psycopg2 not installed, falling back to SQLite")
+            print("psycopg2 not installed, falling back to SQLite")
             return sqlite3.connect('plantatree.db')
         except Exception as e:
-            print(f"⚠️ Cloud DB connection failed: {e}, falling back to SQLite")
+            print(f"Cloud DB connection failed: {e}, falling back to SQLite")
             return sqlite3.connect('plantatree.db')
     else:
         return sqlite3.connect('plantatree.db')
@@ -239,11 +239,11 @@ def init_db():
     cursor.execute('SELECT COUNT(*) FROM badges')
     if cursor.fetchone()[0] == 0:
         sample_badges = [
-            ('Tree Planter', 'Засади първото си дърво', '🌳', 'trees', 1),
-            ('Eco Hero', 'Направи 10 еко действия', '♻️', 'actions', 10),
-            ('Green Warrior', 'Събери 100 точки', '🏆', 'points', 100),
-            ('Nature Lover', 'Посети 5 различни зелени зони', '🌿', 'locations', 5),
-            ('Bike Rider', 'Използвай велосипед 10 пъти', '🚴', 'bike_rides', 10)
+            ('Tree Planter', 'Засади първото си дърво', 'Tree', 'trees', 1),
+            ('Eco Hero', 'Направи 10 еко действия', 'Eco', 'actions', 10),
+            ('Green Warrior', 'Събери 100 точки', 'Trophy', 'points', 100),
+            ('Nature Lover', 'Посети 5 различни зелени зони', 'Nature', 'locations', 5),
+            ('Bike Rider', 'Използвай велосипед 10 пъти', 'Bike', 'bike_rides', 10)
         ]
         
         cursor.executemany('''
@@ -264,7 +264,7 @@ try:
     import google.generativeai as genai
     GENAI_AVAILABLE = True
 except ImportError:
-    print("⚠️ Google Generative AI not available - chat functionality disabled")
+    print("Google Generative AI not available - chat functionality disabled")
     GENAI_AVAILABLE = False
     genai = None
 
@@ -285,12 +285,12 @@ if GENAI_AVAILABLE and GENAI_API_KEY:
                 "Бъди дружелюбен и насърчавай потребителите да се включат в еко инициативи."
             )
         )
-        print("✅ Gemini 2.5 готов с главен промпт!")
+        print("Gemini 2.5 готов с главен промпт!")
     except Exception as e:
-        print(f"❌ Gemini грешка: {e}")
+        print(f"Gemini грешка: {e}")
         GEMINI_MODEL = None
 elif not GENAI_AVAILABLE:
-    print("❌ Google Generative AI не е инсталиран")
+    print("Google Generative AI не е инсталиран")
 else:
     print("ℹ️ GENAI_API_KEY not set - AI chat functionality will be disabled")
 # Routes
@@ -360,6 +360,16 @@ def health_check():
 def index():
     """Serve the main HTML page"""
     return send_from_directory('.', 'index.html')
+
+@app.route('/robots.txt')
+def robots():
+    """Serve robots.txt for SEO"""
+    return send_from_directory('.', 'robots.txt', mimetype='text/plain')
+
+@app.route('/sitemap.xml')
+def sitemap():
+    """Serve sitemap.xml for SEO"""
+    return send_from_directory('.', 'sitemap.xml', mimetype='application/xml')
 
 @app.route('/<path:filename>')
 def serve_static(filename):
@@ -1290,23 +1300,23 @@ if __name__ == '__main__':
     
     # Express.js-style startup messages
     print("\n" + "="*50)
-    print("🌱 PlantATree Server Starting...")
+    print("PlantATree Server Starting...")
     print("="*50)
-    print(f"� Environment: {'Development' if app.debug else 'Production'}")
-    print(f"�📍 Server URL: http://localhost:5001")
-    print(f"🔗 API Endpoints:")
+    print(f"Environment: {'Development' if app.debug else 'Production'}")
+    print(f"Server URL: http://localhost:5001")
+    print(f"API Endpoints:")
     print(f"   • API Info: http://localhost:5001/api")
     print(f"   • Health Check: http://localhost:5001/api/health")
     print(f"   • V1 API: http://localhost:5001/api/v1/")
     print(f"   • Admin API: http://localhost:5001/api/admin/")
-    print(f"�️  Features:")
+    print(f"Features:")
     print(f"   ✓ Sofia Redesign Tools")
     print(f"   ✓ Air Quality Monitoring")
     print(f"   ✓ AI Chat Assistant")
     print(f"   ✓ Real-time Statistics")
     print(f"   ✓ Rate Limiting")
     print(f"   ✓ Security Headers")
-    print(f"🔧 Press Ctrl+C to stop server")
+    print(f"Press Ctrl+C to stop server")
     print("="*50 + "\n")
     
     try:
@@ -1317,11 +1327,11 @@ if __name__ == '__main__':
             threaded=True  # Express.js-style concurrent request handling
         )
     except KeyboardInterrupt:
-        print("\n🛑 Server stopped by user")
+        print("\nServer stopped by user")
     except Exception as e:
-        print(f"\n❌ Server error: {e}")
+        print(f"\nServer error: {e}")
     finally:
-        print("👋 Goodbye!")
+        print("Goodbye!")
         
 # Export app for deployment (like module.exports in Express.js)
 application = create_app()  # For WSGI servers
