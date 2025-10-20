@@ -11,15 +11,15 @@ import google.generativeai as genai
 import jwt
 import time
 
-# Google Translate import
+# Translation import - using deep-translator for better reliability
 try:
-    from googletrans import Translator
+    from deep_translator import GoogleTranslator
     GOOGLE_TRANSLATE_AVAILABLE = True
-    print("✓ Google Translate library loaded successfully")
+    print("✓ Deep Translator library loaded successfully")
 except ImportError as e:
-    print(f"Google Translate not available: {e}")
+    print(f"Translation library not available: {e}")
     GOOGLE_TRANSLATE_AVAILABLE = False
-    Translator = None
+    GoogleTranslator = None
 
 from dotenv import load_dotenv
 load_dotenv()  # Load environment variables from .env
@@ -1327,18 +1327,18 @@ def translate_text():
             return jsonify({'success': False, 'error': 'Target language must be "en" or "bg"'}), 400
         
         # Initialize translator
-        translator = Translator()
+        translator = GoogleTranslator(source='auto', target=target_lang)
         
-        print(f"Translating: '{text[:50]}...' from {source_lang} to {target_lang}")
+        print(f"Translating: '{text[:50]}...' from auto to {target_lang}")
         
         # Perform translation
-        result = translator.translate(text, dest=target_lang, src=source_lang)
+        result = translator.translate(text)
         
-        if result and result.text:
+        if result:
             return jsonify({
                 'success': True,
-                'translated_text': result.text,
-                'source_lang': result.src,
+                'translated_text': result,
+                'source_lang': 'auto',
                 'target_lang': target_lang,
                 'original_text': text
             })
@@ -1398,7 +1398,7 @@ def translate_batch():
             return jsonify({'success': False, 'error': 'Target language must be "en" or "bg"'}), 400
         
         # Initialize translator
-        translator = Translator()
+        translator = GoogleTranslator(source='auto', target=target_lang)
         translations = []
         
         print(f"Batch translating {len(texts)} texts to {target_lang}")
@@ -1414,12 +1414,12 @@ def translate_batch():
                     })
                     continue
                 
-                result = translator.translate(text.strip(), dest=target_lang, src=source_lang)
+                result = translator.translate(text.strip())
                 
-                if result and result.text:
+                if result:
                     translations.append({
                         'original': text,
-                        'translated': result.text,
+                        'translated': result,
                         'success': True
                     })
                 else:
@@ -1498,7 +1498,7 @@ def translate_page_content():
             return jsonify({'success': False, 'error': 'Target language must be "en" or "bg"'}), 400
         
         # Initialize translator
-        translator = Translator()
+        translator = GoogleTranslator(source='auto', target=target_lang)
         translations = {}
         
         print(f"Translating page elements to {target_lang}")
@@ -1510,10 +1510,10 @@ def translate_page_content():
                     translations[key] = text
                     continue
                 
-                result = translator.translate(text.strip(), dest=target_lang, src='auto')
+                result = translator.translate(text.strip())
                 
-                if result and result.text:
-                    translations[key] = result.text
+                if result:
+                    translations[key] = result
                 else:
                     translations[key] = text  # Keep original on failure
                     
@@ -1561,12 +1561,12 @@ if __name__ == '__main__':
     print("PlantATree Server Starting...")
     print("="*50)
     print(f"Environment: {'Development' if app.debug else 'Production'}")
-    print(f"Server URL: http://localhost:5001")
+    print(f"Server URL: http://localhost:5000")
     print(f"API Endpoints:")
-    print(f"   • API Info: http://localhost:5001/api")
-    print(f"   • Health Check: http://localhost:5001/api/health")
-    print(f"   • V1 API: http://localhost:5001/api/v1/")
-    print(f"   • Admin API: http://localhost:5001/api/admin/")
+    print(f"   • API Info: http://localhost:5000/api")
+    print(f"   • Health Check: http://localhost:5000/api/health")
+    print(f"   • V1 API: http://localhost:5000/api/v1/")
+    print(f"   • Admin API: http://localhost:5000/api/admin/")
     print(f"Features:")
     print(f"   ✓ Sofia Redesign Tools")
     print(f"   ✓ Air Quality Monitoring")
@@ -1581,7 +1581,7 @@ if __name__ == '__main__':
         app.run(
             debug=os.getenv('FLASK_DEBUG', 'True').lower() == 'true', 
             host=os.getenv('HOST', '0.0.0.0'), 
-            port=int(os.getenv('PORT', '5001')),
+            port=int(os.getenv('PORT', '5000')),
             threaded=True  # Express.js-style concurrent request handling
         )
     except KeyboardInterrupt:
