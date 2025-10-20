@@ -11,6 +11,16 @@ import google.generativeai as genai
 import jwt
 import time
 
+# Google Translate import
+try:
+    from googletrans import Translator
+    GOOGLE_TRANSLATE_AVAILABLE = True
+    print("✓ Google Translate library loaded successfully")
+except ImportError as e:
+    print(f"Google Translate not available: {e}")
+    GOOGLE_TRANSLATE_AVAILABLE = False
+    Translator = None
+
 from dotenv import load_dotenv
 load_dotenv()  # Load environment variables from .env
 
@@ -1275,6 +1285,254 @@ def chat():
     except Exception as e:
         print(f"Gemini request error: {e}")
         return jsonify({'error': str(e)}), 500
+
+# ==================== GOOGLE TRANSLATE API ENDPOINT ====================
+
+@app.route('/api/translate', methods=['POST'])
+def translate_text():
+    """Translate text using Google Translate API
+    
+    POST JSON: {
+        "text": "text to translate",
+        "target_lang": "en" or "bg",
+        "source_lang": "auto" (optional)
+    }
+    Returns: {
+        "translated_text": "translated text",
+        "source_lang": "detected source language",
+        "target_lang": "target language",
+        "success": true/false
+    }
+    """
+    if not GOOGLE_TRANSLATE_AVAILABLE:
+        return jsonify({
+            'success': False,
+            'error': 'Google Translate not available. Please install googletrans library.'
+        }), 503
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No JSON data provided'}), 400
+        
+        text = data.get('text', '').strip()
+        target_lang = data.get('target_lang', 'en')
+        source_lang = data.get('source_lang', 'auto')
+        
+        if not text:
+            return jsonify({'success': False, 'error': 'No text provided'}), 400
+        
+        # Validate target language
+        if target_lang not in ['en', 'bg']:
+            return jsonify({'success': False, 'error': 'Target language must be "en" or "bg"'}), 400
+        
+        # Initialize translator
+        translator = Translator()
+        
+        print(f"Translating: '{text[:50]}...' from {source_lang} to {target_lang}")
+        
+        # Perform translation
+        result = translator.translate(text, dest=target_lang, src=source_lang)
+        
+        if result and result.text:
+            return jsonify({
+                'success': True,
+                'translated_text': result.text,
+                'source_lang': result.src,
+                'target_lang': target_lang,
+                'original_text': text
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Translation failed - no result returned'
+            }), 500
+            
+    except Exception as e:
+        print(f"Translation error: {e}")
+        return jsonify({
+            'success': False,
+            'error': f'Translation failed: {str(e)}'
+        }), 500
+
+@app.route('/api/translate/batch', methods=['POST'])
+def translate_batch():
+    """Translate multiple texts in batch
+    
+    POST JSON: {
+        "texts": ["text1", "text2", "text3"],
+        "target_lang": "en" or "bg",
+        "source_lang": "auto" (optional)
+    }
+    Returns: {
+        "translations": [
+            {"original": "text1", "translated": "translated1", "success": true},
+            {"original": "text2", "translated": "translated2", "success": true}
+        ],
+        "success": true/false
+    }
+    """
+    if not GOOGLE_TRANSLATE_AVAILABLE:
+        return jsonify({
+            'success': False,
+            'error': 'Google Translate not available'
+        }), 503
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No JSON data provided'}), 400
+        
+        texts = data.get('texts', [])
+        target_lang = data.get('target_lang', 'en')
+        source_lang = data.get('source_lang', 'auto')
+        
+        if not texts or not isinstance(texts, list):
+            return jsonify({'success': False, 'error': 'No texts array provided'}), 400
+        
+        if len(texts) > 50:  # Limit batch size
+            return jsonify({'success': False, 'error': 'Too many texts. Maximum 50 allowed.'}), 400
+        
+        # Validate target language
+        if target_lang not in ['en', 'bg']:
+            return jsonify({'success': False, 'error': 'Target language must be "en" or "bg"'}), 400
+        
+        # Initialize translator
+        translator = Translator()
+        translations = []
+        
+        print(f"Batch translating {len(texts)} texts to {target_lang}")
+        
+        # Translate each text
+        for text in texts:
+            try:
+                if not text or not text.strip():
+                    translations.append({
+                        'original': text,
+                        'translated': text,
+                        'success': True
+                    })
+                    continue
+                
+                result = translator.translate(text.strip(), dest=target_lang, src=source_lang)
+                
+                if result and result.text:
+                    translations.append({
+                        'original': text,
+                        'translated': result.text,
+                        'success': True
+                    })
+                else:
+                    translations.append({
+                        'original': text,
+                        'translated': text,  # Keep original on failure
+                        'success': False,
+                        'error': 'Translation failed'
+                    })
+                    
+            except Exception as e:
+                print(f"Error translating '{text[:30]}...': {e}")
+                translations.append({
+                    'original': text,
+                    'translated': text,  # Keep original on failure
+                    'success': False,
+                    'error': str(e)
+                })
+        
+        successful_translations = sum(1 for t in translations if t['success'])
+        
+        return jsonify({
+            'success': True,
+            'translations': translations,
+            'total_count': len(texts),
+            'successful_count': successful_translations,
+            'failed_count': len(texts) - successful_translations
+        })
+        
+    except Exception as e:
+        print(f"Batch translation error: {e}")
+        return jsonify({
+            'success': False,
+            'error': f'Batch translation failed: {str(e)}'
+        }), 500
+
+@app.route('/api/translate/page', methods=['POST'])
+def translate_page_content():
+    """Translate specific page content elements
+    
+    POST JSON: {
+        "elements": {
+            "hero_title": "Помогни да направим София по-зелена",
+            "hero_subtitle": "Платформа за картиране...",
+            ...
+        },
+        "target_lang": "en"
+    }
+    Returns: {
+        "translations": {
+            "hero_title": "Help Make Sofia Greener",
+            "hero_subtitle": "Platform for mapping...",
+            ...
+        },
+        "success": true
+    }
+    """
+    if not GOOGLE_TRANSLATE_AVAILABLE:
+        return jsonify({
+            'success': False,
+            'error': 'Google Translate not available'
+        }), 503
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'error': 'No JSON data provided'}), 400
+        
+        elements = data.get('elements', {})
+        target_lang = data.get('target_lang', 'en')
+        
+        if not elements:
+            return jsonify({'success': False, 'error': 'No elements provided'}), 400
+        
+        if target_lang not in ['en', 'bg']:
+            return jsonify({'success': False, 'error': 'Target language must be "en" or "bg"'}), 400
+        
+        # Initialize translator
+        translator = Translator()
+        translations = {}
+        
+        print(f"Translating page elements to {target_lang}")
+        
+        # Translate each element
+        for key, text in elements.items():
+            try:
+                if not text or not text.strip():
+                    translations[key] = text
+                    continue
+                
+                result = translator.translate(text.strip(), dest=target_lang, src='auto')
+                
+                if result and result.text:
+                    translations[key] = result.text
+                else:
+                    translations[key] = text  # Keep original on failure
+                    
+            except Exception as e:
+                print(f"Error translating element '{key}': {e}")
+                translations[key] = text  # Keep original on failure
+        
+        return jsonify({
+            'success': True,
+            'translations': translations,
+            'target_lang': target_lang
+        })
+        
+    except Exception as e:
+        print(f"Page translation error: {e}")
+        return jsonify({
+            'success': False,
+            'error': f'Page translation failed: {str(e)}'
+        }), 500
 
 # Express.js-style startup configuration
 def create_app():
