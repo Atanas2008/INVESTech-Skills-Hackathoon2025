@@ -102,9 +102,44 @@
     border-radius: 8px;
     font-size: 1rem;
     transition: all 0.3s ease;
+    box-sizing: border-box;
 }
 
-.form-group input:focus {
+.form-group select {
+    width: 100%;
+    padding: 0.8rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+    background-color: white;
+    cursor: pointer;
+}
+
+.form-group input[type="file"] {
+    padding: 0.5rem;
+    border: 2px dashed #e0e0e0;
+    background-color: #f9f9f9;
+    cursor: pointer;
+}
+
+.form-group input[type="file"]:hover {
+    border-color: #7bc142;
+    background-color: #f0f8ed;
+}
+
+.file-upload-info {
+    margin-top: 0.5rem;
+}
+
+.file-upload-info small {
+    color: #666;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.form-group input:focus, .form-group select:focus {
     outline: none;
     border-color: #7bc142;
     box-shadow: 0 0 0 3px rgba(123, 193, 66, 0.2);
@@ -131,4 +166,59 @@
     color: #2d5a27;
     font-weight: 500;
     margin-right: 1rem;
+}
+
+/* User info display styles */
+.user-info {
+    display: flex;
+    align-items: center;
+    margin-right: 10px;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 8px;
+    object-fit: cover;
+    border: 2px solid #7bc142;
+}
+
+.user-avatar-placeholder {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #4CAF50;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.admin-badge {
+    background: #ff9800;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-left: 8px;
+}
+
+/* Enhanced modal for registration */
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 450px; /* Slightly larger for registration form */
+    position: relative;
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
+    max-height: 85vh;
+    overflow-y: auto;
 }
