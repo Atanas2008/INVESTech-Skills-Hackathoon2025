@@ -6,6 +6,7 @@
     <title>PlantATree - Еко инициативи София</title>
     <link rel="stylesheet" href="design.css">
     <link rel="stylesheet" href="static/css/auth.css">
+    <link rel="stylesheet" href="static/css/chat.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- Geoapify Maps CSS and JS -->
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/@geoapify/leaflet-address-search-plugin@^1/dist/L.Control.GeoapifyAddressSearch.min.css" />
@@ -1099,7 +1100,46 @@
 
             // Toggle chat modal
             chatButton.addEventListener('click', () => {
-                chatModal.style.display = chatModal.style.display === 'none' ? 'block' : 'none';
+                chatModal.style.display = chatModal.style.display === 'none' ? 'flex' : 'none';
+            });
+
+            // Custom resize functionality
+            let isResizing = false;
+            let initialWidth, initialHeight, initialX, initialY;
+
+            // Only allow resizing from top-left corner (10x10 pixels area)
+            chatModal.addEventListener('mousedown', function(e) {
+                const rect = chatModal.getBoundingClientRect();
+                const isInResizeArea = (
+                    e.clientX <= rect.left + 10 &&
+                    e.clientY <= rect.top + 10
+                );
+
+                if (isInResizeArea) {
+                    isResizing = true;
+                    initialWidth = chatModal.offsetWidth;
+                    initialHeight = chatModal.offsetHeight;
+                    initialX = e.clientX;
+                    initialY = e.clientY;
+                }
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (!isResizing) return;
+
+                const width = initialWidth - (e.clientX - initialX);
+                const height = initialHeight - (e.clientY - initialY);
+
+                // Apply size constraints matching the default size (350x400)
+                const newWidth = Math.min(Math.max(width, 350), 800);
+                const newHeight = Math.min(Math.max(height, 400), 800);
+
+                chatModal.style.width = newWidth + 'px';
+                chatModal.style.height = newHeight + 'px';
+            });
+
+            document.addEventListener('mouseup', function() {
+                isResizing = false;
             });
 
             // Send message on button click or Enter key

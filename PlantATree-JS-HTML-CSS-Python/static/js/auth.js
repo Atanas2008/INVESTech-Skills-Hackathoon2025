@@ -170,9 +170,14 @@ function updateUIAfterLogout() {
         profileLink.parentElement.remove();
     }
     
-    // Redirect to home if on profile page
+    // Redirect to home if on profile page and hide profile section
     if (window.location.hash === '#profile') {
         window.location.hash = '#';
+        const profileSection = document.getElementById('profile');
+        if (profileSection) {
+            profileSection.classList.add('hidden');
+        }
+        showSection('home');
     }
 }
 
