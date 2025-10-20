@@ -3634,4 +3634,410 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Clear any other temporary data
     console.log('All temporary data cleared - starting fresh session');
+    
+    // Initialize sponsors animations
+    initializeSponsorsAnimations();
 });
+
+// ===============================================
+// SPONSORS SECTION FUNCTIONALITY
+// ===============================================
+
+// Initialize sponsor animations and interactions
+function initializeSponsorsAnimations() {
+    console.log('Initializing sponsors animations...');
+    
+    // Animate stats numbers when sponsors section becomes visible
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                if (entry.target.classList.contains('impact-stats')) {
+                    animateImpactStats();
+                }
+                if (entry.target.classList.contains('sponsors-tier')) {
+                    entry.target.style.animationPlayState = 'running';
+                }
+            }
+        });
+    }, { threshold: 0.3 });
+    
+    // Observe impact stats section
+    const impactStats = document.querySelector('.impact-stats');
+    if (impactStats) {
+        observer.observe(impactStats);
+    }
+    
+    // Observe sponsor tiers for staggered animation
+    const sponsorTiers = document.querySelectorAll('.sponsors-tier');
+    sponsorTiers.forEach(tier => {
+        observer.observe(tier);
+    });
+    
+    // Add hover effects to sponsor cards
+    addSponsorCardEffects();
+    
+    // Initialize sponsor badge interactions
+    initializeSponsorBadges();
+}
+
+// Animate impact statistics numbers
+function animateImpactStats() {
+    const statNumbers = document.querySelectorAll('.impact-stats .stat-number');
+    
+    statNumbers.forEach(statNumber => {
+        const target = parseInt(statNumber.getAttribute('data-target')) || 0;
+        const duration = 2000; // 2 seconds
+        const startTime = Date.now();
+        
+        function updateNumber() {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            // Easing function for smooth animation
+            const easeOutCubic = 1 - Math.pow(1 - progress, 3);
+            const current = Math.floor(target * easeOutCubic);
+            
+            // Format numbers with commas for large numbers
+            if (target >= 1000) {
+                statNumber.textContent = current.toLocaleString();
+            } else {
+                statNumber.textContent = current;
+            }
+            
+            if (progress < 1) {
+                requestAnimationFrame(updateNumber);
+            } else {
+                statNumber.textContent = target >= 1000 ? target.toLocaleString() : target;
+            }
+        }
+        
+        updateNumber();
+    });
+}
+
+// Add interactive effects to sponsor cards
+function addSponsorCardEffects() {
+    const sponsorCards = document.querySelectorAll('.sponsor-card');
+    
+    sponsorCards.forEach(card => {
+        // Add mouseenter effect
+        card.addEventListener('mouseenter', function() {
+            // Add subtle pulse animation to the logo
+            const logo = this.querySelector('.sponsor-logo i');
+            if (logo) {
+                logo.style.animation = 'pulse 0.6s ease-in-out';
+            }
+            
+            // Slightly increase brightness of contribution items
+            const contributions = this.querySelectorAll('.contribution-item');
+            contributions.forEach(item => {
+                item.style.transform = 'translateX(5px)';
+                item.style.transition = 'transform 0.3s ease';
+            });
+        });
+        
+        // Add mouseleave effect
+        card.addEventListener('mouseleave', function() {
+            const logo = this.querySelector('.sponsor-logo i');
+            if (logo) {
+                logo.style.animation = '';
+            }
+            
+            const contributions = this.querySelectorAll('.contribution-item');
+            contributions.forEach(item => {
+                item.style.transform = '';
+            });
+        });
+        
+        // Add click effect for mobile
+        card.addEventListener('click', function() {
+            this.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 150);
+        });
+    });
+}
+
+// Initialize sponsor badge interactions
+function initializeSponsorBadges() {
+    const badges = document.querySelectorAll('.sponsor-badges .badge');
+    
+    badges.forEach(badge => {
+        badge.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            // Create ripple effect
+            createRippleEffect(this, e);
+            
+            // Show badge info (you can customize this)
+            showBadgeInfo(this);
+        });
+    });
+}
+
+// Create ripple effect for badge clicks
+function createRippleEffect(element, event) {
+    const rect = element.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const x = event.clientX - rect.left - size / 2;
+    const y = event.clientY - rect.top - size / 2;
+    
+    const ripple = document.createElement('span');
+    ripple.style.cssText = `
+        position: absolute;
+        width: ${size}px;
+        height: ${size}px;
+        left: ${x}px;
+        top: ${y}px;
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 50%;
+        transform: scale(0);
+        animation: ripple 0.6s linear;
+        pointer-events: none;
+    `;
+    
+    // Add ripple animation keyframes if not already added
+    if (!document.getElementById('ripple-animation')) {
+        const style = document.createElement('style');
+        style.id = 'ripple-animation';
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(2);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    element.style.position = 'relative';
+    element.style.overflow = 'hidden';
+    element.appendChild(ripple);
+    
+    setTimeout(() => {
+        ripple.remove();
+    }, 600);
+}
+
+// Show badge information
+function showBadgeInfo(badge) {
+    const badgeText = badge.textContent;
+    let message = '';
+    
+    switch(badgeText.toLowerCase()) {
+        case 'премиум партньор':
+            message = 'Премиум партньорите са най-големите поддръжници на нашата мисия';
+            break;
+        case 'верифициран':
+            message = 'Верифицирани партньори с доказан принос към околната среда';
+            break;
+        case 'иновация':
+            message = 'Партньори, които внасят иновативни еко решения';
+            break;
+        case 'стандартен партньор':
+            message = 'Надеждни партньори с постоянен принос';
+            break;
+        case 'бронзов партньор':
+            message = 'Нови партньори, които започват своето еко пътуване';
+            break;
+        default:
+            message = 'Благодарим за подкрепата на еко инициативите';
+    }
+    
+    // Create and show tooltip
+    showTooltip(badge, message);
+}
+
+// Show tooltip function
+function showTooltip(element, message) {
+    // Remove existing tooltips
+    document.querySelectorAll('.badge-tooltip').forEach(tooltip => tooltip.remove());
+    
+    const tooltip = document.createElement('div');
+    tooltip.className = 'badge-tooltip';
+    tooltip.textContent = message;
+    tooltip.style.cssText = `
+        position: absolute;
+        background: rgba(45, 90, 39, 0.95);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        z-index: 1000;
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s ease;
+        max-width: 250px;
+        white-space: normal;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    `;
+    
+    document.body.appendChild(tooltip);
+    
+    const rect = element.getBoundingClientRect();
+    tooltip.style.left = (rect.left + rect.width / 2 - tooltip.offsetWidth / 2) + 'px';
+    tooltip.style.top = (rect.bottom + 10) + 'px';
+    
+    // Animate in
+    setTimeout(() => {
+        tooltip.style.opacity = '1';
+        tooltip.style.transform = 'translateY(0)';
+    }, 10);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        tooltip.style.opacity = '0';
+        tooltip.style.transform = 'translateY(10px)';
+        setTimeout(() => tooltip.remove(), 300);
+    }, 3000);
+}
+
+// Functions for sponsor modal interactions
+function showBecomeSponsorModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 600px;">
+            <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+            <h3 style="color: #2d5a27; margin-bottom: 1.5rem;">Станете наш партньор</h3>
+            <form id="sponsorForm">
+                <div class="form-group">
+                    <label>Име на компанията:</label>
+                    <input type="text" name="company" required>
+                </div>
+                <div class="form-group">
+                    <label>Контактен имейл:</label>
+                    <input type="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Телефон:</label>
+                    <input type="tel" name="phone" required>
+                </div>
+                <div class="form-group">
+                    <label>Тип партньорство:</label>
+                    <select name="sponsorship-type" required>
+                        <option value="">Изберете тип</option>
+                        <option value="gold">Златно партньорство</option>
+                        <option value="silver">Сре��ърно партньорство</option>
+                        <option value="bronze">Бронзово партньорство</option>
+                        <option value="custom">Персонализирано</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Съобщение:</label>
+                    <textarea name="message" placeholder="Разкажете ни за вашата компания и как искате да подкрепите еко инициативите..." rows="4"></textarea>
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 1rem;">
+                    <i class="fas fa-paper-plane"></i>
+                    Изпрати заявка
+                </button>
+            </form>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Handle form submission
+    modal.querySelector('#sponsorForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Show success message
+        showSuccessMessage('Благодарим за интереса! Ще се свържем с вас скоро.');
+        modal.remove();
+    });
+}
+
+function showContactModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 500px;">
+            <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+            <h3 style="color: #2d5a27; margin-bottom: 1.5rem;">Свържете се с нас</h3>
+            <div style="text-align: center;">
+                <div style="margin-bottom: 2rem;">
+                    <i class="fas fa-envelope" style="font-size: 3rem; color: #7bc142; margin-bottom: 1rem;"></i>
+                    <h4>Имейл</h4>
+                    <p>partnerships@plantatree.bg</p>
+                </div>
+                <div style="margin-bottom: 2rem;">
+                    <i class="fas fa-phone" style="font-size: 3rem; color: #7bc142; margin-bottom: 1rem;"></i>
+                    <h4>Телефон</h4>
+                    <p>+359 2 123 456</p>
+                </div>
+                <div style="margin-bottom: 2rem;">
+                    <i class="fas fa-map-marker-alt" style="font-size: 3rem; color: #7bc142; margin-bottom: 1rem;"></i>
+                    <h4>Адрес</h4>
+                    <p>ул. "Витоша" 15, София 1000</p>
+                </div>
+                <button onclick="showBecomeSponsorModal(); this.closest('.modal').remove();" class="btn-primary">
+                    <i class="fas fa-handshake"></i>
+                    Станете партньор
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function showSuccessMessage(message) {
+    const successDiv = document.createElement('div');
+    successDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #7bc142, #8ed655);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(123, 193, 66, 0.3);
+        z-index: 10000;
+        font-weight: 600;
+        opacity: 0;
+        transform: translateX(100px);
+        transition: all 0.3s ease;
+    `;
+    successDiv.innerHTML = `
+        <i class="fas fa-check-circle" style="margin-right: 0.5rem;"></i>
+        ${message}
+    `;
+    
+    document.body.appendChild(successDiv);
+    
+    // Animate in
+    setTimeout(() => {
+        successDiv.style.opacity = '1';
+        successDiv.style.transform = 'translateX(0)';
+    }, 10);
+    
+    // Remove after 5 seconds
+    setTimeout(() => {
+        successDiv.style.opacity = '0';
+        successDiv.style.transform = 'translateX(100px)';
+        setTimeout(() => successDiv.remove(), 300);
+    }, 5000);
+}
+
+// Add pulse animation keyframes for logos
+if (!document.getElementById('pulse-animation')) {
+    const style = document.createElement('style');
+    style.id = 'pulse-animation';
+    style.textContent = `
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Make functions globally available
+window.showBecomeSponsorModal = showBecomeSponsorModal;
+window.showContactModal = showContactModal;
