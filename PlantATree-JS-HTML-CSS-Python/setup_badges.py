@@ -51,16 +51,16 @@ def add_default_badges():
     cursor = conn.cursor()
     
     badges = [
-        ("Tree Planter", "Засади първото си дърво", "fas fa-tree", "points", 10),
-        ("Eco Hero", "Спести 100 точки за околната среда", "fas fa-recycle", "points", 100),
-        ("Bike Rider", "Използвай велосипед 5 пъти", "fas fa-bicycle", "actions", 5),
-        ("Green Pioneer", "Първи 5 еко действия", "fas fa-seedling", "actions", 5),
-        ("Water Saver", "Спести вода 10 пъти", "fas fa-tint", "points", 75),
-        ("Energy Master", "Спести енергия 20 пъти", "fas fa-lightbulb", "points", 150),
-        ("Cleanup Champion", "Почисти 5 места", "fas fa-broom", "actions", 3),
-        ("Compost King", "Направи компост 3 пъти", "fas fa-leaf", "actions", 2),
-        ("Green Influencer", "Влияй на 10 души", "fas fa-users", "points", 200),
-        ("Eco Warrior", "Достигни 500 точки", "fas fa-medal", "points", 500)
+        ("Tree Planter", "Plant your first tree", "fas fa-tree", "points", 10),
+        ("Eco Hero", "Save 100 eco points", "fas fa-recycle", "points", 100),
+        ("Bike Rider", "Use a bicycle 5 times", "fas fa-bicycle", "actions", 5),
+        ("Green Pioneer", "First 5 eco actions", "fas fa-seedling", "actions", 5),
+        ("Water Saver", "Save water 10 times", "fas fa-tint", "points", 75),
+        ("Energy Master", "Save energy 20 times", "fas fa-lightbulb", "points", 150),
+        ("Cleanup Champion", "Clean up 5 places", "fas fa-broom", "actions", 3),
+        ("Compost King", "Make compost 3 times", "fas fa-leaf", "actions", 2),
+        ("Green Influencer", "Influence 10 people", "fas fa-users", "points", 200),
+        ("Eco Warrior", "Reach 500 points", "fas fa-medal", "points", 500)
     ]
     
     for badge in badges:

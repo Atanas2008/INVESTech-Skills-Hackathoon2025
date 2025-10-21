@@ -43,24 +43,18 @@
                 <span>EcoBuilders</span>
             </div>
             <ul class="nav-menu" style="flex:1 1 0;justify-content:center;display:flex;gap:1.5rem;align-items:center;margin:0;">
-                <li><a href="#" onclick="showSection('home')" class="nav-link">Начало</a></li>
-                <li><a href="#" onclick="showSection('map')" class="nav-link">Карта</a></li>
-                <li><a href="#" onclick="showSection('feed')" class="nav-link">Еко действия</a></li>
-                <li><a href="#" onclick="showSection('air-quality')" class="nav-link">Въздух</a></li>
-                <li><a href="#" onclick="showSection('leaderboard')" class="nav-link">Класация</a></li>
-                <li><a href="#" onclick="showSection('sponsors')" class="nav-link">Спонсори</a></li>
+                <li><a href="#" onclick="showSection('home')" class="nav-link">Home</a></li>
+                <li><a href="#" onclick="showSection('map')" class="nav-link">Map</a></li>
+                <li><a href="#" onclick="showSection('feed')" class="nav-link">Eco Actions</a></li>
+                <li><a href="#" onclick="showSection('air-quality')" class="nav-link">Air Quality</a></li>
+                <li><a href="#" onclick="showSection('leaderboard')" class="nav-link">Leaderboard</a></li>
+                <li><a href="#" onclick="showSection('sponsors')" class="nav-link">Sponsors</a></li>
             </ul>
             <div class="nav-right" style="flex:0 0 auto;display:flex;align-items:center;gap:1.2rem;">
-                <a href="#" onclick="showSection('profile')" class="nav-link" style="font-weight:600;">Профил</a>
-                <div class="language-switch">
-                    <button id="language-toggle" class="btn-language" onclick="toggleLanguage()" title="Switch Language">
-                        <i class="fas fa-language"></i>
-                        <span id="language-text">EN</span>
-                    </button>
-                </div>
+                <a href="#" onclick="showSection('profile')" class="nav-link" style="font-weight:600;">Profile</a>
                 <div class="auth-buttons">
-                    <button class="btn-login" onclick="showModal('loginModal')">Вход</button>
-                    <button class="btn-register" onclick="showModal('registerModal')">Регистрация</button>
+                    <button class="btn-login" onclick="showModal('loginModal')">Sign In</button>
+                    <button class="btn-register" onclick="showModal('registerModal')">Register</button>
                 </div>
             </div>
         </div>
@@ -83,29 +77,29 @@
         </div>
         <div class="hero-overlay"></div>
         <div class="hero-content">
-            <h1>Помогни да направим София по-зелена</h1>
-            <p>Платформа за картиране на зелени зони, еко пътеки и споделяне на еко инициативи в България</p>
+            <h1>Help Make Sofia Greener</h1>
+            <p>Platform for mapping green zones, eco trails, and sharing eco initiatives in Bulgaria</p>
             <div class="hero-buttons">
                 <button class="btn-primary" onclick="showSection('map')">
-                    <i class="fas fa-map-marked-alt"></i> Разгледай картата
+                    <i class="fas fa-map-marked-alt"></i> View Map
                 </button>
                 <button class="btn-primary" onclick="showSection('feed')">
-                    <i class="fas fa-leaf"></i> Еко действия
+                    <i class="fas fa-leaf"></i> Eco Actions
                 </button>
             </div>
         </div>
         <div class="hero-stats">
             <div class="stat">
                 <div class="stat-number" data-target="150">0+</div>
-                <div class="stat-label">Зелени зони</div>
+                <div class="stat-label">Green Zones</div>
             </div>
             <div class="stat">
                 <div class="stat-number" data-target="500">0+</div>
-                <div class="stat-label">Засадени дървета</div>
+                <div class="stat-label">Planted Trees</div>
             </div>
             <div class="stat">
                 <div class="stat-number" data-target="200">0+</div>
-                <div class="stat-label">Активни потребители</div>
+                <div class="stat-label">Active Users</div>
             </div>
         </div>
     </section>
@@ -113,29 +107,29 @@
     <!-- Map Section -->
     <section id="map" class="section hidden">
         <div class="section-header">
-            <h2><i class="fas fa-map-marked-alt"></i> Карта на зелените зони</h2>
-            <p>Открий паркове, еко пътеки и велоалеи в София</p>
+            <h2><i class="fas fa-map-marked-alt"></i> Map of Green Zones</h2>
+            <p>Discover parks, eco trails, and bike lanes in Sofia</p>
         </div>
         
         <!-- Sofia Redesign Tools Panel -->
         <div class="sofia-tools-panel">
-            <h3><i class="fas fa-hammer"></i> Инструменти за преустройване на София</h3>
+            <h3><i class="fas fa-hammer"></i> Sofia Redesign Tools</h3>
             <div class="save-notice">
                 <i class="fas fa-database"></i>
-                <span data-translate="auto_save_notice">Промените се запазват автоматично в базата данни</span>
+                <span data-translate="auto_save_notice">Changes are saved automatically to the database</span>
             </div>
             <div class="redesign-tools">
                 <button class="redesign-tool active" id="select-tool" onclick="setRedesignTool('select')">
                     <i class="fas fa-mouse-pointer"></i>
-                    <span data-translate="tool_selection">Селектиране</span>
+                    <span data-translate="tool_selection">Select</span>
                 </button>
                 <button class="redesign-tool" id="park-tool" onclick="setRedesignTool('park')">
                     <i class="fas fa-tree"></i>
-                    <span data-translate="tool_park">Парк</span>
+                    <span data-translate="tool_park">Park</span>
                 </button>
                 <button class="redesign-tool" id="alley-tool" onclick="setRedesignTool('alley')">
                     <i class="fas fa-road"></i>
-                    <span data-translate="tool_alley">Алея/Улица</span>
+                    <span data-translate="tool_alley">Alley/Street</span>
                 </button>
                 <button class="redesign-tool" id="green-zone-tool" onclick="setRedesignTool('greenzone')">
                     <i class="fas fa-leaf"></i>

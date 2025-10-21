@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bg">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,59 +22,59 @@
     <h1>🧪 Navigation Test</h1>
     
     <div class="status" id="status">
-        JavaScript статус: <span id="js-status">Проверявам...</span>
+    JavaScript status: <span id="js-status">Checking...</span>
     </div>
     
     <div class="nav">
-        <button onclick="showSection('home')">🏠 Начало</button>
-        <button onclick="showSection('map')">🗺️ Карта</button>
-        <button onclick="showSection('feed')">📱 Еко действия</button>
-        <button onclick="showSection('profile')">👤 Профил</button>
+    <button onclick="showSection('home')">🏠 Home</button>
+    <button onclick="showSection('map')">🗺️ Map</button>
+    <button onclick="showSection('feed')">📱 Eco Actions</button>
+    <button onclick="showSection('profile')">👤 Profile</button>
     </div>
     
     <div class="nav">
-        <button onclick="testConsole()">📝 Тест Console</button>
-        <button onclick="testAlert()">🔔 Тест Alert</button>
-        <button onclick="testFunctions()">⚙️ Тест Функции</button>
+    <button onclick="testConsole()">📝 Test Console</button>
+    <button onclick="testAlert()">🔔 Test Alert</button>
+    <button onclick="testFunctions()">⚙️ Test Functions</button>
     </div>
     
     <!-- Sections -->
     <div id="home" class="section hero active">
-        <h2>🏠 Начало</h2>
-        <p>Това е началната секция. Ако виждате това, навигацията работи!</p>
-        <button onclick="showSection('map')">Към картата →</button>
+    <h2>🏠 Home</h2>
+    <p>This is the home section. If you see this, navigation works!</p>
+    <button onclick="showSection('map')">Go to Map →</button>
     </div>
     
     <div id="map" class="section">
-        <h2>🗺️ Карта</h2>
-        <p>Това е секцията с картата.</p>
+        <h2>🗺️ Map</h2>
+        <p>This is the map section.</p>
         <div style="height: 200px; background: #e8f5e8; border: 2px dashed #7bc142; display: flex; align-items: center; justify-content: center; border-radius: 10px;">
-            <p>Тук ще бъде картата</p>
+            <p>The map will be here</p>
         </div>
     </div>
     
     <div id="feed" class="section">
-        <h2>📱 Еко действия</h2>
-        <p>Това е секцията с еко действията.</p>
+        <h2>📱 Eco Actions</h2>
+        <p>This is the eco actions section.</p>
         <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #ddd; margin: 10px 0;">
-            <h4>Пример еко действие</h4>
-            <p>Засадих дърво в парка!</p>
+            <h4>Sample Eco Action</h4>
+            <p>I planted a tree in the park!</p>
         </div>
     </div>
     
     <div id="profile" class="section">
-        <h2>👤 Профил</h2>
-        <p>Това е потребителския профил.</p>
+        <h2>👤 Profile</h2>
+        <p>This is the user profile.</p>
         <div style="background: white; padding: 15px; border-radius: 10px; border: 1px solid #ddd;">
-            <h4>Потребител: Тест</h4>
-            <p>Точки: 100</p>
-            <p>Баджове: 🌳🌿</p>
+            <h4>User: Test</h4>
+            <p>Points: 100</p>
+            <p>Badges: 🌳🌿</p>
         </div>
     </div>
     
     <div id="log" style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin: 20px 0;">
-        <h3>📋 Log:</h3>
-        <div id="log-content">Логовете ще се показват тук...</div>
+    <h3>📋 Log:</h3>
+    <div id="log-content">Logs will appear here...</div>
     </div>
 
     <script>

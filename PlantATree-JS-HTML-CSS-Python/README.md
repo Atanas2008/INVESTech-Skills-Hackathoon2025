@@ -1,143 +1,143 @@
-# PlantATree - Еко платформа за София 🌳
+# PlantATree - Eco Platform for Sofia 🌳
 
-Проект за картиране на зелени зони, еко пътеки и споделяне на еко инициативи в България.
+Project for mapping green zones, eco trails, and sharing eco initiatives in Bulgaria.
 
-## 🚀 Как да стартирате проекта
+## 🚀 How to start the project
 
-### 1. Инсталирайте Python dependencies
+### 1. Install Python dependencies
 
-Отворете терминал в папката на проекта и изпълнете:
+Open a terminal in the project folder and run:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Стартирайте Flask сървъра
+### 2. Start the Flask server
 
 ```bash
 python app.py
 ```
 
-### 3. Отворете браузъра
+### 3. Open your browser
 
-Идете на: http://localhost:5000
+Go to: http://localhost:5000
 
-## 📁 Структура на проекта
+## 📁 Project Structure
 
 ```
 PlantATree-JS-HTML-CSS-Python/
 │
-├── index.html          # Основна HTML страница
-├── design.css          # CSS стилове
-├── script.js           # JavaScript функционалност
-├── app.py              # Flask backend сървър
+├── index.html          # Main HTML page
+├── design.css          # CSS styles
+├── script.js           # JavaScript functionality
+├── app.py              # Flask backend server
 ├── requirements.txt    # Python dependencies
-├── plantatree.db       # SQLite база данни (създава се автоматично)
-└── uploads/            # Папка за качени снимки (създава се автоматично)
+├── plantatree.db       # SQLite database (created automatically)
+└── uploads/            # Folder for uploaded images (created automatically)
 ```
 
-## 🎯 Функционалности
+## 🎯 Features
 
-### ✅ Реализирани:
-- 🏠 **Начална страница** с статистики
-- 🗺️ **Интерактивна карта** с демо локации
-- 📝 **Еко действия feed** за споделяне на инициативи
-- 👤 **Потребителски профил** с точки и баджове
-- ➕ **Добавяне на локации** и еко действия
-- 🔧 **Backend API** с Flask и SQLite
-- 📊 **База данни** с таблици за потребители, локации, действия
+### ✅ Implemented:
+- 🏠 **Home page** with statistics
+- 🗺️ **Interactive map** with demo locations
+- 📝 **Eco actions feed** for sharing initiatives
+- 👤 **User profile** with points and badges
+- ➕ **Add locations** and eco actions
+- 🔧 **Backend API** with Flask and SQLite
+- 📊 **Database** with tables for users, locations, actions
 
-### 🔄 За доразвиване:
-- 🔐 Система за регистрация/вход
-- 🗺️ Истинска карта с Geoapify API
-- 📱 Мобилна оптимизация
-- 🎮 Разширена геймификация
-- 👨‍💼 Админ панел за модерация
+### 🔄 To be developed:
+- 🔐 Registration/login system
+- 🗺️ Real map with Geoapify API
+- 📱 Mobile optimization
+- 🎮 Advanced gamification
+- 👨‍💼 Admin panel for moderation
 
-## 🛠️ Технологии
+## 🛠️ Technologies
 
 - **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
 - **Backend**: Python Flask
-- **База данни**: SQLite
-- **API**: Geoapify (за карти)
-- **Стилове**: Font Awesome (за икони)
+- **Database**: SQLite
+- **API**: Geoapify (for maps)
+- **Styles**: Font Awesome (for icons)
 
-## 👥 Разпределение на работата
+## 👥 Team Roles
 
-### Човек 1 - Frontend Developer
-- ✅ HTML структура и дизайн
-- ✅ CSS стилове и анимации  
+### Person 1 - Frontend Developer
+- ✅ HTML structure and design
+- ✅ CSS styles and animations  
 - ✅ Responsive design
-- 🔄 Мобилна оптимизация
+- 🔄 Mobile optimization
 
-### Човек 2 - Backend Developer  
+### Person 2 - Backend Developer  
 - ✅ Flask API endpoints
-- ✅ База данни модели
-- ✅ CRUD операции
-- 🔄 Система за потребители
+- ✅ Database models
+- ✅ CRUD operations
+- 🔄 User system
 
-### Човек 3 - Maps & Database
-- ✅ Интеграция с Geoapify API
-- ✅ SQLite схема и данни
-- 🔄 Истинска карта с координати
-- 🔄 Геолокация функции
+### Person 3 - Maps & Database
+- ✅ Integration with Geoapify API
+- ✅ SQLite schema and data
+- 🔄 Real map with coordinates
+- 🔄 Geolocation functions
 
-### Човек 4 - DevOps & QA
-- ✅ Проектна документация
-- ✅ Деплой инструкции  
-- 🔄 Тестове и debugging
-- 🔄 Хостинг и production setup
+### Person 4 - DevOps & QA
+- ✅ Project documentation
+- ✅ Deployment instructions  
+- 🔄 Tests and debugging
+- 🔄 Hosting and production setup
 
 ## 🌟 API Endpoints
 
-### Локации
-- `GET /api/locations` - Всички одобрени локации
-- `POST /api/locations` - Добавяне на нова локация
+### Locations
+- `GET /api/locations` - All approved locations
+- `POST /api/locations` - Add a new location
 
-### Еко действия
-- `GET /api/eco-actions` - Всички одобрени действия
-- `POST /api/eco-actions` - Добавяне на ново действие
+### Eco Actions
+- `GET /api/eco-actions` - All approved actions
+- `POST /api/eco-actions` - Add a new action
 
-### Статистики
-- `GET /api/stats` - Общи статистики на платформата
+### Statistics
+- `GET /api/stats` - General platform statistics
 
-### Потребители
-- `GET /api/user/{id}/profile` - Потребителски профил
+### Users
+- `GET /api/user/{id}/profile` - User profile
 
-## 🎨 Дизайн концепция
+## 🎨 Design Concept
 
-- **Цветова схема**: Зелени тонове (#7bc142, #2d5a27)
-- **Типография**: Modern, четлива
-- **Икони**: Font Awesome
+- **Color scheme**: Green tones (#7bc142, #2d5a27)
+- **Typography**: Modern, readable
+- **Icons**: Font Awesome
 - **Layout**: Grid-based, responsive
-- **Анимации**: Subtle hover effects
+- **Animations**: Subtle hover effects
 
-## 📱 Бъдещи подобрения
+## 📱 Future Improvements
 
-1. **Мобилно приложение** (React Native)
-2. **Push известия** за еко събития
-3. **Social features** (чат, споделяне)
-4. **Партньорства** с еко организации
-5. **Награди система** с истински награди
-6. **ML предложения** за еко зони
+1. **Mobile app** (React Native)
+2. **Push notifications** for eco events
+3. **Social features** (chat, sharing)
+4. **Partnerships** with eco organizations
+5. **Rewards system** with real prizes
+6. **ML suggestions** for eco zones
 
 ## 🔧 Troubleshooting
 
-### Проблеми с Flask:
+### Flask issues:
 ```bash
 pip install --upgrade Flask Flask-CORS
 ```
 
-### Проблеми с базата данни:
-- Изтрийте `plantatree.db` файла и рестартирайте сървъра
+### Database issues:
+- Delete the `plantatree.db` file and restart the server
 
-### Проблеми с качване на снимки:
-- Проверете дали папката `uploads/` съществува
-- Проверете правата за писане
+### Image upload issues:
+- Check if the `uploads/` folder exists
+- Check write permissions
 
-## 📞 Контакти
+## 📞 Contacts
 
-За въпроси и предложения свържете се с екипа на PlantATree!
+For questions and suggestions, contact the PlantATree team!
 
 ---
 Made with 💚 for a greener Sofia!

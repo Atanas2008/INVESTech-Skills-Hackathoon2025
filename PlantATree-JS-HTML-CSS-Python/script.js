@@ -1002,22 +1002,7 @@ function showFallbackMap() {
                         </div>
                     `).join('')}
                 </div>
-                <div style="margin-top: 2rem;">
-                    <button 
-                        onclick="location.reload()" 
-                        style="
-                            background: #7bc142; 
-                            color: white; 
-                            border: none; 
-                            padding: 10px 20px; 
-                            border-radius: 5px; 
-                            cursor: pointer;
-                            font-size: 1rem;
-                        "
-                    >
-                        🔄 Презареди картата
-                    </button>
-                </div>
+                <!-- Translation button removed -->
             </div>
         </div>
     `;
@@ -1213,13 +1198,7 @@ function getLocationIcon(type) {
 
 // Sample data
 function getSampleLocations() {
-    return [
-        { id: 1, name: 'Борисова градина', type: 'park', description: 'Най-големият парк в София' },
-        { id: 2, name: 'Витоша парк', type: 'park', description: 'Красив парк в подножието на Витоша' },
-        { id: 3, name: 'Еко пътека Витоша', type: 'trail', description: 'Планинска еко пътека' },
-        { id: 4, name: 'Велоалея Дунав', type: 'bike', description: 'Велосипедна алея по р. Дунав' },
-        { id: 5, name: 'Зона за засаждане', type: 'plant', description: 'Място за нови дървета' }
-    ];
+    return [];
 }
 
 // Show location info
@@ -1613,22 +1592,8 @@ document.head.appendChild(style);
 // Load sample data
 function loadSampleData() {
     // This would typically come from your backend API
-    ecoActions = [
-        {
-            id: 1,
-            title: 'Засадих 3 дървета в Борисовата градина',
-            description: 'Участвах в еко акция за засаджане на дървета. Всеки може да помогне!',
-            type: 'tree',
-            location: 'Борисова градина, София',
-            user: 'Мария Петрова',
-            timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-            points: 15,
-            likes: 15,
-            comments: 3
-        }
-    ];
-    
-    locations = getSampleLocations();
+    ecoActions = [];
+    locations = [];
 }
 
 // API Integration Functions

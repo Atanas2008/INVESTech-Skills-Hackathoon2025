@@ -1,6 +1,6 @@
 {
   "city_info": {
-    "name": "София",
+  "name": "Sofia",
     "total_area_km2": 492,
     "population": 1396000,
     "population_density_per_km2": 2838,
@@ -13,34 +13,34 @@
     "protected_areas_count": 8,
     "major_parks": [
       {
-        "name": "Борисова градина",
+  "name": "Borisova Garden",
         "area_hectares": 300,
         "coordinates": [42.6755, 23.3348],
-        "description": "Най-големият парк в София, създаден през 1884 г."
+  "description": "The largest park in Sofia, established in 1884."
       },
       {
-        "name": "Витоша парк", 
+  "name": "Vitosha Park", 
         "area_hectares": 100,
         "coordinates": [42.6447, 23.2750],
-        "description": "Парк в подножието на Витоша"
+  "description": "Park at the foot of Vitosha Mountain"
       },
       {
-        "name": "Южен парк",
+  "name": "South Park",
         "area_hectares": 380,
         "coordinates": [42.6420, 23.3190],
-        "description": "Голям парк в южната част на София"
+  "description": "Large park in the southern part of Sofia"
       },
       {
-        "name": "Западен парк",
+  "name": "West Park",
         "area_hectares": 160,
         "coordinates": [42.6950, 23.2980],
-        "description": "Парк в западната част на града"
+  "description": "Park in the western part of the city"
       },
       {
-        "name": "Северен парк",
+  "name": "North Park",
         "area_hectares": 220,
         "coordinates": [42.7200, 23.3200],
-        "description": "Парк в северната част на София"
+  "description": "Park in the northern part of Sofia"
       }
     ]
   },
@@ -49,42 +49,42 @@
     "co2_emissions_tons_per_year": 3200000,
     "recycling_rate_percentage": 35,
     "renewable_energy_percentage": 18,
-    "water_quality_rating": "Добра",
+  "water_quality_rating": "Good",
     "noise_pollution_db": 65
   },
   "districts": [
     {
-      "name": "Център",
+      "name": "Center",
       "population": 85000,
       "green_percentage": 15,
       "coordinates": [42.6977, 23.3219]
     },
     {
-      "name": "Лозенец", 
+      "name": "Lozenets", 
       "population": 65000,
       "green_percentage": 35,
       "coordinates": [42.6750, 23.3400]
     },
     {
-      "name": "Младост",
+      "name": "Mladost",
       "population": 145000,
       "green_percentage": 25,
       "coordinates": [42.6550, 23.3780]
     },
     {
-      "name": "Люлин",
+      "name": "Lyulin",
       "population": 120000,
       "green_percentage": 20,
       "coordinates": [42.7100, 23.2800]
     },
     {
-      "name": "Витоша",
+      "name": "Vitosha",
       "population": 95000,
       "green_percentage": 45,
       "coordinates": [42.6400, 23.2900]
     },
     {
-      "name": "Овча купел",
+      "name": "Ovcha Kupel",
       "population": 75000,
       "green_percentage": 30,
       "coordinates": [42.6800, 23.2600]
@@ -92,31 +92,31 @@
   ],
   "eco_projects": [
     {
-      "name": "Зелена София 2025",
-      "description": "Програма за увеличаване на зелените площи с 15%",
-      "status": "активна",
+  "name": "Green Sofia 2025",
+  "description": "Program to increase green areas by 15%",
+  "status": "active",
       "budget_bgn": 50000000
     },
     {
-      "name": "Велоалеи София",
-      "description": "Изграждане на 150 км нови велосипедни алеи",
-      "status": "планирана", 
+  "name": "Sofia Bike Lanes",
+  "description": "Construction of 150 km of new bike lanes",
+  "status": "planned", 
       "budget_bgn": 25000000
     },
     {
-      "name": "Чист въздух",
-      "description": "Намаляване на емисиите с 30% до 2030 г.",
-      "status": "активна",
+  "name": "Clean Air",
+  "description": "Reduce emissions by 30% by 2030.",
+  "status": "active",
       "budget_bgn": 80000000
     }
   ],
   "facts": [
-    "София е една от най-зелените столици в Европа",
-    "30% от територията на града са зелени площи",
-    "Борисова градина е по-стара от Централ парк в Ню Йорк",
-    "В София има над 126 официални парка",
-    "Планината Витоша е на 20 минути от центъра",
-    "София има 8 защитени природни територии",
-    "Градът има най-много минерални извори в Европа"
+  "Sofia is one of the greenest capitals in Europe",
+  "30% of the city's territory is green areas",
+  "Borisova Garden is older than Central Park in New York",
+  "Sofia has over 126 official parks",
+  "Vitosha Mountain is 20 minutes from the city center",
+  "Sofia has 8 protected natural areas",
+  "The city has the most mineral springs in Europe"
   ]
 }

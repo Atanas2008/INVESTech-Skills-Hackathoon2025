@@ -4,7 +4,7 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "София",
+  "name": "Sofia",
         "type": "city_boundary"
       },
       "geometry": {

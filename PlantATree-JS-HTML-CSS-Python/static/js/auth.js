@@ -54,17 +54,17 @@ async function registerUser(event) {
 
     // Client-side validation
     if (password !== confirmPassword) {
-        console.log('Паролите не съвпадат');
+        console.log('Passwords do not match');
         return;
     }
 
     if (password.length < 6) {
-        console.log('Паролата трябва да е поне 6 символа');
+        console.log('Password must be at least 6 characters');
         return;
     }
 
     if (username.length < 3) {
-        console.log('Потребителското име трябва да е поне 3 символа');
+        console.log('Username must be at least 3 characters');
         return;
     }
 
@@ -72,13 +72,13 @@ async function registerUser(event) {
     if (profilePicture && profilePicture.size > 0) {
         const maxSize = 5 * 1024 * 1024; // 5MB
         if (profilePicture.size > maxSize) {
-            console.log('Снимката е твърде голяма. Максималният размер е 5MB');
+            console.log('Image is too large. Maximum size is 5MB');
             return;
         }
 
         const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
         if (!allowedTypes.includes(profilePicture.type)) {
-            console.log('Невалиден формат на снимката. Моля използвайте PNG, JPG, JPEG, GIF или WebP');
+            console.log('Invalid image format. Please use PNG, JPG, JPEG, GIF or WebP');
             return;
         }
     }
@@ -92,11 +92,11 @@ async function registerUser(event) {
         const data = await response.json();
         
         if (!data.success) {
-            console.log(data.message || 'Грешка при регистрация');
+            console.log(data.message || 'Registration error');
             return;
         }
         
-        console.log('Регистрацията е успешна!');
+        console.log('Registration successful!');
         
         // Store user data
         localStorage.setItem('token', data.token);
@@ -109,7 +109,7 @@ async function registerUser(event) {
         form.reset();
         
     } catch (error) {
-        console.log('Възникна грешка при свързване със сървъра');
+        console.log('An error occurred while connecting to the server');
         console.error('Registration error:', error);
     }
 }
@@ -118,10 +118,10 @@ async function handleAuthError(response) {
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
         const data = await response.json();
-        throw new Error(data.message || 'Възникна грешка при заявката');
+    throw new Error(data.message || 'An error occurred with the request');
     } else {
         const text = await response.text();
-        throw new Error(text || 'Възникна неочаквана грешка');
+    throw new Error(text || 'An unexpected error occurred');
     }
 }
 
@@ -134,7 +134,7 @@ async function loginUser(event) {
     const password = document.getElementById('login-password').value;
 
     if (!email || !password) {
-        console.log('Моля въведете имейл и парола');
+        console.log('Please enter email and password');
         return;
     }
 
@@ -153,13 +153,13 @@ async function loginUser(event) {
         const data = await response.json();
         
         if (!data.success) {
-            console.log(data.message || 'Грешка при вход');
+            console.log(data.message || 'Login error');
             return;
         }
         
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
-        console.log('Успешен вход!');
+        console.log('Login successful!');
         updateUIAfterLogin(data.user);
         closeModal('loginModal');
         
@@ -167,7 +167,7 @@ async function loginUser(event) {
         document.getElementById('loginForm').reset();
         
     } catch (error) {
-        console.log('Възникна грешка при свързване със сървъра');
+        console.log('An error occurred while connecting to the server');
         console.error('Login error:', error);
     }
 }
@@ -184,14 +184,14 @@ async function logout() {
                 }
             });
         } catch (error) {
-            console.log('Грешка при излизане от профила');
+            console.log('Error while logging out');
         }
     }
     
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     updateUIAfterLogout();
-    console.log('Успешно излязохте от профила си');
+    console.log('Successfully logged out');
 }
 
 function updateUIAfterLogin(user) {
@@ -209,10 +209,10 @@ function updateUIAfterLogin(user) {
     authButtons.innerHTML = `
         <div class="user-info" style="display: flex; align-items: center; margin-right: 10px;">
             ${profilePicture}
-            <span class="user-welcome" style="margin-right: 10px;">Здравей, ${user.username}!</span>
+            <span class="user-welcome" style="margin-right: 10px;">Hello, ${user.username}!</span>
             ${user.role === 'admin' ? '<span class="admin-badge" style="background: #ff9800; color: white; padding: 2px 6px; border-radius: 10px; font-size: 12px;">ADMIN</span>' : ''}
         </div>
-        <button onclick="logout()" class="btn-login">Изход</button>
+        <button onclick="logout()" class="btn-login">Logout</button>
     `;
 }
 
@@ -221,8 +221,8 @@ function updateUIAfterLogout() {
     
     // Restore original login/register buttons with proper modal functions
     authButtons.innerHTML = `
-        <button class="btn-login" onclick="showModal('loginModal')">Вход</button>
-        <button class="btn-register" onclick="showModal('registerModal')">Регистрация</button>
+        <button class="btn-login" onclick="showModal('loginModal')">Sign In</button>
+        <button class="btn-register" onclick="showModal('registerModal')">Register</button>
     `;
 }
 
