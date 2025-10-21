@@ -3,39 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Basic SEO Meta Tags -->
+
     <title>PlantATree - Еко инициативи София | Засади дърво, опази природата</title>
     <meta name="description" content="Присъединете се към най-голямата еко платформа в София! Засаждайте дървета, следете качеството на въздуха, участвайте в еко инициативи и печелете награди.">
     <meta name="keywords" content="еко инициативи, засаждане дървета, София, околна среда, качество въздух, зелени зони, екология, PlantATree">
     <meta name="author" content="PlantATree Team">
     <meta name="robots" content="index, follow">
-    
-    <!-- Open Graph for Social Media -->
+
     <meta property="og:title" content="PlantATree - Еко инициативи София">
     <meta property="og:description" content="Присъединете се към най-голямата еко платформа в София! Засаждайте дървета и участвайте в еко инициативи.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://plantatree-sofia.com/">
     <meta property="og:image" content="https://plantatree-sofia.com/images/og-image.jpg">
-    
-    <!-- Canonical URL -->
+
     <link rel="canonical" href="https://plantatree-sofia.com/">
     
     <link rel="stylesheet" href="design.css">
     <link rel="stylesheet" href="static/css/auth.css">
     <link rel="stylesheet" href="static/css/chat.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Geoapify Maps CSS and JS -->
+    
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/@geoapify/leaflet-address-search-plugin@^1/dist/L.Control.GeoapifyAddressSearch.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <!-- Leaflet Draw for drawing shapes on map -->
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <script src="https://unpkg.com/@geoapify/leaflet-address-search-plugin@^1/dist/L.Control.GeoapifyAddressSearch.min.js"></script>
 </head>
 <body>
-    <!-- Navigation -->
+    
     <nav class="navbar">
         <div class="nav-container" style="display:flex;align-items:center;justify-content:space-between;width:100%;">
             <div class="logo" style="flex:0 0 auto;">
@@ -60,19 +57,18 @@
         </div>
     </nav>
 
-    <!-- Home Section -->
     <section id="home" class="hero">
         <div class="hero-video-container">
             <video autoplay muted loop class="hero-video" id="hero-video" preload="metadata">
                 <source src="video1.mp4" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
-            <!-- Fallback animated background using multiple nature images -->
+            
             <div class="fallback-slideshow" id="fallback-slideshow">
-                <div class="slide active" style="background-image: url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2071&q=80')"></div>
-                <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')"></div>
-                <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1448375240586-882707db888b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')"></div>
-                <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')"></div>
+                <div class="slide active" style="background-image: url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')"></div>
+                <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')"></div>
+                <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1511593358241-7eea1f3c84e5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')"></div>
+                <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')"></div>
             </div>
         </div>
         <div class="hero-overlay"></div>
@@ -104,14 +100,12 @@
         </div>
     </section>
 
-    <!-- Map Section -->
     <section id="map" class="section hidden">
         <div class="section-header">
             <h2><i class="fas fa-map-marked-alt"></i> Map of Green Zones</h2>
             <p>Discover parks, eco trails, and bike lanes in Sofia</p>
         </div>
-        
-        <!-- Sofia Redesign Tools Panel -->
+
         <div class="sofia-tools-panel">
             <h3><i class="fas fa-hammer"></i> Sofia Redesign Tools</h3>
             <div class="save-notice">
@@ -212,7 +206,7 @@
                 </div>
             </div>
             <div class="map-sidebar">
-                <!-- Sofia Stats Panel -->
+                
                 <div class="sofia-sidebar-stats">
                     <h3><i class="fas fa-city"></i> София</h3>
                     <div class="sidebar-stats-grid">
@@ -262,8 +256,7 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Sofia Facts Panel -->
+
         <div class="sofia-facts-panel" id="sofia-facts-panel" style="display: none;">
             <h3><i class="fas fa-lightbulb"></i> <span data-translate="facts_title">Знаете ли, че...</span></h3>
             <div class="fact-container">
@@ -277,10 +270,8 @@
         </div>
     </section>
 
-
-        
         <div class="builder-container" style="display: none;">
-            <!-- City Stats Panel -->
+            
             <div class="city-stats-panel">
                 <h3><i class="fas fa-chart-line"></i> Статистики на града</h3>
                 <div class="stats-grid">
@@ -315,7 +306,6 @@
                 </div>
             </div>
 
-            <!-- Building Tools Panel -->
             <div class="building-tools-panel">
                 <h3><i class="fas fa-tools"></i> Инструменти за строене</h3>
                 <div class="tool-categories">
@@ -400,27 +390,24 @@
                 </div>
             </div>
 
-            <!-- City Grid -->
             <div class="city-grid-container">
                 <h3><i class="fas fa-th"></i> Планировка на града</h3>
                 <div class="selected-tool-info" id="selected-tool-info">
                     <span>Избран инструмент: <strong id="current-tool">Няма</strong></span>
                 </div>
                 <div class="city-grid" id="city-grid">
-                    <!-- Grid cells will be generated by JavaScript -->
+                    
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Eco Actions Section -->
     <section id="feed" class="section hidden">
-        <!-- Eco Actions Header -->
+        
         <div class="eco-actions-header">
             <h1>Еко действия</h1>
             <p class="eco-actions-subtitle">Споделете вашите еко инициативи с общността и вдъхновете други да следват вашия пример</p>
-            
-            <!-- Charity Notice Card -->
+
             <div class="charity-card">
                 <div class="charity-content">
                     <div class="charity-icon">
@@ -448,14 +435,13 @@
             </button>
         </div>
 
-        <!-- Eco Actions Feed -->
         <div class="eco-actions-container">
             <div class="eco-actions-grid" id="ecoActionsGrid">
-                <!-- Sample eco action card -->
+                
                 <div class="eco-action-card">
                     <div class="eco-card-header">
                         <div class="eco-user-info">
-                            <img src="https://via.placeholder.com/50" alt="user" class="eco-user-avatar">
+                            <img src="https://via.placeholder.com/50x50/7bc142/white?text=М" alt="user" class="eco-user-avatar">
                             <div class="eco-user-details">
                                 <h4 class="eco-username">Мария Петрова</h4>
                                 <span class="eco-post-date">преди 2 часа</span>
@@ -465,7 +451,7 @@
                     </div>
                     
                     <div class="eco-card-content">
-                        <img src="https://via.placeholder.com/400x200" alt="eco action" class="eco-action-image">
+                        <img src="https://images.unsplash.com/photo-1574263867128-ce9ac6b4d8e5?w=400&h=200&fit=crop" alt="eco action" class="eco-action-image">
                         <div class="eco-card-body">
                             <h3 class="eco-action-title">Засадих 3 дървета в Борисовата градина</h3>
                             <p class="eco-action-description">Участвах в еко акция за засаждане на дървета. Всеки може да помогне за по-зелена София!</p>
@@ -495,14 +481,12 @@
         </div>
     </section>
 
-    <!-- Leaderboard Section -->
     <section id="leaderboard" class="section hidden">
         <div class="section-header">
             <h2><i class="fas fa-trophy"></i> Класация</h2>
             <p>Топ еко герои на София</p>
         </div>
-        
-        <!-- Statistics Overview -->
+
         <div class="leaderboard-stats">
             <div class="stat-card total-users">
                 <div class="stat-icon"><i class="fas fa-users"></i></div>
@@ -527,7 +511,6 @@
             </div>
         </div>
 
-        <!-- Leaderboard Filters -->
         <div class="leaderboard-filters">
             <button class="filter-btn active" onclick="filterLeaderboard('all')">Всички</button>
             <div class="filter-dropdown">
@@ -547,7 +530,6 @@
             <button class="filter-btn" onclick="filterLeaderboard('bike')">Велосипед</button>
         </div>
 
-        <!-- Leaderboard Table -->
         <div class="leaderboard-container">
             <div class="leaderboard-table">
                 <div class="table-header">
@@ -557,8 +539,7 @@
                     <div class="actions-header" data-translate="actions_header">Действия</div>
                     <div class="badges-header" data-translate="badges_header">Баджове</div>
                 </div>
-                
-                <!-- Top 3 Special Podium -->
+
                 <div class="podium-section">
                     <div class="podium-item gold" id="user-1">
                         <div class="podium-rank">
@@ -566,7 +547,7 @@
                             <span>1</span>
                         </div>
                         <div class="podium-avatar">
-                            <img src="https://via.placeholder.com/80" alt="user">
+                            <img src="https://via.placeholder.com/80x80/FFD700/white?text=М" alt="Мария">
                             <div class="online-indicator"></div>
                         </div>
                         <div class="podium-info">
@@ -588,7 +569,7 @@
                             <span>2</span>
                         </div>
                         <div class="podium-avatar">
-                            <img src="https://via.placeholder.com/80" alt="user">
+                            <img src="https://via.placeholder.com/80x80/C0C0C0/white?text=П" alt="Петър">
                         </div>
                         <div class="podium-info">
                             <h4>Петър Иванов</h4>
@@ -608,7 +589,7 @@
                             <span>3</span>
                         </div>
                         <div class="podium-avatar">
-                            <img src="https://via.placeholder.com/80" alt="user">
+                            <img src="https://via.placeholder.com/80x80/CD7F32/white?text=А" alt="Анна">
                         </div>
                         <div class="podium-info">
                             <h4>Анна Георгиева</h4>
@@ -623,19 +604,17 @@
                     </div>
                 </div>
 
-                <!-- Rest of leaderboard -->
                 <div class="regular-rankings" id="leaderboard-list">
-                    <!-- Will be populated by JavaScript -->
+                    
                 </div>
             </div>
-            
-            <!-- Your Position Card -->
+
             <div class="your-position">
                 <h3><i class="fas fa-user"></i> Твоята позиция</h3>
                 <div class="position-card">
                     <div class="position-rank">#12</div>
                     <div class="position-avatar">
-                        <img src="https://via.placeholder.com/60" alt="you">
+                        <img src="https://via.placeholder.com/60x60/7bc142/white?text=И" alt="Иван">
                     </div>
                     <div class="position-info">
                         <h4>Иван Петров</h4>
@@ -655,7 +634,6 @@
         </div>
     </section>
 
-    <!-- Air Quality Section -->
     <section id="air-quality" class="section hidden">
         <div class="section-header">
             <h2><i class="fas fa-wind"></i> Качество на въздуха</h2>
@@ -663,7 +641,7 @@
         </div>
         
         <div class="air-quality-container">
-            <!-- Current Air Quality Card -->
+            
             <div class="air-quality-card main-card">
                 <div class="card-header">
                     <h3><i class="fas fa-map-marker-alt"></i> <span data-translate="sofia_center">София Център</span></h3>
@@ -707,8 +685,7 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Weather Information -->
+
             <div class="weather-card">
                 <h3><i class="fas fa-cloud-sun"></i> <span data-translate="weather_conditions">Метеорологични условия</span></h3>
                 <div class="weather-info">
@@ -730,24 +707,21 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Health Recommendations -->
+
             <div class="health-recommendations">
                 <h3><i class="fas fa-heart"></i> <span data-translate="health_rec_title">Препоръки за здравето</span></h3>
                 <div class="recommendation-content" id="health-recommendations">
                     <p data-translate="loading">Зареждане на препоръки...</p>
                 </div>
             </div>
-            
-            <!-- Historical Data Chart -->
+
             <div class="chart-container">
                 <h3><i class="fas fa-chart-line"></i> <span data-translate="aqi_trend_title">24-часова тенденция</span></h3>
                 <div class="chart-placeholder" id="air-quality-chart">
                     <p data-translate="loading">Зареждане на графика...</p>
                 </div>
             </div>
-            
-            <!-- Location Selector -->
+
             <div class="location-selector">
                 <h3><i class="fas fa-location-arrow"></i> <span data-translate="location_selector_title">Избери локация</span></h3>
                 <select id="location-select" onchange="changeLocation()">
@@ -764,7 +738,6 @@
         </div>
     </section>
 
-    <!-- Profile Section -->
     <section id="profile" class="section hidden">
         <div class="section-header">
             <h2><i class="fas fa-user"></i> Потребителски профил</h2>
@@ -788,19 +761,18 @@
                     </div>
                 </div>
                 <div id="profile-badges-list" class="user-badges">
-                    <!-- Badges will be loaded dynamically -->
+                    
                 </div>
             </div>
             <div class="profile-history">
                 <h4>История на действията</h4>
                 <div id="profile-history-list">
-                    <!-- History will be loaded dynamically -->
+                    
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Sponsors Section -->
     <section id="sponsors" class="section hidden">
         <div class="container">
             <div class="sponsors-header">
@@ -808,7 +780,6 @@
                 <p class="sponsors-subtitle">Компании, които подкрепят зелената мисия на София</p>
             </div>
 
-            <!-- Main Sponsors Tier -->
             <div class="sponsors-tier main-tier">
                 <h2 class="tier-title">
                     <i class="fas fa-crown"></i>
@@ -863,7 +834,6 @@
                 </div>
             </div>
 
-            <!-- Silver Sponsors Tier -->
             <div class="sponsors-tier silver-tier">
                 <h2 class="tier-title">
                     <i class="fas fa-medal"></i>
@@ -926,7 +896,6 @@
                 </div>
             </div>
 
-            <!-- Corporate Partners -->
             <div class="sponsors-tier bronze-tier">
                 <h2 class="tier-title">
                     <i class="fas fa-handshake"></i>
@@ -979,7 +948,6 @@
                 </div>
             </div>
 
-            <!-- Partnership Benefits -->
             <div class="partnership-benefits">
                 <h2>Станете наш партньор</h2>
                 <p class="benefits-intro">Присъединете се към нашата мисия за по-зелена София</p>
@@ -1033,7 +1001,6 @@
                 </div>
             </div>
 
-            <!-- Impact Statistics -->
             <div class="impact-stats">
                 <h2 data-translate="partnership_impact">Въздействие на партньорствата</h2>
                 <div class="stats-grid">
@@ -1058,7 +1025,6 @@
         </div>
     </section>
 
-    <!-- Modals -->
     <div id="addLocationModal" class="modal hidden">
         <div class="modal-content">
             <span class="close" onclick="closeModal('addLocationModal')">&times;</span>
@@ -1105,14 +1071,12 @@
         </div>
     </div>
 
-    <!-- Floating Chat Button -->
     <button id="chat-button">🌱</button>
 
-    <!-- Chat Pop-up Modal -->
     <div id="chat-modal">
         <div id="chat-header">Еко Асистент</div>
         <div id="chat-body">
-            <!-- Messages will appear here -->
+            
         </div>
         <div id="chat-footer">
             <input type="text" id="chat-input" placeholder="Попитай за еко инициативи...">
@@ -1128,16 +1092,28 @@
             const chatSend = document.getElementById('chat-send');
             const chatBody = document.getElementById('chat-body');
 
-            // Toggle chat modal
-            chatButton.addEventListener('click', () => {
+            chatButton.addEventListener('click', (e) => {
+                e.stopPropagation(); 
                 chatModal.style.display = chatModal.style.display === 'none' ? 'flex' : 'none';
             });
 
-            // Custom resize functionality
+            document.addEventListener('click', (e) => {
+                
+                if (chatModal.style.display === 'flex') {
+                    
+                    if (!chatModal.contains(e.target) && !chatButton.contains(e.target)) {
+                        chatModal.style.display = 'none';
+                    }
+                }
+            });
+
+            chatModal.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+
             let isResizing = false;
             let initialWidth, initialHeight, initialX, initialY;
 
-            // Only allow resizing from top-left corner (10x10 pixels area)
             chatModal.addEventListener('mousedown', function(e) {
                 const rect = chatModal.getBoundingClientRect();
                 const isInResizeArea = (
@@ -1160,7 +1136,6 @@
                 const width = initialWidth - (e.clientX - initialX);
                 const height = initialHeight - (e.clientY - initialY);
 
-                // Apply size constraints matching the default size (350x400)
                 const newWidth = Math.min(Math.max(width, 350), 800);
                 const newHeight = Math.min(Math.max(height, 400), 800);
 
@@ -1172,7 +1147,6 @@
                 isResizing = false;
             });
 
-            // Send message on button click or Enter key
             chatSend.addEventListener('click', sendMessage);
             chatInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') sendMessage();
@@ -1182,11 +1156,9 @@
                 const message = chatInput.value.trim();
                 if (!message) return;
 
-                // Add user message to chat body
                 addMessage('user-message', message);
                 chatInput.value = '';
 
-                // Send to backend
                 fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1210,7 +1182,7 @@
                 div.classList.add('message', className);
                 div.textContent = text;
                 chatBody.appendChild(div);
-                chatBody.scrollTop = chatBody.scrollHeight; // Scroll to bottom
+                chatBody.scrollTop = chatBody.scrollHeight; 
             }
         });
     </script>
@@ -1218,7 +1190,6 @@
     <script src="script.js"></script>
     <script src="static/js/auth.js"></script>
 
-    <!-- Auth Modals -->
     <div id="loginModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('loginModal')">&times;</span>

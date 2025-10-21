@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """
 Admin User Management Script
 Use this script to manually create admin users or manage existing user roles.
@@ -14,7 +14,7 @@ def connect_to_db():
         conn = sqlite3.connect('infousers.db')
         return conn
     except Exception as e:
-        print(f"❌ Error connecting to database: {e}")
+        print(f" Error connecting to database: {e}")
         return None
 
 def list_users():
@@ -32,13 +32,13 @@ def list_users():
     
     users = cursor.fetchall()
     
-    print("\n📋 Current Users:")
+    print("\n Current Users:")
     print("-" * 80)
     print(f"{'ID':<4} {'Username':<20} {'Email':<30} {'Role':<10} {'Active':<8} {'Created'}")
     print("-" * 80)
     
     for user in users:
-        active_status = "✅ Yes" if user[4] else "❌ No"
+        active_status = " Yes" if user[4] else " No"
         print(f"{user[0]:<4} {user[1]:<20} {user[2]:<30} {user[3]:<10} {active_status:<8} {user[5]}")
     
     if not users:
@@ -52,50 +52,47 @@ def create_admin_user():
     if not conn:
         return
     
-    print("\n🔐 Create New Admin User")
+    print("\n Create New Admin User")
     print("-" * 30)
     
     username = input("Username: ").strip()
     if not username:
-        print("❌ Username cannot be empty")
+        print(" Username cannot be empty")
         conn.close()
         return
     
     email = input("Email: ").strip()
     if not email:
-        print("❌ Email cannot be empty")
+        print(" Email cannot be empty")
         conn.close()
         return
     
     password = getpass.getpass("Password: ")
     if len(password) < 6:
-        print("❌ Password must be at least 6 characters")
+        print(" Password must be at least 6 characters")
         conn.close()
         return
     
     confirm_password = getpass.getpass("Confirm Password: ")
     if password != confirm_password:
-        print("❌ Passwords do not match")
+        print(" Passwords do not match")
         conn.close()
         return
     
     cursor = conn.cursor()
     
-    # Check if username already exists
     cursor.execute('SELECT id FROM users WHERE username = ?', (username,))
     if cursor.fetchone():
-        print(f"❌ Username '{username}' already exists")
+        print(f" Username '{username}' already exists")
         conn.close()
         return
     
-    # Check if email already exists
     cursor.execute('SELECT id FROM users WHERE email = ?', (email,))
     if cursor.fetchone():
-        print(f"❌ Email '{email}' already exists")
+        print(f" Email '{email}' already exists")
         conn.close()
         return
     
-    # Create admin user
     hashed_password = generate_password_hash(password)
     
     try:
@@ -106,13 +103,13 @@ def create_admin_user():
         
         conn.commit()
         
-        print(f"✅ Admin user '{username}' created successfully!")
+        print(f" Admin user '{username}' created successfully!")
         print(f"   Email: {email}")
         print(f"   Role: admin")
         print(f"   Points: 1000")
         
     except Exception as e:
-        print(f"❌ Error creating admin user: {e}")
+        print(f" Error creating admin user: {e}")
         conn.rollback()
     
     conn.close()
@@ -123,10 +120,9 @@ def promote_user_to_admin():
     if not conn:
         return
     
-    print("\n⬆️ Promote User to Admin")
+    print("\n⬆ Promote User to Admin")
     print("-" * 25)
     
-    # Show regular users
     cursor = conn.cursor()
     cursor.execute('''
         SELECT id, username, email, role 
@@ -138,7 +134,7 @@ def promote_user_to_admin():
     regular_users = cursor.fetchall()
     
     if not regular_users:
-        print("❌ No regular users found to promote")
+        print(" No regular users found to promote")
         conn.close()
         return
     
@@ -149,11 +145,10 @@ def promote_user_to_admin():
     try:
         user_id = int(input("\nEnter user ID to promote: "))
     except ValueError:
-        print("❌ Invalid user ID")
+        print(" Invalid user ID")
         conn.close()
         return
     
-    # Verify user exists and is regular
     cursor.execute('''
         SELECT username, email, role 
         FROM users 
@@ -162,18 +157,15 @@ def promote_user_to_admin():
     
     user = cursor.fetchone()
     if not user:
-        print("❌ User not found or not eligible for promotion")
+        print(" User not found or not eligible for promotion")
         conn.close()
         return
-    
-    # Confirm promotion
     confirm = input(f"Promote '{user[0]}' ({user[1]}) to admin? (y/N): ").strip().lower()
     if confirm != 'y':
-        print("❌ Promotion cancelled")
+        print(" Promotion cancelled")
         conn.close()
         return
     
-    # Promote user
     try:
         cursor.execute('''
             UPDATE users 
@@ -183,11 +175,11 @@ def promote_user_to_admin():
         
         conn.commit()
         
-        print(f"✅ User '{user[0]}' promoted to admin successfully!")
+        print(f" User '{user[0]}' promoted to admin successfully!")
         print(f"   Added 500 bonus points")
         
     except Exception as e:
-        print(f"❌ Error promoting user: {e}")
+        print(f" Error promoting user: {e}")
         conn.rollback()
     
     conn.close()
@@ -198,10 +190,9 @@ def demote_admin_to_user():
     if not conn:
         return
     
-    print("\n⬇️ Demote Admin to Regular User")
+    print("\n⬇ Demote Admin to Regular User")
     print("-" * 30)
     
-    # Show admin users (except the main admin)
     cursor = conn.cursor()
     cursor.execute('''
         SELECT id, username, email, role 
@@ -213,7 +204,7 @@ def demote_admin_to_user():
     admin_users = cursor.fetchall()
     
     if not admin_users:
-        print("❌ No admin users found to demote (main admin is protected)")
+        print(" No admin users found to demote (main admin is protected)")
         conn.close()
         return
     
@@ -224,11 +215,10 @@ def demote_admin_to_user():
     try:
         user_id = int(input("\nEnter user ID to demote: "))
     except ValueError:
-        print("❌ Invalid user ID")
+        print(" Invalid user ID")
         conn.close()
         return
     
-    # Verify user exists and is admin
     cursor.execute('''
         SELECT username, email, role 
         FROM users 
@@ -237,18 +227,16 @@ def demote_admin_to_user():
     
     user = cursor.fetchone()
     if not user:
-        print("❌ User not found, not admin, or protected user")
+        print(" User not found, not admin, or protected user")
         conn.close()
         return
     
-    # Confirm demotion
     confirm = input(f"Demote '{user[0]}' ({user[1]}) to regular user? (y/N): ").strip().lower()
     if confirm != 'y':
-        print("❌ Demotion cancelled")
+        print(" Demotion cancelled")
         conn.close()
         return
     
-    # Demote user
     try:
         cursor.execute('''
             UPDATE users 
@@ -258,10 +246,10 @@ def demote_admin_to_user():
         
         conn.commit()
         
-        print(f"✅ User '{user[0]}' demoted to regular user successfully!")
+        print(f" User '{user[0]}' demoted to regular user successfully!")
         
     except Exception as e:
-        print(f"❌ Error demoting user: {e}")
+        print(f" Error demoting user: {e}")
         conn.rollback()
     
     conn.close()
@@ -272,10 +260,9 @@ def toggle_user_status():
     if not conn:
         return
     
-    print("\n🔄 Toggle User Status")
+    print("\n Toggle User Status")
     print("-" * 20)
     
-    # Show all users
     cursor = conn.cursor()
     cursor.execute('''
         SELECT id, username, email, role, is_active 
@@ -287,7 +274,7 @@ def toggle_user_status():
     users = cursor.fetchall()
     
     if not users:
-        print("❌ No users found to modify (main admin is protected)")
+        print(" No users found to modify (main admin is protected)")
         conn.close()
         return
     
@@ -299,11 +286,10 @@ def toggle_user_status():
     try:
         user_id = int(input("\nEnter user ID to toggle status: "))
     except ValueError:
-        print("❌ Invalid user ID")
+        print(" Invalid user ID")
         conn.close()
         return
     
-    # Get user info
     cursor.execute('''
         SELECT username, email, role, is_active 
         FROM users 
@@ -312,17 +298,16 @@ def toggle_user_status():
     
     user = cursor.fetchone()
     if not user:
-        print("❌ User not found or protected user")
+        print(" User not found or protected user")
         conn.close()
         return
     
     new_status = not user[3]
     status_text = "activate" if new_status else "deactivate"
     
-    # Confirm toggle
     confirm = input(f"{status_text.capitalize()} '{user[0]}' ({user[1]})? (y/N): ").strip().lower()
     if confirm != 'y':
-        print("❌ Operation cancelled")
+        print(" Operation cancelled")
         conn.close()
         return
     
@@ -336,10 +321,10 @@ def toggle_user_status():
         
         conn.commit()
         
-        print(f"✅ User '{user[0]}' {status_text}d successfully!")
+        print(f" User '{user[0]}' {status_text}d successfully!")
         
     except Exception as e:
-        print(f"❌ Error toggling user status: {e}")
+        print(f" Error toggling user status: {e}")
         conn.rollback()
     
     conn.close()
@@ -348,7 +333,7 @@ def main():
     """Main menu"""
     while True:
         print("\n" + "="*50)
-        print("🔧 PlantATree Admin User Management")
+        print(" PlantATree Admin User Management")
         print("="*50)
         print("1. List all users")
         print("2. Create new admin user")
@@ -361,7 +346,7 @@ def main():
         try:
             choice = input("Choose an option (1-6): ").strip()
         except KeyboardInterrupt:
-            print("\n\n👋 Goodbye!")
+            print("\n\n Goodbye!")
             break
         
         if choice == '1':
@@ -375,10 +360,10 @@ def main():
         elif choice == '5':
             toggle_user_status()
         elif choice == '6':
-            print("\n👋 Goodbye!")
+            print("\n Goodbye!")
             break
         else:
-            print("❌ Invalid choice. Please select 1-6.")
+            print(" Invalid choice. Please select 1-6.")
         
         input("\nPress Enter to continue...")
 
@@ -389,7 +374,7 @@ if __name__ == "__main__":
     # Check if database exists
     import os
     if not os.path.exists('infousers.db'):
-        print("❌ Database 'infousers.db' not found!")
+        print(" Database 'infousers.db' not found!")
         print("   Make sure the Flask app has been run at least once to create the database.")
         exit(1)
     

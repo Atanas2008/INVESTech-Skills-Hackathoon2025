@@ -11,7 +11,6 @@ import google.generativeai as genai
 import jwt
 import time
 
-# Translation import - using deep-translator for better reliability
 try:
     from deep_translator import GoogleTranslator
     GOOGLE_TRANSLATE_AVAILABLE = True
@@ -22,9 +21,8 @@ except ImportError as e:
     GoogleTranslator = None
 
 from dotenv import load_dotenv
-load_dotenv()  # Load environment variables from .env
+load_dotenv()  
 
-# Environment Variables Validation
 def validate_environment():
     """Validate required environment variables"""
     required_vars = {
@@ -44,12 +42,10 @@ def validate_environment():
         return False
     return True
 
-# Validate environment on startup
 if not validate_environment():
     print("Server cannot start due to missing configuration.")
     exit(1)
 
-# Import Express.js-style enhancements (with error handling)
 try:
     from middleware import (
         request_logger, rate_limit, require_auth, validate_json, 
@@ -68,35 +64,31 @@ except ImportError as e:
     ROUTES_V1_AVAILABLE = False
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all domains
+CORS(app)  
 
-# Express.js-style middleware registration
 @app.before_request
 def before_request():
     g.start_time = time.time()
 
 @app.after_request
 def after_request(response):
-    # Apply Express.js-style middleware if available
+    
     if MIDDLEWARE_AVAILABLE:
         response = add_cors_headers(response)
         response = add_security_headers(response)
     else:
-        # Basic CORS and security headers
         response.headers['Access-Control-Allow-Origin'] = '*'
         response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['X-Frame-Options'] = 'DENY'
     
-    # Log request (like Morgan middleware)
     if hasattr(g, 'start_time'):
         duration = round((time.time() - g.start_time) * 1000, 2)
         print(f"{request.method} {request.path} - {response.status_code} - {duration}ms")
     
     return response
 
-# Register blueprints (like Express.js routers) if available
 if ROUTES_V1_AVAILABLE:
     app.register_blueprint(api_v1)
     app.register_blueprint(admin_routes)
@@ -104,32 +96,26 @@ if ROUTES_V1_AVAILABLE:
 else:
     print("V1 API Routes not available - using legacy routes")
 
-# Ambee API Configuration from environment
 AMBEE_API_KEY = os.getenv('AMBEE_API_KEY')
 AMBEE_BASE_URL = os.getenv('AMBEE_BASE_URL', 'https://api.ambeedata.com')
 
-# Configuration from environment
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback-secret-key')
 app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', 'uploads')
-app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_CONTENT_LENGTH', '16777216'))  # 16MB max file size
+app.config['MAX_CONTENT_LENGTH'] = int(os.getenv('MAX_CONTENT_LENGTH', '16777216'))  
 
-# Cloud database configuration
-CLOUD_DB_URL = os.environ.get('DATABASE_URL')  # For Heroku/Railway/etc
+CLOUD_DB_URL = os.environ.get('DATABASE_URL')  
 USE_CLOUD_DB = CLOUD_DB_URL is not None
 
 if USE_CLOUD_DB:
-    print("🌐 Using cloud database:", CLOUD_DB_URL[:50] + "...")
+    print(" Using cloud database:", CLOUD_DB_URL[:50] + "...")
 else:
-    print("💾 Using local SQLite database")
+    print(" Using local SQLite database")
 
-# Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# Database connection function
 def get_db_connection():
     """Get database connection - local SQLite or cloud PostgreSQL"""
     if USE_CLOUD_DB:
-        # For cloud deployment with PostgreSQL
         try:
             import psycopg2
             return psycopg2.connect(CLOUD_DB_URL)
@@ -142,13 +128,11 @@ def get_db_connection():
     else:
         return sqlite3.connect('infousers.db')
 
-# Database initialization
 def init_db():
     """Initialize database with required tables"""
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Users table with role support and profile pictures
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -164,7 +148,6 @@ def init_db():
         )
     ''')
     
-    # User sessions table for better security
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS user_sessions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -176,7 +159,6 @@ def init_db():
         )
     ''')
     
-    # Locations table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS locations (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -192,7 +174,6 @@ def init_db():
         )
     ''')
     
-    # Eco Actions table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS eco_actions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -209,7 +190,6 @@ def init_db():
         )
     ''')
     
-    # Badges table
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS badges (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -221,7 +201,6 @@ def init_db():
         )
     ''')
     
-    # User Badges table (many-to-many)
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS user_badges (
             user_id INTEGER,
@@ -233,7 +212,6 @@ def init_db():
         )
     ''')
     
-    # Sofia Redesigns table for map redesign functionality
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS sofia_redesigns (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -245,17 +223,15 @@ def init_db():
         )
     ''')
     
-    # Create default admin user if it doesn't exist
     cursor.execute('SELECT COUNT(*) FROM users WHERE role = "admin"')
     if cursor.fetchone()[0] == 0:
-        admin_password_hash = generate_password_hash('admin123')  # Change this in production!
+        admin_password_hash = generate_password_hash('admin123')  
         cursor.execute('''
             INSERT INTO users (username, email, password_hash, role, points)
             VALUES (?, ?, ?, ?, ?)
         ''', ('admin', 'admin@plantatree.com', admin_password_hash, 'admin', 1000))
         print("✓ Default admin user created (admin@plantatree.com / admin123)")
     
-    # Insert sample data if tables are empty
     cursor.execute('SELECT COUNT(*) FROM locations')
     if cursor.fetchone()[0] == 0:
         sample_locations = [
@@ -271,7 +247,6 @@ def init_db():
             VALUES (?, ?, ?, ?, ?, ?, ?)
         ''', sample_locations)
     
-    # Insert sample badges
     cursor.execute('SELECT COUNT(*) FROM badges')
     if cursor.fetchone()[0] == 0:
         sample_badges = [
@@ -290,10 +265,8 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Initialize database on startup
 init_db()
 
-# Google Generative AI (Gemini) configuration
 import os
 from dotenv import load_dotenv
 try:
@@ -304,7 +277,6 @@ except ImportError:
     GENAI_AVAILABLE = False
     genai = None
 
-# Get API key from environment (loaded above)
 GENAI_API_KEY = os.getenv('GENAI_API_KEY')
 GEMINI_MODEL = None
 
@@ -328,7 +300,7 @@ if GENAI_AVAILABLE and GENAI_API_KEY:
 elif not GENAI_AVAILABLE:
     print("Google Generative AI не е инсталиран")
 else:
-    print("ℹ️ GENAI_API_KEY not set - AI chat functionality will be disabled")
+    print("ℹ GENAI_API_KEY not set - AI chat functionality will be disabled")
 # Routes
 # Express.js-style API info endpoint
 @app.route('/api', methods=['GET'])
@@ -355,12 +327,10 @@ def api_info():
         'timestamp': datetime.now().isoformat()
     })
 
-# Express.js-style health check
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Comprehensive health check endpoint"""
     try:
-        # Test database connection
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute('SELECT 1')
@@ -369,10 +339,8 @@ def health_check():
     except Exception as e:
         db_status = f'unhealthy: {str(e)}'
     
-    # Test external APIs
     external_apis = {}
     try:
-        # Test a simple request to check connectivity
         response = requests.get('https://httpbin.org/status/200', timeout=5)
         external_apis['connectivity'] = 'healthy' if response.status_code == 200 else 'unhealthy'
     except Exception:
@@ -392,21 +360,17 @@ def health_check():
         'version': '1.0.0'
     })
 
-# Authentication Utility Functions
 def get_current_user():
     """Get current user from JWT token in Authorization header"""
     try:
-        # Check for Authorization header
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
             return None
         
-        # Extract token
         token = auth_header.replace('Bearer ', '')
         if not token:
             return None
         
-        # Decode JWT token
         try:
             payload = jwt.decode(token, app.secret_key, algorithms=['HS256'])
             user_id = payload.get('user_id')
@@ -430,7 +394,6 @@ def get_current_user():
             if not user_row:
                 return None
             
-            # Return user data as dict
             return {
                 'id': user_row[0],
                 'username': user_row[1],
@@ -468,7 +431,6 @@ def serve_static(filename):
     """Serve static files (CSS, JS, images)"""
     return send_from_directory('.', filename)
 
-# API Routes
 @app.route('/api/locations', methods=['GET'])
 def get_locations():
     """Get all approved locations"""
@@ -515,8 +477,8 @@ def add_location():
             data['type'],
             data.get('latitude'),
             data.get('longitude'),
-            data.get('user_id', 1),  # Default user for demo
-            False  # Requires approval
+            data.get('user_id', 1),  
+            False  
         ))
         
         location_id = cursor.lastrowid
@@ -570,12 +532,10 @@ def get_eco_actions():
 def add_eco_action():
     """Add a new eco action"""
     try:
-        # Get current user from JWT token
         current_user = get_current_user()
         if not current_user:
             return jsonify({'success': False, 'error': 'Трябва да влезете в профила си'}), 401
         
-        # Handle file upload if present
         image_path = None
         if 'image' in request.files:
             file = request.files['image']
@@ -587,17 +547,14 @@ def add_eco_action():
                 file.save(file_path)
                 image_path = f'uploads/{filename}'
         
-        # Get form data
         title = request.form.get('title')
         description = request.form.get('description')
         action_type = request.form.get('type')
         location_name = request.form.get('location')
         
-        # Validate required fields
         if not all([title, description, action_type]):
             return jsonify({'success': False, 'error': 'Моля попълнете всички задължителни полета'}), 400
         
-        # Calculate points based on action type
         points_map = {
             'tree': 15,
             'clean': 10,
@@ -614,7 +571,7 @@ def add_eco_action():
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             title, description, action_type, location_name, 
-            image_path, points, current_user['id'], True  # Use actual user ID and auto-approve
+            image_path, points, current_user['id'], True 
         ))
         
         action_id = cursor.lastrowid
@@ -639,13 +596,11 @@ def get_charity_stats():
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Calculate total points from all approved eco actions
         cursor.execute('SELECT SUM(points) FROM eco_actions WHERE approved = TRUE')
         total_points = cursor.fetchone()[0] or 0
         
-        # Calculate donations made (every 500 points = 1 BGN donation)
         donations_made = total_points // 500
-        total_donated = donations_made * 1.0  # 1 BGN per 500 points
+        total_donated = donations_made * 1.0 
         
         conn.close()
         
@@ -664,14 +619,13 @@ def get_charity_stats():
 def get_leaderboard():
     """Get leaderboard data with user rankings"""
     try:
-        period = request.args.get('period', 'all')  # all, week, month, year
-        action_type = request.args.get('type', 'all')  # all, tree, clean, bike, recycle
+        period = request.args.get('period', 'all')  
+        action_type = request.args.get('type', 'all')  
         limit = int(request.args.get('limit', 50))
         
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Base query for user statistics
         base_query = """
             SELECT 
                 u.id,
@@ -686,7 +640,6 @@ def get_leaderboard():
             LEFT JOIN badges b ON ub.badge_id = b.id
         """
         
-        # Add time period filter
         where_conditions = []
         params = []
         
@@ -727,7 +680,6 @@ def get_leaderboard():
                 'avatar': f'https://via.placeholder.com/80?text={row[1][0].upper()}'
             }
             
-            # Determine user level based on points
             if user_data['points'] >= 1000:
                 user_data['level'] = 'Еко легенда'
             elif user_data['points'] >= 750:

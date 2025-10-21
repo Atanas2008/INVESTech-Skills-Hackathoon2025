@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """
 Admin Management Script for Eco Actions
 Provides functionality to manage posts, users, and system administration
@@ -38,7 +38,7 @@ def list_all_actions():
     print("=" * 80)
     
     for action in actions:
-        status = "✅ Approved" if action['approved'] else "⏳ Pending"
+        status = " Approved" if action['approved'] else "⏳ Pending"
         print(f"ID: {action['id']} | {status}")
         print(f"Title: {action['title']}")
         print(f"Type: {action['type']} | Points: {action['points']}")
@@ -53,16 +53,14 @@ def delete_action(action_id):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # First check if action exists
     cursor.execute('SELECT title, username FROM eco_actions ea LEFT JOIN users u ON ea.user_id = u.id WHERE ea.id = ?', (action_id,))
     action = cursor.fetchone()
     
     if not action:
-        print(f"❌ Action with ID {action_id} not found.")
+        print(f" Action with ID {action_id} not found.")
         return False
     
-    # Confirm deletion
-    print(f"\n⚠️  You are about to delete:")
+    print(f"\n  You are about to delete:")
     print(f"   Title: {action['title']}")
     print(f"   User: {action['username'] or 'Unknown'}")
     
@@ -71,10 +69,10 @@ def delete_action(action_id):
     if confirm == 'DELETE':
         cursor.execute('DELETE FROM eco_actions WHERE id = ?', (action_id,))
         conn.commit()
-        print(f"✅ Action {action_id} deleted successfully.")
+        print(f" Action {action_id} deleted successfully.")
         return True
     else:
-        print("❌ Deletion cancelled.")
+        print(" Deletion cancelled.")
         return False
     
     conn.close()
@@ -88,18 +86,18 @@ def approve_action(action_id):
     action = cursor.fetchone()
     
     if not action:
-        print(f"❌ Action with ID {action_id} not found.")
+        print(f" Action with ID {action_id} not found.")
         return False
     
     if action['approved']:
-        print(f"ℹ️  Action '{action['title']}' is already approved.")
+        print(f"ℹ  Action '{action['title']}' is already approved.")
         return False
     
     cursor.execute('UPDATE eco_actions SET approved = TRUE WHERE id = ?', (action_id,))
     conn.commit()
     conn.close()
     
-    print(f"✅ Action '{action['title']}' approved successfully.")
+    print(f" Action '{action['title']}' approved successfully.")
     return True
 
 def reject_action(action_id):
@@ -111,7 +109,7 @@ def reject_action(action_id):
     action = cursor.fetchone()
     
     if not action:
-        print(f"❌ Action with ID {action_id} not found.")
+        print(f" Action with ID {action_id} not found.")
         return False
     
     cursor.execute('UPDATE eco_actions SET approved = FALSE WHERE id = ?', (action_id,))
@@ -119,7 +117,7 @@ def reject_action(action_id):
     conn.close()
     
     status = "rejected" if action['approved'] else "kept as pending"
-    print(f"✅ Action '{action['title']}' {status}.")
+    print(f" Action '{action['title']}' {status}.")
     return True
 
 def list_users():
@@ -141,10 +139,10 @@ def list_users():
     conn.close()
     
     if not users:
-        print("📭 No users found.")
+        print(" No users found.")
         return
     
-    print(f"\n👥 Found {len(users)} users:")
+    print(f"\n Found {len(users)} users:")
     print("=" * 80)
     
     for user in users:
@@ -159,41 +157,35 @@ def delete_user(user_id):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Check if user exists
     cursor.execute('SELECT username, email FROM users WHERE id = ?', (user_id,))
     user = cursor.fetchone()
     
     if not user:
-        print(f"❌ User with ID {user_id} not found.")
+        print(f" User with ID {user_id} not found.")
         return False
     
-    # Check how many actions they have
     cursor.execute('SELECT COUNT(*) as count FROM eco_actions WHERE user_id = ?', (user_id,))
     action_count = cursor.fetchone()['count']
     
-    print(f"\n⚠️  You are about to delete user:")
+    print(f"\n  You are about to delete user:")
     print(f"   Username: {user['username']}")
     print(f"   Email: {user['email']}")
     print(f"   Actions: {action_count}")
-    print(f"   ⚠️  This will also delete all their eco actions!")
+    print(f"     This will also delete all their eco actions!")
     
     confirm = input("\nType 'DELETE USER' to confirm: ")
     
     if confirm == 'DELETE USER':
-        # Delete user's actions first
         cursor.execute('DELETE FROM eco_actions WHERE user_id = ?', (user_id,))
-        # Delete user sessions
         cursor.execute('DELETE FROM sessions WHERE user_id = ?', (user_id,))
-        # Delete user badges
         cursor.execute('DELETE FROM user_badges WHERE user_id = ?', (user_id,))
-        # Delete user
         cursor.execute('DELETE FROM users WHERE id = ?', (user_id,))
         
         conn.commit()
-        print(f"✅ User {user['username']} and {action_count} actions deleted successfully.")
+        print(f" User {user['username']} and {action_count} actions deleted successfully.")
         return True
     else:
-        print("❌ User deletion cancelled.")
+        print(" User deletion cancelled.")
         return False
     
     conn.close()
@@ -203,27 +195,21 @@ def show_statistics():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Total users
     cursor.execute('SELECT COUNT(*) as count FROM users')
     total_users = cursor.fetchone()['count']
     
-    # Total actions
     cursor.execute('SELECT COUNT(*) as count FROM eco_actions')
     total_actions = cursor.fetchone()['count']
     
-    # Approved actions
     cursor.execute('SELECT COUNT(*) as count FROM eco_actions WHERE approved = TRUE')
     approved_actions = cursor.fetchone()['count']
     
-    # Pending actions
     cursor.execute('SELECT COUNT(*) as count FROM eco_actions WHERE approved = FALSE')
     pending_actions = cursor.fetchone()['count']
     
-    # Total points
     cursor.execute('SELECT COALESCE(SUM(points), 0) as total FROM eco_actions WHERE approved = TRUE')
     total_points = cursor.fetchone()['total']
     
-    # Actions by type
     cursor.execute('''
         SELECT type, COUNT(*) as count, COALESCE(SUM(points), 0) as points
         FROM eco_actions WHERE approved = TRUE
@@ -234,23 +220,23 @@ def show_statistics():
     
     conn.close()
     
-    print("\n📊 System Statistics")
+    print("\n System Statistics")
     print("=" * 50)
-    print(f"👥 Total Users: {total_users}")
-    print(f"📝 Total Actions: {total_actions}")
-    print(f"✅ Approved Actions: {approved_actions}")
-    print(f"⏳ Pending Actions: {pending_actions}")
-    print(f"⭐ Total Points: {total_points}")
-    print(f"💰 Charity Donations: {total_points // 500} BGN ({total_points % 500}/500 to next)")
+    print(f" Total Users: {total_users}")
+    print(f" Total Actions: {total_actions}")
+    print(f" Approved Actions: {approved_actions}")
+    print(f" Pending Actions: {pending_actions}")
+    print(f" Total Points: {total_points}")
+    print(f" Charity Donations: {total_points // 500} BGN ({total_points % 500}/500 to next)")
     
     if action_types:
         print(f"\n📈 Actions by Type:")
         for action_type in action_types:
             type_names = {
-                'tree': '🌳 Trees',
-                'clean': '🧹 Cleaning',
-                'bike': '🚴 Biking',
-                'recycle': '♻️ Recycling'
+                'tree': ' Trees',
+                'clean': ' Cleaning',
+                'bike': ' Biking',
+                'recycle': ' Recycling'
             }
             name = type_names.get(action_type['type'], action_type['type'])
             print(f"   {name}: {action_type['count']} actions, {action_type['points']} points")
@@ -258,7 +244,7 @@ def show_statistics():
 def main_menu():
     """Display main menu and handle user input"""
     while True:
-        print("\n🌱 PlantATree Admin Management")
+        print("\n PlantATree Admin Management")
         print("=" * 40)
         print("1. List all eco actions")
         print("2. Delete eco action")
@@ -279,19 +265,19 @@ def main_menu():
                 action_id = int(input("Enter action ID to delete: "))
                 delete_action(action_id)
             except ValueError:
-                print("❌ Invalid action ID. Please enter a number.")
+                print(" Invalid action ID. Please enter a number.")
         elif choice == '3':
             try:
                 action_id = int(input("Enter action ID to approve: "))
                 approve_action(action_id)
             except ValueError:
-                print("❌ Invalid action ID. Please enter a number.")
+                print(" Invalid action ID. Please enter a number.")
         elif choice == '4':
             try:
                 action_id = int(input("Enter action ID to reject: "))
                 reject_action(action_id)
             except ValueError:
-                print("❌ Invalid action ID. Please enter a number.")
+                print(" Invalid action ID. Please enter a number.")
         elif choice == '5':
             list_users()
         elif choice == '6':
@@ -299,18 +285,18 @@ def main_menu():
                 user_id = int(input("Enter user ID to delete: "))
                 delete_user(user_id)
             except ValueError:
-                print("❌ Invalid user ID. Please enter a number.")
+                print(" Invalid user ID. Please enter a number.")
         elif choice == '7':
             show_statistics()
         elif choice == '8':
             print("👋 Goodbye!")
             break
         else:
-            print("❌ Invalid choice. Please enter 1-8.")
+            print(" Invalid choice. Please enter 1-8.")
 
 if __name__ == '__main__':
     if not os.path.exists('infousers.db'):
-        print("❌ Database file 'infousers.db' not found!")
+        print(" Database file 'infousers.db' not found!")
         print("Make sure you're running this script from the correct directory.")
         sys.exit(1)
     
