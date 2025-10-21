@@ -1453,29 +1453,9 @@ style.textContent = `
 document.head.appendChild(style);
 
 function loadSampleData() {
-<<<<<<< HEAD
     // This would typically come from your backend API
     ecoActions = [];
     locations = [];
-=======
-    
-    ecoActions = [
-        {
-            id: 1,
-            title: 'Засадих 3 дървета в Борисовата градина',
-            description: 'Участвах в еко акция за засаджане на дървета. Всеки може да помогне!',
-            type: 'tree',
-            location: 'Борисова градина, София',
-            user: 'Мария Петрова',
-            timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-            points: 15,
-            likes: 15,
-            comments: 3
-        }
-    ];
-    
-    locations = getSampleLocations();
->>>>>>> 8feee1f (Final changes)
 }
 
 async function fetchLocationsFromAPI() {
