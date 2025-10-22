@@ -372,7 +372,8 @@ def get_current_user():
             return None
         
         try:
-            payload = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+            # Use configured SECRET_KEY to decode tokens consistently
+            payload = jwt.decode(token, app.config.get('SECRET_KEY'), algorithms=['HS256'])
             user_id = payload.get('user_id')
             
             if not user_id:

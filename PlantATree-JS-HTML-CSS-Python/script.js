@@ -2010,29 +2010,28 @@ function createEcoActionCard(action) {
     const card = document.createElement('div');
     card.className = 'eco-action-card';
 
-    const date = new Date(action.created_at);
+    const date = new Date(action.created_at || action.timestamp || Date.now());
     const timeAgo = getTimeAgo(date);
 
-    const profilePicture = action.user_profile_picture || action.profile_picture;
-    const userAvatar = profilePicture 
-        ? `/static/${profilePicture}` 
-        : `https://via.placeholder.com/50/4CAF50/white?text=${username.charAt(0)}`;
+    const username = action.username || action.user || 'Потребител';
+    const profilePicture = action.user_profile_picture || action.profile_picture || null;
+    // If profile picture is stored under uploads/, serve it directly; otherwise use provided URL
+    const userAvatar = profilePicture
+        ? (profilePicture.startsWith('uploads/') || profilePicture.startsWith('/uploads/') ? `/${profilePicture.replace(/^\//, '')}` : profilePicture)
+        : `https://via.placeholder.com/50/4CAF50/white?text=${encodeURIComponent(username.charAt(0).toUpperCase())}`;
 
     let imageUrl = 'https://via.placeholder.com/300/4CAF50/white?text=ECO';
     if (action.image_path) {
-        
-        const cleanPath = action.image_path.startsWith('static/') 
-            ? action.image_path.substring(7) 
-            : action.image_path;
-        imageUrl = `/static/${cleanPath}`;
+        // Server stores image_path like 'uploads/filename' — use it directly (ensure it has leading slash)
+        imageUrl = action.image_path.startsWith('/') ? action.image_path : `/${action.image_path}`;
     }
     
     card.innerHTML = `
         <div class="eco-card-header">
-            <div class="eco-user-info">
-                <img src="${userAvatar}" alt="user" class="eco-user-avatar"
-                     onerror="this.src='https://via.placeholder.com/50/4CAF50/white?text=U'"
-                <div class="eco-user-details">
+          <div class="eco-user-info">
+             <img src="${userAvatar}" alt="user" class="eco-user-avatar"
+                 onerror="this.src='https://via.placeholder.com/50/4CAF50/white?text=U'" />
+             <div class="eco-user-details">
                     <h4 class="eco-username">${action.username}</h4>
                     <span class="eco-post-date">${timeAgo}</span>
                 </div>
@@ -2040,10 +2039,10 @@ function createEcoActionCard(action) {
             <div class="eco-points-badge">+${action.points} точки</div>
         </div>
         
-        <div class="eco-card-content">
-            <img src="${imageUrl}" alt="eco action" class="eco-action-image" 
-                 onerror="this.src='https://via.placeholder.com/300/4CAF50/white?text=ECO'"
-            <div class="eco-card-body">
+       <div class="eco-card-content">
+          <img src="${imageUrl}" alt="eco action" class="eco-action-image" 
+              onerror="this.src='https://via.placeholder.com/300/4CAF50/white?text=ECO'" />
+          <div class="eco-card-body">
                 <h3 class="eco-action-title">${action.title}</h3>
                 <p class="eco-action-description">${action.description}</p>
                 <div class="eco-action-location">
